@@ -1,3 +1,4 @@
+import { sendSMS } from './utils/sendSMS';
 import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
@@ -10,6 +11,7 @@ import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { HelloResolver } from './resolvers/hello';
+import UserResolver from './resolvers/user';
 import { MyContext } from './types';
 require('dotenv-safe').config();
 
@@ -20,10 +22,13 @@ const main = async () => {
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     synchronize: true,
-    logging: false,
+    logging: true,
     entities: [path.join(__dirname, '/entity/*.js')],
-    migrations: ['src/migration/**/*.ts'],
-    subscribers: ['src/subscriber/**/*.ts'],
+    migrations: [path.join(__dirname, '/migration/*.ts')],
+    migrationsTableName: 'paaws_migrations',
+    cli: {
+      migrationsDir: 'src/migration',
+    },
   });
   const app = express();
   await conn.runMigrations();
@@ -65,7 +70,7 @@ const main = async () => {
       redis,
     }),
     schema: await buildSchema({
-      resolvers: [HelloResolver],
+      resolvers: [HelloResolver, UserResolver],
       validate: false,
     }),
   });

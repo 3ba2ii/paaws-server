@@ -71,7 +71,7 @@ const main = async () => {
     }),
     schema: await buildSchema({
       resolvers: [HelloResolver, UserResolver],
-      validate: false,
+      validate: true,
     }),
   });
 

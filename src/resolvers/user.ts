@@ -1,6 +1,8 @@
+import { isValidPhoneNumber } from './../middleware/isValid';
 import { sendSMS } from './../utils/sendSMS';
 import { VERIFY_PHONE_NUMBER_PREFIX } from './../constants';
 import { MyContext } from './../types';
+import argon2 from 'argon2';
 import { User } from './../entity/User';
 import {
   Arg,
@@ -11,23 +13,35 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from 'type-graphql';
+import { MaxLength, Length, IsMobilePhone, IsEmail } from 'class-validator';
 
 @InputType()
 class RegisterOptions {
   @Field()
+  @MaxLength(100)
   full_name!: string;
 
   @Field()
+  @IsMobilePhone('ar-EG', {
+    strictMode: true,
+  })
   phone!: string;
 
   @Field()
+  @IsEmail()
   email!: string;
 
   @Field()
+  @Length(8, 40)
   password!: string;
 
   @Field()
+  @Length(4, 4, {
+    message: 'OTP must be 4 characters',
+    context: { key: 'otp' },
+  })
   otp!: number;
 }
 
@@ -66,6 +80,7 @@ class UserResolver {
   }
 
   @Mutation(() => RegularResponse)
+  @UseMiddleware(isValidPhoneNumber)
   async sendOTP(
     @Arg('phone') phone: string,
     @Ctx() { redis }: MyContext
@@ -115,23 +130,63 @@ class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg('registerOptions') registerOptions: RegisterOptions,
-    @Ctx() { req }: MyContext
+    @Ctx() { req, redis }: MyContext
   ): Promise<UserResponse> {
     const { email, full_name, otp, password, phone } = registerOptions;
+
+    const redisKey = VERIFY_PHONE_NUMBER_PREFIX + phone;
+    const storedOTP = await redis.get(redisKey);
+
+    const isValidOTP = storedOTP?.toString() === otp.toString();
+
+    if (!isValidOTP || !storedOTP) {
+      return {
+        errors: [{ field: 'otp', message: 'Invalid OTP' }],
+      };
+    }
+
+    const hashedPassword = await argon2.hash(password);
 
     const user = User.create({
       full_name,
       email: email.trim().toLowerCase(),
-      password: password,
+      password: hashedPassword,
       phone,
     });
 
-    await user.save();
+    try {
+      await user.save();
+      await redis.del(redisKey);
 
-    return {
-      user,
-    };
+      req.session!.userId = user.id;
+
+      return { user };
+    } catch (err) {
+      const errors = checkDuplicationError(err);
+      return {
+        errors,
+      };
+    }
   }
 }
 
+const checkDuplicationError = (err: any): FieldError[] => {
+  const errors: FieldError[] = [];
+
+  if (err.detail.includes('already exists')) {
+    if (err.detail.includes('email')) {
+      errors.push({
+        field: 'email',
+        message: 'Email already exists',
+      });
+    }
+    if (err.detail.includes('phone')) {
+      errors.push({
+        field: 'phone',
+        message: 'Phone Number already exists',
+      });
+    }
+  }
+  return errors;
+};
 export default UserResolver;

@@ -39,15 +39,21 @@ export class User extends BaseEntity {
   @Column({ default: ProviderTypes.LOCAL })
   provider: ProviderTypes;
 
-  @Field()
+  @Field(() => Int, {
+    nullable: true,
+  })
   @Column({ nullable: true })
   provider_id: number;
 
-  @Field()
+  @Field(() => String, {
+    nullable: true,
+  })
   @Column({ nullable: true })
   location: string;
 
-  @Field()
+  @Field(() => String, {
+    nullable: true,
+  })
   @Column({ nullable: true })
   bio: string;
 

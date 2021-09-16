@@ -1,9 +1,12 @@
-import { Field, ID, Int, ObjectType } from 'type-graphql';
+import { Photo } from './Media';
+import { Pet } from './Pet';
+import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,7 +24,7 @@ enum ProviderTypes {
 export class User extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
-  id!: number;
+  readonly id!: number;
 
   @Field()
   @Column({ unique: true })
@@ -79,4 +82,17 @@ export class User extends BaseEntity {
   @Field()
   @UpdateDateColumn()
   updatedAt: Date;
+
+  //Relations
+  /*  @Field(() => [Pet])
+  @OneToMany(() => Pet, (pet) => pet.user)
+  pets: Pet[]; */
+
+  @Field(() => [Photo])
+  @OneToMany(() => Photo, (photo) => photo.user)
+  photos!: Photo[];
+
+  @Field(() => [Pet])
+  @OneToMany(() => Pet, (pet) => pet.user)
+  pets: Pet[];
 }

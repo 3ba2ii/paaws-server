@@ -1,4 +1,4 @@
-import { sendSMS } from './utils/sendSMS';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core/dist/plugin/landingPage/graphqlPlayground';
 import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
@@ -11,6 +11,7 @@ import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { HelloResolver } from './resolvers/hello';
+import PetResolver from './resolvers/pet';
 import UserResolver from './resolvers/user';
 import { MyContext } from './types';
 require('dotenv-safe').config();
@@ -25,11 +26,12 @@ const main = async () => {
     logging: true,
     entities: [path.join(__dirname, '/entity/*.js')],
     migrations: [path.join(__dirname, '/migration/*.ts')],
-    migrationsTableName: 'paaws_migrations',
+    migrationsTableName: 'migrations',
     cli: {
       migrationsDir: 'src/migration',
     },
   });
+
   const app = express();
   await conn.runMigrations();
 
@@ -70,9 +72,16 @@ const main = async () => {
       redis,
     }),
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
+      resolvers: [HelloResolver, UserResolver, PetResolver],
       validate: true,
     }),
+    plugins: [
+      ApolloServerPluginLandingPageGraphQLPlayground({
+        settings: {
+          'request.credentials': 'include',
+        },
+      }),
+    ],
   });
 
   await apolloServer.start();

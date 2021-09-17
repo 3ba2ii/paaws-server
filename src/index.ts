@@ -69,8 +69,8 @@ const main = async () => {
     app,
     cors: false,
   });
-  app.listen(3000, () => {
-    console.log(`🚀 Now listening on port http://localhost:3000/graphql`);
+  app.listen(4000, () => {
+    console.log(`🚀 Now listening on port http://localhost:4000/graphql`);
   });
 };
 

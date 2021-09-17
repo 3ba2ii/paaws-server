@@ -1,5 +1,3 @@
-import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core/dist/plugin/landingPage/graphqlPlayground';
-import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
 import express from 'express';
@@ -9,9 +7,7 @@ import path from 'path';
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
-import { MyContext } from './types';
 import { createApolloServer } from './utils/createApolloServer';
-import { createSchema } from './utils/createSchema';
 require('dotenv-safe').config();
 
 const main = async () => {

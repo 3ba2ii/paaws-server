@@ -15,62 +15,21 @@ afterAll(async () => {
 
 describe('resolvers', () => {
   it('fake-login', async () => {
-    for (let i = 0; i < 10; i++) {
-      const fakeUser: LoginInput = {
-        identifier: faker.internet.email(),
-        password: faker.internet.password(),
-      };
-      const { data } = await graphqlCall({
-        source: loginMutation,
-        variableValues: {
-          loginOptions: fakeUser,
-        },
-      });
-
-      /* expect(data?.login).toMatchObject({
-        errors: expect.arrayContaining([FieldError]),
-        user: null,
-      }); */
-      expect(data?.login.errors).toBeDefined();
-    }
-
-    //Register
-    /* 
-    const newUserPhone = '+201029111763';
-    const sendOTPResponse = await graphqlTestCall(sendOTPMutation, {
-      sendOtpPhone: newUserPhone,
-    });
-    console.log(
-      `🚀 ~ file: user.test.ts ~ line 38 ~ it ~ sendOTPResponse`,
-      sendOTPResponse
-    );
-
-    expect(sendOTPResponse).toEqual({ success: true }); */
-    /* 
-    const foundUser = {
-      email: 'aghonem2011@gmail.com',
-      password: 'Ahmed3ba2ii',
+    const fakeUser: LoginInput = {
+      identifier: faker.internet.email(),
+      password: faker.internet.password(),
     };
-
-    loginResponse = await graphqlTestCall(loginMutation, {
-      loginOptions: {
-        identifier: foundUser.email,
-        password: foundUser.password,
+    const { data } = await graphqlCall({
+      source: loginMutation,
+      variableValues: {
+        loginOptions: fakeUser,
       },
     });
 
-    expect(loginResponse.errors).toBeNull();
-    expect(loginResponse.data).toBeDefined();
-    expect(loginResponse.data?.user).toBeDefined(); */
+    expect(data?.login.errors).toBeDefined();
+    expect(data?.login.user).toBeNull();
   });
 });
-/* 
-const sendOTPMutation = `
-mutation ( $sendOtpPhone: String!){
-    sendOTP(phone: $sendOtpPhone) {
-      success
-    }
-  }`; */
 
 const loginMutation = `
 mutation LoginMutation($loginOptions: LoginInput!) {
@@ -85,12 +44,3 @@ mutation LoginMutation($loginOptions: LoginInput!) {
       }
     }
   }`;
-
-/* const usersQuery = `
-query UsersQuery {
-    users {
-        id
-        email
-    }
-  }`;
- */

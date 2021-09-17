@@ -35,7 +35,7 @@ export class LoginInput {
 }
 
 @ObjectType()
-export class FieldError {
+export class FieldError2 {
   @Field()
   field: string;
 
@@ -43,13 +43,13 @@ export class FieldError {
   message: string;
 
   @Field()
-  code: number;
+  code!: number;
 }
 
 @ObjectType()
 export class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+  @Field(() => [FieldError2], { nullable: true })
+  errors?: FieldError2[];
 
   @Field(() => User, { nullable: true })
   user?: User;
@@ -57,8 +57,8 @@ export class UserResponse {
 
 @ObjectType()
 export class RegularResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+  @Field(() => [FieldError2], { nullable: true })
+  errors?: FieldError2[];
 
   @Field(() => Boolean, { defaultValue: false })
   success: boolean;
@@ -66,8 +66,8 @@ export class RegularResponse {
 
 @ObjectType()
 export class PetResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+  @Field(() => [FieldError2], { nullable: true })
+  errors?: FieldError2[];
 
   @Field(() => Pet, { nullable: true })
   pet?: Pet;
@@ -118,8 +118,8 @@ export class CreatePetOptions {
 
 @ObjectType()
 export class ChangePasswordResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+  @Field(() => [FieldError2], { nullable: true })
+  errors?: FieldError2[];
 
   @Field(() => Boolean)
   success: boolean;

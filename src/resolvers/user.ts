@@ -142,7 +142,7 @@ class UserResolver {
           {
             field: 'identifier',
             message: 'Incorrect Username or Email',
-            code: 401,
+            code: 401, // Unauthorized Code
           },
         ],
       };

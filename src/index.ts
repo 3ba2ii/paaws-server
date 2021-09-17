@@ -7,13 +7,11 @@ import session from 'express-session';
 import Redis from 'ioredis';
 import path from 'path';
 import 'reflect-metadata';
-import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
-import { HelloResolver } from './resolvers/hello';
-import PetResolver from './resolvers/pet';
-import UserResolver from './resolvers/user';
 import { MyContext } from './types';
+import { createApolloServer } from './utils/createApolloServer';
+import { createSchema } from './utils/createSchema';
 require('dotenv-safe').config();
 
 const main = async () => {
@@ -65,24 +63,8 @@ const main = async () => {
       resave: false, // don't save session if unmodified
     })
   );
-  const apolloServer = new ApolloServer({
-    context: ({ req, res }): MyContext => ({
-      req,
-      res,
-      redis,
-    }),
-    schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver, PetResolver],
-      validate: true,
-    }),
-    plugins: [
-      ApolloServerPluginLandingPageGraphQLPlayground({
-        settings: {
-          'request.credentials': 'include',
-        },
-      }),
-    ],
-  });
+
+  const apolloServer = await createApolloServer(redis);
 
   await apolloServer.start();
 

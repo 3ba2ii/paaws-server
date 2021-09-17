@@ -160,7 +160,7 @@ class UserResolver {
     user.last_login = new Date();
     user.save();
 
-    req.session!.userId = user.id;
+    req!.session!.userId = user.id;
 
     return { user };
   }

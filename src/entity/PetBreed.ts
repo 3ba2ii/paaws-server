@@ -17,7 +17,7 @@ export class PetBreed extends BaseEntity {
   readonly id!: number;
 
   @Field(() => Pet)
-  @ManyToOne((type) => Pet, (pet) => pet.breeds)
+  @ManyToOne((_type) => Pet, (pet) => pet.breeds)
   pet: Pet;
 
   @Field()

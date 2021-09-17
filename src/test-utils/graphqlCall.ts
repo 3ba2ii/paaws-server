@@ -1,6 +1,6 @@
 import { graphql } from 'graphql';
 import { Maybe } from 'graphql/jsutils/Maybe';
-import Redis from 'ioredis';
+import { Redis as RedisType } from 'ioredis';
 import { createApolloServer } from '../utils/createApolloServer';
 import { createSchema } from '../utils/createSchema';
 
@@ -10,7 +10,8 @@ interface Options {
     [key: string]: any;
   }>;
 }
-const redis = new Redis();
+let redis: RedisType;
+
 export const graphqlCall = async ({ source, variableValues }: Options) => {
   return graphql({
     schema: await createSchema(),

@@ -1,6 +1,8 @@
+import faker from 'faker';
 import { Connection } from 'typeorm';
 import { graphqlCall } from '../test-utils/graphqlCall';
 import { createTestConnection } from '../test-utils/testConn';
+import { LoginInput } from './../types/_responseTypes';
 
 let conn: Connection;
 beforeAll(async () => {
@@ -12,20 +14,25 @@ afterAll(async () => {
 });
 
 describe('resolvers', () => {
-  it('login', async () => {
-    let loginResponse = await graphqlCall({
-      source: loginMutation,
-      variableValues: {
-        loginOptions: {
-          identifier: 'aaa',
-          password: '2131231313123',
+  it('fake-login', async () => {
+    for (let i = 0; i < 10; i++) {
+      const fakeUser: LoginInput = {
+        identifier: faker.internet.email(),
+        password: faker.internet.password(),
+      };
+      const { data } = await graphqlCall({
+        source: loginMutation,
+        variableValues: {
+          loginOptions: fakeUser,
         },
-      },
-    });
-    console.log(
-      `🚀 ~ file: user.test.ts ~ line 28 ~ it ~ loginResponse`,
-      loginResponse
-    );
+      });
+
+      /* expect(data?.login).toMatchObject({
+        errors: expect.arrayContaining([FieldError]),
+        user: null,
+      }); */
+      expect(data?.login.errors).toBeDefined();
+    }
 
     //Register
     /* 

@@ -51,6 +51,7 @@ class UserResolver {
           {
             message: 'Phone number is not valid',
             field: 'phone',
+            code: 400, // Bad Request Code
           },
         ],
       };
@@ -65,6 +66,7 @@ class UserResolver {
           {
             message: 'Phone number is already registered',
             field: 'phone',
+            code: 409, //Conflict Code
           },
         ],
       };
@@ -90,7 +92,7 @@ class UserResolver {
 
     if (!isValidOTP || !storedOTP) {
       return {
-        errors: [{ field: 'otp', message: 'Invalid OTP' }],
+        errors: [{ field: 'otp', message: 'Invalid OTP', code: 400 }],
       };
     }
 
@@ -140,6 +142,7 @@ class UserResolver {
           {
             field: 'identifier',
             message: 'Incorrect Username or Email',
+            code: 401,
           },
         ],
       };
@@ -152,6 +155,7 @@ class UserResolver {
           {
             field: 'password',
             message: 'Incorrect Password',
+            code: 401,
           },
         ],
       };
@@ -240,6 +244,7 @@ class UserResolver {
           {
             field: 'confirmPassword',
             message: 'Passwords do not match',
+            code: 400,
           },
         ],
       };
@@ -253,6 +258,7 @@ class UserResolver {
           {
             field: 'token',
             message: 'Token not found',
+            code: 404,
           },
         ],
       };
@@ -266,6 +272,7 @@ class UserResolver {
           {
             field: 'user',
             message: 'User not found',
+            code: 404,
           },
         ],
       };

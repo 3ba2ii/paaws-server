@@ -7,7 +7,7 @@ import {
   RegisterOptions,
   RegularResponse,
   UserResponse,
-} from '../types/_responseTypes';
+} from '../types/responseTypes';
 import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
@@ -19,7 +19,7 @@ import { MyContext } from './../types';
 import {
   ChangePasswordInput,
   ChangePasswordResponse,
-} from './../types/_responseTypes';
+} from '../types/responseTypes';
 import { sendSMS } from './../utils/sendSMS';
 
 @Resolver(User)

@@ -11,7 +11,7 @@ import { Pet } from './../entity/Pet';
 import { PetBreed } from './../entity/PetBreed';
 import { User } from './../entity/User';
 import { isAuth } from './../middleware/isAuth';
-import { CreatePetOptions, PetResponse } from '../types/_responseTypes';
+import { CreatePetOptions, PetResponse } from '../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {

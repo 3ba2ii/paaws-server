@@ -8,6 +8,7 @@ import 'reflect-metadata';
 import { createConnection } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { createApolloServer } from './utils/createApolloServer';
+
 require('dotenv-safe').config();
 
 const main = async () => {
@@ -19,10 +20,10 @@ const main = async () => {
     synchronize: true,
     logging: true,
     entities: [path.join(__dirname, '/entity/*.js')],
-    migrations: [path.join(__dirname, '/migration/*.ts')],
+    migrations: [path.join(__dirname, '/migration/*.js')],
     migrationsTableName: 'migrations',
     cli: {
-      migrationsDir: 'src/migration',
+      migrationsDir: path.join(__dirname, '/migration'),
     },
   });
 

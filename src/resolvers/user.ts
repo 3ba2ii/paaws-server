@@ -1,8 +1,17 @@
 import argon2 from 'argon2';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
-import { Upload } from 'src/types/Upload';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { UserTagsType } from '../types/types';
+import { Upload } from '../types/Upload';
+import {
+  Arg,
+  Ctx,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
 import {
@@ -20,9 +29,13 @@ import {
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
+import { Pet } from './../entity/Pet';
 import { Photo } from './../entity/Photo';
 import { User } from './../entity/User';
 import { UserAvatar } from './../entity/UserAvatar';
+import { UserFavorites } from './../entity/UserFavorites';
+import { UserTag } from './../entity/UserTags';
+import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
 
@@ -30,7 +43,9 @@ import { sendSMS } from './../utils/sendSMS';
 class UserResolver {
   @Query(() => [User])
   async users(): Promise<User[]> {
-    return await User.find();
+    return await User.find({
+      relations: ['pets', 'tags', 'favorites', 'favorites.pet'],
+    });
   }
 
   @Mutation(() => RegularResponse)
@@ -324,6 +339,54 @@ class UserResolver {
     });
 
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async likePet(
+    @Arg('petId', () => Int) petId: number,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    const pet = await Pet.findOne({ id: petId });
+    if (!pet) return false;
+
+    const user = await User.findOne({ id: req.session.userId });
+
+    const userFavorite = UserFavorites.create({ user, pet });
+
+    pet.numberOfLikes += 1;
+
+    try {
+      const conn = getConnection();
+      await conn.transaction(async (_transactionalEntityManager) => {
+        await conn.manager.insert(UserFavorites, userFavorite);
+        await pet.save();
+      });
+
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async addUserTag(
+    @Arg('tag', () => UserTagsType) tag: UserTagsType,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    const user = await User.findOne({ id: req.session.userId });
+
+    const newTag = UserTag.create({ user, tagName: tag });
+
+    try {
+      await getConnection().manager.insert(UserTag, newTag);
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
 }
 

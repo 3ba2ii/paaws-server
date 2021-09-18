@@ -1,4 +1,4 @@
-import { Breeds, PetType, PetGender, PetSize, PetStatus } from './petTypes';
+import { Breeds, PetType, PetGender, PetSize, PetStatus } from './types';
 import { Pet } from '../entity/Pet';
 import { IsEmail, Length, MaxLength } from 'class-validator';
 import { Field, InputType, ObjectType, Int } from 'type-graphql';

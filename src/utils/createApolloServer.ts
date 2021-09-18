@@ -1,7 +1,7 @@
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import { Redis } from 'ioredis';
-import { MyContext } from 'src/types';
+import { MyContext } from '../types';
 import { createSchema } from './createSchema';
 
 export const createApolloServer = async (redis: Redis) => {

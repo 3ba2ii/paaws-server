@@ -9,9 +9,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PetGender, PetSize, PetStatus, PetType } from '../types/petTypes';
+import { PetGender, PetSize, PetStatus, PetType } from '../types/types';
 import { PetBreed } from './PetBreed';
 import { User } from './User';
+import { UserFavorites } from './UserFavorites';
 
 @ObjectType()
 @Entity()
@@ -26,20 +27,31 @@ export class Pet extends BaseEntity {
 
   @Field(() => PetStatus)
   @Column({
+    type: 'enum',
+    enum: PetStatus,
     default: PetStatus.OFFERED,
   })
   status: PetStatus;
 
   @Field(() => PetType)
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: PetType,
+  })
   type!: PetType;
 
   @Field(() => PetGender)
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: PetGender,
+  })
   gender!: PetGender;
 
   @Field(() => PetSize)
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: PetSize,
+  })
   size!: PetSize;
 
   @Field(() => Date)
@@ -78,12 +90,22 @@ export class Pet extends BaseEntity {
 
   //Relations
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.pets)
+  @ManyToOne(() => User, (user) => user.pets, {
+    cascade: true,
+  })
   user: User;
 
   @Field(() => [PetBreed])
   @OneToMany(() => PetBreed, (pb) => pb.pet, {
     cascade: true,
   })
-  breeds!: PetBreed[];
+  breeds: PetBreed[];
+
+  @Field(() => Int)
+  @Column({ default: 0 })
+  numberOfLikes: number;
+
+  @Field(() => [UserFavorites], { nullable: true })
+  @OneToMany(() => UserFavorites, (pb) => pb.pet)
+  likes!: UserFavorites[];
 } //

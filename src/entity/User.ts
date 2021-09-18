@@ -1,5 +1,3 @@
-import { UserAvatar } from './UserAvatar';
-import { Pet } from './Pet';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -10,9 +8,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Pet } from './Pet';
 import { Photo } from './Photo';
-import { UserTag } from './UserTags';
+import { UserAvatar } from './UserAvatar';
 import { UserFavorites } from './UserFavorites';
+import { UserTag } from './UserTags';
 
 enum ProviderTypes {
   LOCAL = 'local',
@@ -95,6 +95,8 @@ export class User extends BaseEntity {
   @Field(() => [UserAvatar], {
     nullable: true,
   })
+
+  //Relationships
   @OneToMany(() => UserAvatar, (avatar) => avatar.user)
   avatars!: UserAvatar[];
 

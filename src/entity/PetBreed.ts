@@ -1,26 +1,24 @@
-import { Breeds } from '../types/petTypes';
-import { Field, Int, ObjectType } from 'type-graphql';
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Field, ObjectType } from 'type-graphql';
+import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Breeds } from '../types/types';
 import { Pet } from './Pet';
 
 @ObjectType()
 @Entity()
 export class PetBreed extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  readonly id!: number;
+  @Field()
+  @PrimaryColumn()
+  petId: number;
 
   @Field(() => Pet)
-  @ManyToOne((_type) => Pet, (pet) => pet.breeds)
-  pet: Pet;
+  @ManyToOne(() => Pet, (user) => user.breeds, {
+    onDelete: 'CASCADE',
+  })
+  pet!: Pet;
 
-  @Field()
-  @Column()
-  breed: Breeds;
+  @Field(() => Breeds)
+  @PrimaryColumn({ type: 'enum', enum: Breeds, enumName: 'Breeds' })
+  breed!: Breeds;
 }
+
+///

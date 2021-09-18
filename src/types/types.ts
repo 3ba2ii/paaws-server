@@ -27,6 +27,21 @@ export enum Breeds {
   HUSKEY = 'huskey',
 }
 
+export enum UserTagsType {
+  CAT_PERSON = 'Cat Person',
+  DOG_PERSON = 'Dog Person',
+  ADOPTER = 'Adopter',
+  ANIMAL_FRIEND = 'Animal Friend',
+  ANIMAL_PARTNER = 'Animal Partner',
+  ANIMAL_OWNER = 'Animal Owner',
+  ANIMAL_OWNER_ADOPTER = 'Animal Owner & Adopter',
+}
+
+registerEnumType(UserTagsType, {
+  name: 'UserTagsType',
+  description: 'User Tags Option',
+});
+
 registerEnumType(Breeds, {
   name: 'Breeds',
   description: 'Basic Pet Breeds',

@@ -1,43 +1,37 @@
-import { MyContext } from '../types';
 import {
   Arg,
   Ctx,
-  FieldResolver,
+  Int,
   Mutation,
   Query,
   Resolver,
-  Root,
   UseMiddleware,
 } from 'type-graphql';
+import { MyContext } from '../types';
+import { CreatePetOptions, PetResponse } from '../types/responseTypes';
 import { Pet } from './../entity/Pet';
 import { PetBreed } from './../entity/PetBreed';
 import { User } from './../entity/User';
 import { isAuth } from './../middleware/isAuth';
-import { CreatePetOptions, PetResponse } from '../types/responseTypes';
+import { RegularResponse } from './../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {
-  /*  @FieldResolver(() => String)
-  user(@Root() user: User, @Ctx() { req }: MyContext) {
-    //this is the current user and its ok to show them their email
-    if (req.session.userId === user.id) {
-      return user.email;
-    }
-
-    //this is NOT the current user, so hide the email
-    return '';
-  }
- */
   @Query(() => [Pet])
+  @UseMiddleware(isAuth)
   async pets(): Promise<Pet[]> {
-    return await Pet.find({
+    return Pet.find({
       relations: ['breeds', 'user', 'likes'],
     });
   }
-
-  @Query(() => [PetBreed])
-  async breeds(): Promise<PetBreed[]> {
-    return await PetBreed.find({ relations: ['pet'] });
+  @Query(() => Pet, {
+    nullable: true,
+  })
+  @UseMiddleware(isAuth)
+  async pet(@Arg('petId', () => Int) petId: number): Promise<Pet | undefined> {
+    return Pet.findOne(petId, {
+      relations: ['breeds', 'user', 'likes'],
+    });
   }
 
   @Mutation(() => PetResponse)
@@ -61,6 +55,44 @@ class PetResolver {
     return {
       pet,
     };
+  }
+
+  @Mutation(() => RegularResponse)
+  @UseMiddleware(isAuth)
+  async deletePet(
+    @Arg('petId', () => Int) petId: number,
+    @Ctx() { req }: MyContext
+  ): Promise<RegularResponse> {
+    const userId = req.session.userId;
+    const pet = await Pet.findOne(petId);
+    console.log(`🚀 ~ file: pet.ts ~ line 64 ~ PetResolver ~ pet`, pet);
+    if (!pet)
+      return {
+        errors: [
+          {
+            code: 404,
+            message: 'Pet not found',
+            field: 'pet',
+          },
+        ],
+        success: false,
+      };
+    if (pet.userId !== userId) {
+      return {
+        errors: [
+          {
+            code: 403,
+            message: 'You are not allowed to delete this pet',
+            field: 'user',
+          },
+        ],
+        success: false,
+      };
+    }
+
+    await Pet.delete(petId);
+
+    return { success: true };
   }
 }
 

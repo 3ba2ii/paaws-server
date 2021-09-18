@@ -89,6 +89,11 @@ export class Pet extends BaseEntity {
   updatedAt: Date;
 
   //Relations
+
+  @Field(() => Int)
+  @Column()
+  userId!: number;
+
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.pets, {
     cascade: true,

@@ -1,4 +1,4 @@
-import { Photo } from './Media';
+import { UserAvatar } from './UserAvatar';
 import { Pet } from './Pet';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
@@ -10,6 +10,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Photo } from './Photo';
+import { UserTag } from './UserTags';
+import { UserFavorites } from './UserFavorites';
 
 enum ProviderTypes {
   LOCAL = 'local',
@@ -83,16 +86,33 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  //Relations
-  /*  @Field(() => [Pet])
-  @OneToMany(() => Pet, (pet) => pet.user)
-  pets: Pet[]; */
-
-  @Field(() => [Photo])
-  @OneToMany(() => Photo, (photo) => photo.user)
+  @Field(() => [Photo], {
+    nullable: true,
+  })
+  @OneToMany(() => Photo, (photo) => photo.creator)
   photos!: Photo[];
 
-  @Field(() => [Pet])
+  @Field(() => [UserAvatar], {
+    nullable: true,
+  })
+  @OneToMany(() => UserAvatar, (avatar) => avatar.user)
+  avatars!: UserAvatar[];
+
+  @Field(() => [Pet], {
+    nullable: true,
+  })
   @OneToMany(() => Pet, (pet) => pet.user)
   pets: Pet[];
+
+  @Field(() => [UserTag], {
+    nullable: true,
+  })
+  @OneToMany(() => UserTag, (tag) => tag.user)
+  tags: UserTag[];
+
+  @Field(() => [UserFavorites], {
+    nullable: true,
+  })
+  @OneToMany(() => UserFavorites, (fav) => fav.user)
+  favorites: UserFavorites[];
 }

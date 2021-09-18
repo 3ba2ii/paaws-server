@@ -1,25 +1,29 @@
-import { checkDuplicationError } from '../utils/checkDuplicationError';
 import argon2 from 'argon2';
+import { createWriteStream } from 'fs';
+import { GraphQLUpload } from 'graphql-upload';
+import { Upload } from 'src/types/Upload';
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
 import {
+  ChangePasswordInput,
+  ChangePasswordResponse,
   LoginInput,
   RegisterOptions,
   RegularResponse,
   UserResponse,
 } from '../types/responseTypes';
+import { checkDuplicationError } from '../utils/checkDuplicationError';
 import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
+import { Photo } from './../entity/Photo';
 import { User } from './../entity/User';
+import { UserAvatar } from './../entity/UserAvatar';
 import { MyContext } from './../types';
-import {
-  ChangePasswordInput,
-  ChangePasswordResponse,
-} from '../types/responseTypes';
 import { sendSMS } from './../utils/sendSMS';
 
 @Resolver(User)
@@ -285,6 +289,41 @@ class UserResolver {
     return {
       success: true,
     };
+  }
+
+  @Mutation(() => Boolean)
+  async uploadAvatar(
+    @Arg('image', () => GraphQLUpload) { createReadStream, filename }: Upload,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    console.log(`🚀 ~ file: user.ts ~ line 311 ~ UserResolver ~ userId`);
+    const userId = req.session.userId;
+    if (!userId) return false;
+
+    const user = await User.findOne({ id: userId });
+    if (!user) return false;
+
+    const path = __dirname + `/../../images/${filename}`;
+
+    const image = Photo.create({
+      creator: user,
+      filename,
+      path,
+      isOnDisk: true,
+    });
+    const userAvatar = UserAvatar.create({ user, image });
+
+    getConnection().transaction(async (_transactionalEntityManager) => {
+      await new Promise(async (resolve, reject) =>
+        createReadStream()
+          .pipe(createWriteStream(path))
+          .on('finish', () => resolve(true))
+          .on('error', () => reject(false))
+      );
+      await userAvatar.save();
+    });
+
+    return true;
   }
 }
 

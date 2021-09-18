@@ -41,16 +41,36 @@ import { sendSMS } from './../utils/sendSMS';
 
 @Resolver(User)
 class UserResolver {
-  @Query(() => User)
+  @Query(() => User, {
+    nullable: true,
+  })
   @UseMiddleware(isAuth)
   async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
-    return User.findOne({ id: req.session.userId });
+    return User.findOne(
+      { id: req.session.userId },
+      {
+        relations: ['pets', 'tags'],
+      }
+    );
   }
   @Query(() => [User])
   async users(): Promise<User[]> {
     return await User.find({
       relations: ['pets', 'tags', 'favorites', 'favorites.pet', 'pets.breeds'],
     });
+  }
+
+  @Query(() => User, {
+    nullable: true,
+  })
+  @UseMiddleware(isAuth)
+  async user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
+    return User.findOne(
+      { id },
+      {
+        relations: ['pets', 'tags'],
+      }
+    );
   }
 
   @Mutation(() => RegularResponse)

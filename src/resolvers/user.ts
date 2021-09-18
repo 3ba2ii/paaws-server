@@ -1,8 +1,6 @@
 import argon2 from 'argon2';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
-import { UserTagsType } from '../types/types';
-import { Upload } from '../types/Upload';
 import {
   Arg,
   Ctx,
@@ -22,6 +20,8 @@ import {
   RegularResponse,
   UserResponse,
 } from '../types/responseTypes';
+import { UserTagsType } from '../types/types';
+import { Upload } from '../types/Upload';
 import { checkDuplicationError } from '../utils/checkDuplicationError';
 import { sendEmail } from '../utils/sendEmail';
 import {
@@ -41,10 +41,15 @@ import { sendSMS } from './../utils/sendSMS';
 
 @Resolver(User)
 class UserResolver {
+  @Query(() => User)
+  @UseMiddleware(isAuth)
+  async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
+    return User.findOne({ id: req.session.userId });
+  }
   @Query(() => [User])
   async users(): Promise<User[]> {
     return await User.find({
-      relations: ['pets', 'tags', 'favorites', 'favorites.pet'],
+      relations: ['pets', 'tags', 'favorites', 'favorites.pet', 'pets.breeds'],
     });
   }
 
@@ -311,7 +316,6 @@ class UserResolver {
     @Arg('image', () => GraphQLUpload) { createReadStream, filename }: Upload,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
-    console.log(`🚀 ~ file: user.ts ~ line 311 ~ UserResolver ~ userId`);
     const userId = req.session.userId;
     if (!userId) return false;
 

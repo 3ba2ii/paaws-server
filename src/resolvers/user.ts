@@ -8,7 +8,7 @@ import {
   Mutation,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
@@ -19,7 +19,7 @@ import {
   LoginInput,
   RegisterOptions,
   RegularResponse,
-  UserResponse,
+  UserResponse
 } from '../types/responseTypes';
 import { UserTagsType } from '../types/types';
 import { Upload } from '../types/Upload';
@@ -28,7 +28,7 @@ import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
   FORGET_PASSWORD_PREFIX,
-  VERIFY_PHONE_NUMBER_PREFIX,
+  VERIFY_PHONE_NUMBER_PREFIX
 } from './../constants';
 import { Pet } from './../entity/Pet';
 import { Photo } from './../entity/Photo';
@@ -128,7 +128,19 @@ class UserResolver {
     }
 
     await redis.set(VERIFY_PHONE_NUMBER_PREFIX + phone, otp, 'ex', 60 * 10);
-    await sendSMS(`Your OTP is ${otp}`, phone);
+    const { sent } = await sendSMS(`Your OTP is ${otp}`, phone);
+    if (!sent) {
+      return {
+        success: false,
+        errors: [
+          {
+            field: 'phone',
+            message: 'Sending OTP failed, Please try again later',
+            code: 500,
+          },
+        ],
+      };
+    }
 
     return { success: true };
   }

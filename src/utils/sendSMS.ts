@@ -9,10 +9,24 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 
 export const sendSMS = async (body: string, to: string) => {
-  const response = await client.messages.create({
-    body,
-    from: '+17722911815',
-    to,
-  });
-  console.log(`🚀 ~ file: sendSMS.ts ~ line 17 ~ sendSMS ~ response`, response);
+  try {
+    const response = await client.messages.create({
+      body,
+      from: '+17722911815',
+      to,
+    });
+    console.log(
+      `🚀 ~ file: sendSMS.ts ~ line 17 ~ sendSMS ~ response`,
+      response
+    );
+    return {
+      sent: true,
+      response,
+    };
+  } catch (err) {
+    return {
+      sent: false,
+      err,
+    };
+  }
 };

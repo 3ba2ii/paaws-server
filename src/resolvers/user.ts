@@ -15,6 +15,7 @@ import { v4 } from 'uuid';
 import {
   ChangePasswordInput,
   ChangePasswordResponse,
+  FieldError,
   LoginInput,
   RegisterOptions,
   RegularResponse,
@@ -76,6 +77,7 @@ class UserResolver {
   @Mutation(() => RegularResponse)
   async sendOTP(
     @Arg('phone') phone: string,
+    @Arg('email') email: string,
     @Ctx() { redis }: MyContext
   ): Promise<RegularResponse> {
     //DONE 1. verify that this is a valid phone number
@@ -101,18 +103,27 @@ class UserResolver {
       };
     }
 
-    const user = await User.findOne({ where: { phone } });
+    const user = await User.findOne({ where: [{ phone }, { email }] });
 
     if (user) {
+      const errors: FieldError[] = [];
+      if (user.email === email) {
+        errors.push({
+          message: 'Email is already associated with an account',
+          field: 'email',
+          code: 409, //Conflict Code
+        });
+      }
+      if (user.phone === phone) {
+        errors.push({
+          message: 'Phone number is already registered',
+          field: 'phone',
+          code: 409, //Conflict Code
+        });
+      }
       return {
         success: false,
-        errors: [
-          {
-            message: 'Phone number is already registered',
-            field: 'phone',
-            code: 409, //Conflict Code
-          },
-        ],
+        errors,
       };
     }
 

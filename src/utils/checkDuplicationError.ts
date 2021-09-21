@@ -1,7 +1,7 @@
-import { FieldError2 } from '../types/responseTypes';
+import { FieldError } from '../types/responseTypes';
 
-export const checkDuplicationError = (err: any): FieldError2[] => {
-  const errors: FieldError2[] = [];
+export const checkDuplicationError = (err: any): FieldError[] => {
+  const errors: FieldError[] = [];
 
   if (err.detail.includes('already exists')) {
     if (err.detail.includes('email')) {

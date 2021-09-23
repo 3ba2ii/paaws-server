@@ -4,11 +4,13 @@ import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
+  Field,
+  InputType,
   Int,
   Mutation,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
@@ -19,7 +21,7 @@ import {
   LoginInput,
   RegisterOptions,
   RegularResponse,
-  UserResponse
+  UserResponse,
 } from '../types/responseTypes';
 import { UserTagsType } from '../types/types';
 import { Upload } from '../types/Upload';
@@ -28,7 +30,7 @@ import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
   FORGET_PASSWORD_PREFIX,
-  VERIFY_PHONE_NUMBER_PREFIX
+  VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
 import { Pet } from './../entity/Pet';
 import { Photo } from './../entity/Photo';
@@ -40,12 +42,24 @@ import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
 
+@InputType()
+class UpdateUserInfo {
+  @Field({
+    nullable: true,
+  })
+  bio?: string;
+
+  @Field({
+    nullable: true,
+  })
+  avatar?: string;
+}
+
 @Resolver(User)
 class UserResolver {
   @Query(() => User, {
     nullable: true,
   })
-  @UseMiddleware(isAuth)
   async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
     return User.findOne(
       { id: req.session.userId },
@@ -434,6 +448,28 @@ class UserResolver {
       console.error(e);
       return false;
     }
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async updateUser(
+    @Arg('updateOptions') updateOptions: UpdateUserInfo,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    const { bio } = updateOptions;
+    if (!bio) return false;
+
+    const userId = req.session.userId;
+    const user = await User.findOne({ id: userId });
+    if (!user) return false;
+
+    user.bio = bio;
+
+    await user.save().catch(() => {
+      return false;
+    });
+
+    return true;
   }
 }
 

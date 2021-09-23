@@ -71,7 +71,7 @@ export class User extends BaseEntity {
   @Column({ default: false })
   blocked: Boolean;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ nullable: true })
   last_login: Date;
 

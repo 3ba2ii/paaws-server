@@ -2,6 +2,7 @@ import connectRedis from 'connect-redis';
 import cors from 'cors';
 import express from 'express';
 import session from 'express-session';
+import { graphqlUploadExpress } from 'graphql-upload';
 import Redis from 'ioredis';
 import path from 'path';
 import 'reflect-metadata';
@@ -60,6 +61,7 @@ const main = async () => {
       resave: false, // don't save session if unmodified
     })
   );
+  app.use(graphqlUploadExpress());
 
   const apolloServer = await createApolloServer(redis);
 

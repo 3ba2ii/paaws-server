@@ -35,7 +35,6 @@ import {
 import { Pet } from './../entity/Pet';
 import { Photo } from './../entity/Photo';
 import { User } from './../entity/User';
-import { UserAvatar } from './../entity/UserAvatar';
 import { UserFavorites } from './../entity/UserFavorites';
 import { UserTag } from './../entity/UserTags';
 import { isAuth } from './../middleware/isAuth';
@@ -64,14 +63,21 @@ class UserResolver {
     return User.findOne(
       { id: req.session.userId },
       {
-        relations: ['pets', 'tags'],
+        relations: ['pets', 'avatar', 'tags'],
       }
     );
   }
   @Query(() => [User])
   async users(): Promise<User[]> {
     return await User.find({
-      relations: ['pets', 'tags', 'favorites', 'favorites.pet', 'pets.breeds'],
+      relations: [
+        'pets',
+        'tags',
+        'avatar',
+        'favorites',
+        'favorites.pet',
+        'pets.breeds',
+      ],
     });
   }
 
@@ -369,34 +375,38 @@ class UserResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async uploadAvatar(
     @Arg('image', () => GraphQLUpload) { createReadStream, filename }: Upload,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
     const userId = req.session.userId;
-    if (!userId) return false;
-
     const user = await User.findOne({ id: userId });
     if (!user) return false;
 
-    const path = __dirname + `/../../images/${filename}`;
+    const path = __dirname + `/../../../images/${filename}`;
+    console.log(
+      `🚀 ~ file: user.ts ~ line 382 ~ UserResolver ~ __dirname`,
+      __dirname
+    );
 
-    const image = Photo.create({
+    const avatar = Photo.create({
       creator: user,
       filename,
       path,
       isOnDisk: true,
     });
-    const userAvatar = UserAvatar.create({ user, image });
 
-    getConnection().transaction(async (_transactionalEntityManager) => {
+    user.avatar = avatar;
+
+    await getConnection().transaction(async (_transactionalEntityManager) => {
       await new Promise(async (resolve, reject) =>
         createReadStream()
           .pipe(createWriteStream(path))
           .on('finish', () => resolve(true))
           .on('error', () => reject(false))
       );
-      await userAvatar.save();
+      await user.save();
     });
 
     return true;

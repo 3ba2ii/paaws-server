@@ -4,13 +4,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Pet } from './Pet';
 import { Photo } from './Photo';
-import { UserAvatar } from './UserAvatar';
 import { UserFavorites } from './UserFavorites';
 import { UserTag } from './UserTags';
 
@@ -92,13 +93,13 @@ export class User extends BaseEntity {
   @OneToMany(() => Photo, (photo) => photo.creator)
   photos!: Photo[];
 
-  @Field(() => [UserAvatar], {
+  //Relationships
+  @Field(() => Photo, {
     nullable: true,
   })
-
-  //Relationships
-  @OneToMany(() => UserAvatar, (avatar) => avatar.user)
-  avatars!: UserAvatar[];
+  @OneToOne(() => Photo, { cascade: true })
+  @JoinColumn()
+  avatar: Photo;
 
   @Field(() => [Pet], {
     nullable: true,

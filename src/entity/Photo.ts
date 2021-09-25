@@ -32,6 +32,9 @@ export class Photo extends BaseEntity {
   @Column({ default: true })
   isOnDisk: boolean;
 
+  @Field({ nullable: true })
+  url: string;
+
   @Field(() => Boolean)
   @Column({ default: false })
   isThumbnail: boolean;

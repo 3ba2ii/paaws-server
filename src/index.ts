@@ -63,6 +63,12 @@ const main = async () => {
   );
   app.use(graphqlUploadExpress());
 
+  /* cloudinary.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  }); */
+
   const apolloServer = await createApolloServer(redis);
 
   await apolloServer.start();
@@ -72,6 +78,9 @@ const main = async () => {
     app,
     cors: false,
   });
+  //applying static routes 'public'
+  app.use(express.static(path.join(__dirname, 'public')));
+
   app.listen(4000, () => {
     console.log(`🚀 Now listening on port http://localhost:4000/graphql`);
   });

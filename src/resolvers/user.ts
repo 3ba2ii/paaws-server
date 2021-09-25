@@ -1,6 +1,4 @@
 import argon2 from 'argon2';
-import { createWriteStream } from 'fs';
-import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
@@ -24,7 +22,6 @@ import {
   UserResponse,
 } from '../types/responseTypes';
 import { UserTagsType } from '../types/types';
-import { Upload } from '../types/Upload';
 import { checkDuplicationError } from '../utils/checkDuplicationError';
 import { sendEmail } from '../utils/sendEmail';
 import {
@@ -32,14 +29,12 @@ import {
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
-import { Pet } from './../entity/Pet';
-import { Photo } from './../entity/Photo';
 import { User } from './../entity/User';
-import { UserFavorites } from './../entity/UserFavorites';
 import { UserTag } from './../entity/UserTags';
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
+require('dotenv-safe').config();
 
 @InputType()
 class UpdateUserInfo {
@@ -372,73 +367,6 @@ class UserResolver {
     return {
       success: true,
     };
-  }
-
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async uploadAvatar(
-    @Arg('image', () => GraphQLUpload) { createReadStream, filename }: Upload,
-    @Ctx() { req }: MyContext
-  ): Promise<Boolean> {
-    const userId = req.session.userId;
-    const user = await User.findOne({ id: userId });
-    if (!user) return false;
-
-    const path = __dirname + `/../../../images/${filename}`;
-    console.log(
-      `🚀 ~ file: user.ts ~ line 382 ~ UserResolver ~ __dirname`,
-      __dirname
-    );
-
-    const avatar = Photo.create({
-      creator: user,
-      filename,
-      path,
-      isOnDisk: true,
-    });
-
-    user.avatar = avatar;
-
-    await getConnection().transaction(async (_transactionalEntityManager) => {
-      await new Promise(async (resolve, reject) =>
-        createReadStream()
-          .pipe(createWriteStream(path))
-          .on('finish', () => resolve(true))
-          .on('error', () => reject(false))
-      );
-      await user.save();
-    });
-
-    return true;
-  }
-
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async likePet(
-    @Arg('petId', () => Int) petId: number,
-    @Ctx() { req }: MyContext
-  ): Promise<Boolean> {
-    const pet = await Pet.findOne({ id: petId });
-    if (!pet) return false;
-
-    const user = await User.findOne({ id: req.session.userId });
-
-    const userFavorite = UserFavorites.create({ user, pet });
-
-    pet.numberOfLikes += 1;
-
-    try {
-      const conn = getConnection();
-      await conn.transaction(async (_transactionalEntityManager) => {
-        await conn.manager.insert(UserFavorites, userFavorite);
-        await pet.save();
-      });
-
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
-    }
   }
 
   @Mutation(() => Boolean)

@@ -47,6 +47,15 @@ export class FieldError {
 }
 
 @ObjectType()
+export class UploadImageResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+
+  @Field({ nullable: true })
+  url?: string;
+}
+
+@ObjectType()
 export class UserResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];

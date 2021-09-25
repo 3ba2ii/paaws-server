@@ -1,3 +1,4 @@
+import { UserFavorites } from '../entity/UserFavorites';
 import {
   Arg,
   Ctx,
@@ -7,6 +8,7 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
+import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
 import { CreatePetOptions, PetResponse } from '../types/responseTypes';
 import { Pet } from './../entity/Pet';
@@ -93,6 +95,35 @@ class PetResolver {
     await Pet.delete(petId);
 
     return { success: true };
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async likePet(
+    @Arg('petId', () => Int) petId: number,
+    @Ctx() { req }: MyContext
+  ): Promise<Boolean> {
+    const pet = await Pet.findOne({ id: petId });
+    if (!pet) return false;
+
+    const user = await User.findOne({ id: req.session.userId });
+
+    const userFavorite = UserFavorites.create({ user, pet });
+
+    pet.numberOfLikes += 1;
+
+    try {
+      const conn = getConnection();
+      await conn.transaction(async (_transactionalEntityManager) => {
+        await conn.manager.insert(UserFavorites, userFavorite);
+        await pet.save();
+      });
+
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
 }
 

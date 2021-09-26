@@ -46,21 +46,19 @@ export class User extends BaseEntity {
   @Column({ default: ProviderTypes.LOCAL })
   provider: ProviderTypes;
 
-  @Field(() => Int, {
-    nullable: true,
-  })
+  @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
   provider_id: number;
 
-  @Field(() => String, {
-    nullable: true,
-  })
-  @Column({ nullable: true })
-  location: string;
+  @Field(() => String, { nullable: true })
+  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  long: number;
 
-  @Field(() => String, {
-    nullable: true,
-  })
+  @Field(() => String, { nullable: true })
+  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  lat: number;
+
+  @Field(() => String, { nullable: true })
   @Column({ nullable: true })
   bio: string;
 
@@ -87,35 +85,25 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Field(() => [Photo], {
-    nullable: true,
-  })
+  @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)
   photos!: Photo[];
 
   //Relationships
-  @Field(() => Photo, {
-    nullable: true,
-  })
+  @Field(() => Photo, { nullable: true })
   @OneToOne(() => Photo, { cascade: true })
   @JoinColumn()
   avatar: Photo;
 
-  @Field(() => [Pet], {
-    nullable: true,
-  })
+  @Field(() => [Pet], { nullable: true })
   @OneToMany(() => Pet, (pet) => pet.user)
   pets: Pet[];
 
-  @Field(() => [UserTag], {
-    nullable: true,
-  })
+  @Field(() => [UserTag], { nullable: true })
   @OneToMany(() => UserTag, (tag) => tag.user)
   tags: UserTag[];
 
-  @Field(() => [UserFavorites], {
-    nullable: true,
-  })
+  @Field(() => [UserFavorites], { nullable: true })
   @OneToMany(() => UserFavorites, (fav) => fav.user)
   favorites: UserFavorites[];
 }

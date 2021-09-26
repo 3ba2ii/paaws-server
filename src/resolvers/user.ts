@@ -34,19 +34,34 @@ import { UserTag } from './../entity/UserTags';
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
+
 require('dotenv-safe').config();
 
 @InputType()
 class UpdateUserInfo {
-  @Field({
-    nullable: true,
-  })
+  @Field({ nullable: true })
   bio?: string;
 
-  @Field({
-    nullable: true,
-  })
+  @Field({ nullable: true })
   avatar?: string;
+
+  @Field({ nullable: true })
+  long?: number;
+
+  @Field({ nullable: true })
+  lat?: number;
+}
+
+@InputType()
+class FindNearestUsersInput {
+  @Field()
+  lat!: number;
+
+  @Field()
+  long!: number;
+
+  @Field()
+  radius!: number;
 }
 
 @Resolver(User)
@@ -394,7 +409,7 @@ class UserResolver {
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
-    const { bio } = updateOptions;
+    const { bio, lat, long } = updateOptions;
     if (!bio) return false;
 
     const userId = req.session.userId;
@@ -403,9 +418,54 @@ class UserResolver {
 
     user.bio = bio;
 
-    await user.save().catch(() => {
+    //update location
+    if (lat && long) {
+      user.lat = lat;
+      user.long = long;
+    }
+
+    await user.save().catch((err) => {
+      console.log(`🚀 ~ file: user.ts ~ line 428 ~ UserResolver ~ err`, err);
+
       return false;
     });
+
+    return true;
+  }
+
+  @Query(() => Boolean, { nullable: true })
+  async getNearestLocations(
+    @Arg('options') options: FindNearestUsersInput
+  ): Promise<Boolean> {
+    const { radius, lat: currentLat, long: currentLong } = options;
+
+    //TODO: will need optimization later as we're calculating this distance for every user and this is not efficient
+
+    /* Better way to build this is to hav minimum and maximum latitude and longitude like a bounding box,
+       then we can query the database for users within that bounding box and then calculate the distance for only these users
+  */
+    const sql2 = `
+              select * 
+              from 
+              (
+                SELECT 
+                id,lat,long,full_name,
+                (
+                  6371 *
+                  acos(cos(radians(${currentLat})) * 
+                  cos(radians(lat)) * 
+                  cos(radians(long) - 
+                  radians(${currentLong})) + 
+                  sin(radians(${currentLat})) * 
+                  sin(radians(lat)))
+              ) AS distance 
+              from public."user"
+              ) as innerTable
+              where distance < ${radius || 1}
+              ORDER BY distance;`;
+
+    const users = await getConnection().query(sql2);
+    console.log(`🚀 ~ file: user.ts ~ line 463 ~ UserResolver ~ users`, users);
 
     return true;
   }

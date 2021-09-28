@@ -47,6 +47,17 @@ export class FieldError {
 }
 
 @ObjectType()
+export class PaginatedUsers {
+  @Field(() => [User])
+  users: User[];
+
+  @Field()
+  hasMore: boolean;
+
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+}
+@ObjectType()
 export class UploadImageResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];

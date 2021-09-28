@@ -4,12 +4,12 @@
   "port": 3306,
   "database": "paaws_v1",
   "username": "3ba2i",
-  "password": "Ahmed3401153",
+  "password": "dadadad",
   "synchronize": true,
   "logging": false,
-  "entities": ["src/entity/**/*.ts"],
-  "migrations": ["src/migration/**/*.ts"],
-  "subscribers": ["src/subscriber/**/*.ts"],
+  "entities": ["src/entity/**/*.js"],
+  "migrations": ["dist/migration/*.js"],
+  "subscribers": ["src/subscriber/**/*.js"],
 
   "cli": {
     "migrationsDir": "src/migration"

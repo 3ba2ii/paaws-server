@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import { Max, Min } from 'class-validator';
 import {
   Arg,
   Ctx,
@@ -17,6 +18,7 @@ import {
   ChangePasswordResponse,
   FieldError,
   LoginInput,
+  PaginatedUsers,
   RegisterOptions,
   RegularResponse,
   UserResponse,
@@ -45,13 +47,25 @@ class UpdateUserInfo {
   @Field({ nullable: true })
   avatar?: string;
 
+  @Max(80)
+  @Min(-180)
   @Field({ nullable: true })
   long?: number;
 
+  @Max(90)
+  @Min(-90)
   @Field({ nullable: true })
   lat?: number;
 }
 
+@InputType()
+class WhereCaluse {
+  @Field(() => Int, { nullable: true })
+  limit: number;
+
+  @Field({ nullable: true })
+  cursor?: string;
+}
 @InputType()
 class FindNearestUsersInput {
   @Field()
@@ -77,18 +91,42 @@ class UserResolver {
       }
     );
   }
-  @Query(() => [User])
-  async users(): Promise<User[]> {
-    return await User.find({
-      relations: [
-        'pets',
-        'tags',
-        'avatar',
-        'favorites',
-        'favorites.pet',
-        'pets.breeds',
-      ],
-    });
+
+  @Query(() => Int)
+  async usersCount(): Promise<number> {
+    return User.count();
+  }
+  @Query(() => PaginatedUsers)
+  async users(
+    @Arg('where', () => WhereCaluse)
+    { cursor, limit }: WhereCaluse
+  ): Promise<PaginatedUsers> {
+    console.log(
+      `🚀 ~ file: user.ts ~ line 105 ~ UserResolver ~ cursor`,
+      cursor
+    );
+    // 20 -> 21
+
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+
+    const replacements: any[] = [realLimitPlusOne];
+    if (cursor) replacements.push(new Date(cursor));
+
+    const users = await getConnection().query(
+      `
+          select * from public."user"
+          ${cursor ? `where "createdAt" < $2` : ''}
+          order by "createdAt" DESC
+          limit $1;
+    `,
+      replacements
+    );
+    console.log(`🚀 ~ file: user.ts ~ line 122 ~ UserResolver ~ users`, users);
+    return {
+      users: users.slice(0, realLimit),
+      hasMore: users.length === realLimitPlusOne,
+    };
   }
 
   @Query(() => User, {
@@ -410,13 +448,14 @@ class UserResolver {
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
     const { bio, lat, long } = updateOptions;
-    if (!bio) return false;
 
     const userId = req.session.userId;
     const user = await User.findOne({ id: userId });
     if (!user) return false;
 
-    user.bio = bio;
+    if (bio) {
+      user.bio = bio;
+    }
 
     //update location
     if (lat && long) {
@@ -433,23 +472,25 @@ class UserResolver {
     return true;
   }
 
-  @Query(() => Boolean, { nullable: true })
+  @Query(() => [User], { nullable: true })
   async getNearestLocations(
     @Arg('options') options: FindNearestUsersInput
-  ): Promise<Boolean> {
+  ): Promise<User[] | undefined> {
     const { radius, lat: currentLat, long: currentLong } = options;
+    /* 
+    TODO: will need optimization later as we're calculating this distance for every user and this is not efficient
 
-    //TODO: will need optimization later as we're calculating this distance for every user and this is not efficient
+       Better way to build this is to hav minimum and maximum latitude and longitude like a bounding box,
+       then we can query the database for users within that bounding box,
+       and then calculate the distance for only these users
+    */
 
-    /* Better way to build this is to hav minimum and maximum latitude and longitude like a bounding box,
-       then we can query the database for users within that bounding box and then calculate the distance for only these users
-  */
-    const sql2 = `
+    const sql = `
               select * 
               from 
               (
                 SELECT 
-                id,lat,long,full_name,
+                id, email,phone,full_name,lat,long,
                 (
                   6371 *
                   acos(cos(radians(${currentLat})) * 
@@ -461,13 +502,13 @@ class UserResolver {
               ) AS distance 
               from public."user"
               ) as innerTable
-              where distance < ${radius || 1}
+              where distance < ${radius}
               ORDER BY distance;`;
 
-    const users = await getConnection().query(sql2);
+    const users = (await getConnection().query(sql)) as User[] | undefined;
     console.log(`🚀 ~ file: user.ts ~ line 463 ~ UserResolver ~ users`, users);
 
-    return true;
+    return users;
   }
 }
 

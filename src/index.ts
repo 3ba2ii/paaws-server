@@ -13,6 +13,7 @@ import { createApolloServer } from './utils/createApolloServer';
 require('dotenv-safe').config();
 
 const main = async () => {
+  console.log(path.join(__dirname, '/migration/*.js'));
   const conn = await createConnection({
     type: 'postgres',
     database: process.env.POSTGRES_DB,
@@ -29,7 +30,7 @@ const main = async () => {
   });
 
   const app = express();
-  await conn.runMigrations();
+  await conn.runMigrations(); //
 
   // Redis session store
   const RedisStore = connectRedis(session);

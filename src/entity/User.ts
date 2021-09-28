@@ -78,7 +78,7 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field()
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @Field()

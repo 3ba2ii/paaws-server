@@ -10,9 +10,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Pet } from './Pet';
-import { Photo } from './Photo';
+import { AdoptionPost } from '../PostEntities/AdoptionPost';
+import { Pet } from '../PetEntities/Pet';
+import { Photo } from '../Photo';
 import { UserFavorites } from './UserFavorites';
+import { UserPet } from './UserPet';
 import { UserTag } from './UserTags';
 
 enum ProviderTypes {
@@ -52,11 +54,11 @@ export class User extends BaseEntity {
 
   @Field(() => String, { nullable: true })
   @Column('decimal', { precision: 10, scale: 6, nullable: true })
-  long: number;
+  lat: number;
 
   @Field(() => String, { nullable: true })
   @Column('decimal', { precision: 10, scale: 6, nullable: true })
-  lat: number;
+  lng: number;
 
   @Field(() => String, { nullable: true })
   @Column({ nullable: true })
@@ -78,7 +80,7 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field()
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn()
   createdAt: Date;
 
   @Field()
@@ -106,4 +108,12 @@ export class User extends BaseEntity {
   @Field(() => [UserFavorites], { nullable: true })
   @OneToMany(() => UserFavorites, (fav) => fav.user)
   favorites: UserFavorites[];
+
+  @Field(() => [UserPet], { nullable: true })
+  @OneToMany(() => UserPet, (userPet) => userPet.user)
+  userPets: UserPet[];
+
+  @Field(() => [AdoptionPost], { nullable: true })
+  @OneToMany(() => UserPet, (userPet) => userPet.user)
+  adoptionPosts: UserPet[];
 }

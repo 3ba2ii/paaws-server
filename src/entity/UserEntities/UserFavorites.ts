@@ -1,6 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Pet } from './Pet';
 import { User } from './User';
 
 @ObjectType()
@@ -20,11 +19,11 @@ export class UserFavorites extends BaseEntity {
   @PrimaryColumn()
   petId: number;
 
-  @Field(() => Pet)
+  /* @Field(() => Pet)
   @ManyToOne(() => Pet, (pet) => pet.likes, {
     onDelete: 'CASCADE',
   })
-  pet!: Pet;
+  pet!: Pet; */
 }
 
 /* 

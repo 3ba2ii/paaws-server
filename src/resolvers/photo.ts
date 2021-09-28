@@ -12,7 +12,7 @@ import {
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import path from 'path';
-import { User } from '../entity/User';
+import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import { UploadImageResponse } from '../types/responseTypes';

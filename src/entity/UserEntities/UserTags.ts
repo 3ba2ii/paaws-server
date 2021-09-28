@@ -1,4 +1,4 @@
-import { UserTagsType } from '../types/types';
+import { UserTagsType } from '../../types/types';
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from './User';

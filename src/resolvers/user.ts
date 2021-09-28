@@ -1,14 +1,17 @@
 import argon2 from 'argon2';
 import { Max, Min } from 'class-validator';
+import { Pet } from '../entity/PetEntities/Pet';
 import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
@@ -31,8 +34,8 @@ import {
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
-import { User } from './../entity/User';
-import { UserTag } from './../entity/UserTags';
+import { User } from '../entity/UserEntities/User';
+import { UserTag } from '../entity/UserEntities/UserTags';
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
@@ -50,7 +53,7 @@ class UpdateUserInfo {
   @Max(80)
   @Min(-180)
   @Field({ nullable: true })
-  long?: number;
+  lng?: number;
 
   @Max(90)
   @Min(-90)
@@ -72,7 +75,7 @@ class FindNearestUsersInput {
   lat!: number;
 
   @Field()
-  long!: number;
+  lng!: number;
 
   @Field()
   radius!: number;
@@ -80,6 +83,11 @@ class FindNearestUsersInput {
 
 @Resolver(User)
 class UserResolver {
+  @FieldResolver(() => [Pet])
+  pets(@Root() user: User): Promise<Pet[] | undefined> {
+    return Pet.find({ where: { user } });
+  }
+
   @Query(() => User, {
     nullable: true,
   })
@@ -101,10 +109,6 @@ class UserResolver {
     @Arg('where', () => WhereCaluse)
     { cursor, limit }: WhereCaluse
   ): Promise<PaginatedUsers> {
-    console.log(
-      `🚀 ~ file: user.ts ~ line 105 ~ UserResolver ~ cursor`,
-      cursor
-    );
     // 20 -> 21
 
     const realLimit = Math.min(50, limit);
@@ -122,7 +126,6 @@ class UserResolver {
     `,
       replacements
     );
-    console.log(`🚀 ~ file: user.ts ~ line 122 ~ UserResolver ~ users`, users);
     return {
       users: users.slice(0, realLimit),
       hasMore: users.length === realLimitPlusOne,
@@ -447,7 +450,7 @@ class UserResolver {
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
-    const { bio, lat, long } = updateOptions;
+    const { bio, lat, lng } = updateOptions;
 
     const userId = req.session.userId;
     const user = await User.findOne({ id: userId });
@@ -458,9 +461,9 @@ class UserResolver {
     }
 
     //update location
-    if (lat && long) {
+    if (lat && lng) {
       user.lat = lat;
-      user.long = long;
+      user.lng = lng;
     }
 
     await user.save().catch((err) => {
@@ -476,7 +479,7 @@ class UserResolver {
   async getNearestLocations(
     @Arg('options') options: FindNearestUsersInput
   ): Promise<User[] | undefined> {
-    const { radius, lat: currentLat, long: currentLong } = options;
+    const { radius, lat: currentLat, lng: currentLong } = options;
     /* 
     TODO: will need optimization later as we're calculating this distance for every user and this is not efficient
 
@@ -490,12 +493,12 @@ class UserResolver {
               from 
               (
                 SELECT 
-                id, email,phone,full_name,lat,long,
+                id, email,phone,full_name,lat,lng,
                 (
                   6371 *
                   acos(cos(radians(${currentLat})) * 
                   cos(radians(lat)) * 
-                  cos(radians(long) - 
+                  cos(radians(lng) - 
                   radians(${currentLong})) + 
                   sin(radians(${currentLat})) * 
                   sin(radians(lat)))

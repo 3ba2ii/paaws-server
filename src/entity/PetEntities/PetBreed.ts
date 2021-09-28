@@ -1,6 +1,6 @@
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Breeds } from '../types/types';
+import { Breeds } from '../../types/types';
 import { Pet } from './Pet';
 
 @ObjectType()

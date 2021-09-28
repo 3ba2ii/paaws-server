@@ -2,6 +2,7 @@ import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-co
 import { ApolloServer } from 'apollo-server-express';
 import { Redis } from 'ioredis';
 import { MyContext } from '../types';
+import { createPetLoader } from './createPetLoader';
 import { createSchema } from './createSchema';
 
 export const createApolloServer = async (redis: Redis) => {
@@ -10,6 +11,7 @@ export const createApolloServer = async (redis: Redis) => {
       req,
       res,
       redis,
+      petLoader: createPetLoader(),
     }),
     schema: await createSchema(),
     plugins: [

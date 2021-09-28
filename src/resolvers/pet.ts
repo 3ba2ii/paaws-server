@@ -1,4 +1,3 @@
-import { UserFavorites } from '../entity/UserFavorites';
 import {
   Arg,
   Ctx,
@@ -8,32 +7,24 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
-import { getConnection } from 'typeorm';
+import { Pet } from '../entity/PetEntities/Pet';
 import { MyContext } from '../types';
 import { CreatePetOptions, PetResponse } from '../types/responseTypes';
-import { Pet } from './../entity/Pet';
-import { PetBreed } from './../entity/PetBreed';
-import { User } from './../entity/User';
+import { PetBreed } from '../entity/PetEntities/PetBreed';
+import { User } from '../entity/UserEntities/User';
 import { isAuth } from './../middleware/isAuth';
 import { RegularResponse } from './../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {
   @Query(() => [Pet])
-  @UseMiddleware(isAuth)
   async pets(): Promise<Pet[]> {
-    return Pet.find({
-      relations: ['breeds', 'user', 'likes'],
-    });
+    return Pet.find();
   }
-  @Query(() => Pet, {
-    nullable: true,
-  })
+  @Query(() => Pet, { nullable: true })
   @UseMiddleware(isAuth)
   async pet(@Arg('petId', () => Int) petId: number): Promise<Pet | undefined> {
-    return Pet.findOne(petId, {
-      relations: ['breeds', 'user', 'likes'],
-    });
+    return Pet.findOne(petId);
   }
 
   @Mutation(() => PetResponse)
@@ -96,6 +87,13 @@ class PetResolver {
 
     return { success: true };
   }
+}
+
+export default PetResolver;
+
+/* 
+
+
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -103,6 +101,9 @@ class PetResolver {
     @Arg('petId', () => Int) petId: number,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
+
+    
+    
     const pet = await Pet.findOne({ id: petId });
     if (!pet) return false;
 
@@ -110,9 +111,9 @@ class PetResolver {
 
     const userFavorite = UserFavorites.create({ user, pet });
 
-    pet.numberOfLikes += 1;
-
-    try {
+    /*     pet.numberOfLikes += 1;
+     */
+/* try {
       const conn = getConnection();
       await conn.transaction(async (_transactionalEntityManager) => {
         await conn.manager.insert(UserFavorites, userFavorite);
@@ -124,7 +125,6 @@ class PetResolver {
       console.error(e);
       return false;
     }
-  }
-}
 
-export default PetResolver;
+  }
+*/

@@ -20,8 +20,9 @@ const main = async () => {
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     synchronize: true,
+    dropSchema: true,
     logging: !__prod__,
-    entities: [path.join(__dirname, '/entity/*.js')],
+    entities: [path.join(__dirname, '/entity/**/*.js')],
     migrations: [path.join(__dirname, '/migration/*.js')],
     migrationsTableName: 'migrations',
     cli: {

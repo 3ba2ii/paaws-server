@@ -1,3 +1,4 @@
+import { createUserLoader } from './createUserLoader';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import { Redis } from 'ioredis';
@@ -12,6 +13,7 @@ export const createApolloServer = async (redis: Redis) => {
       res,
       redis,
       petLoader: createPetLoader(),
+      userLoader: createUserLoader(),
     }),
     schema: await createSchema(),
     plugins: [

@@ -1,28 +1,37 @@
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
-import { MyContext } from '../types';
-import { CreatePetOptions, PetResponse } from '../types/responseTypes';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { User } from '../entity/UserEntities/User';
+import { MyContext } from '../types';
+import { CreatePetOptions, PetResponse } from '../types/responseTypes';
 import { isAuth } from './../middleware/isAuth';
 import { RegularResponse } from './../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {
+  @FieldResolver()
+  user(
+    @Root() pet: Pet,
+    @Ctx() { userLoader }: MyContext
+  ): Promise<User | undefined> {
+    return userLoader.load(pet.userId);
+  }
+
   @Query(() => [Pet])
   async pets(): Promise<Pet[]> {
     return Pet.find();
   }
   @Query(() => Pet, { nullable: true })
-  @UseMiddleware(isAuth)
   async pet(@Arg('petId', () => Int) petId: number): Promise<Pet | undefined> {
     return Pet.findOne(petId);
   }

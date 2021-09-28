@@ -10,9 +10,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Pet } from '../PetEntities/Pet';
 import { Photo } from '../Photo';
+import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
 import { UserTag } from './UserTags';
@@ -92,6 +92,10 @@ export class User extends BaseEntity {
   photos!: Photo[];
 
   //Relationships
+  @Field(() => Int, { nullable: true })
+  @Column({ nullable: true })
+  avatarId: number;
+
   @Field(() => Photo, { nullable: true })
   @OneToOne(() => Photo, { cascade: true })
   @JoinColumn()
@@ -102,7 +106,7 @@ export class User extends BaseEntity {
   pets: Pet[];
 
   @Field(() => [UserTag], { nullable: true })
-  @OneToMany(() => UserTag, (tag) => tag.user)
+  @OneToMany(() => UserTag, (tag) => tag.user, { eager: true })
   tags: UserTag[];
 
   @Field(() => [UserFavorites], { nullable: true })

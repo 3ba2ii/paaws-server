@@ -1,3 +1,4 @@
+import { Photo } from './../entity/Photo';
 import argon2 from 'argon2';
 import { Max, Min } from 'class-validator';
 import { Pet } from '../entity/PetEntities/Pet';
@@ -62,7 +63,7 @@ class UpdateUserInfo {
 }
 
 @InputType()
-class WhereCaluse {
+class WhereClause {
   @Field(() => Int, { nullable: true })
   limit: number;
 
@@ -83,21 +84,23 @@ class FindNearestUsersInput {
 
 @Resolver(User)
 class UserResolver {
+  @FieldResolver(() => Photo, { nullable: true })
+  async avatar(@Root() user: User): Promise<Photo | undefined> {
+    if (!user.avatarId) return undefined;
+    const userAvatar = await Photo.findOne(user.avatarId);
+
+    return userAvatar;
+  }
+
   @FieldResolver(() => [Pet])
   pets(@Root() user: User): Promise<Pet[] | undefined> {
     return Pet.find({ where: { user } });
   }
 
-  @Query(() => User, {
-    nullable: true,
-  })
-  async me(@Ctx() { req }: MyContext): Promise<User | undefined> {
-    return User.findOne(
-      { id: req.session.userId },
-      {
-        relations: ['pets', 'avatar', 'tags'],
-      }
-    );
+  @Query(() => User, { nullable: true })
+  @UseMiddleware(isAuth)
+  me(@Ctx() { req }: MyContext): Promise<User | undefined> {
+    return User.findOne(req.session.userId);
   }
 
   @Query(() => Int)
@@ -106,8 +109,8 @@ class UserResolver {
   }
   @Query(() => PaginatedUsers)
   async users(
-    @Arg('where', () => WhereCaluse)
-    { cursor, limit }: WhereCaluse
+    @Arg('where', () => WhereClause)
+    { cursor, limit }: WhereClause
   ): Promise<PaginatedUsers> {
     // 20 -> 21
 
@@ -136,13 +139,8 @@ class UserResolver {
     nullable: true,
   })
   @UseMiddleware(isAuth)
-  async user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
-    return User.findOne(
-      { id },
-      {
-        relations: ['pets', 'tags'],
-      }
-    );
+  user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
+    return User.findOne(id);
   }
 
   @Mutation(() => RegularResponse)
@@ -241,6 +239,7 @@ class UserResolver {
       email: email.trim().toLowerCase(),
       password: hashedPassword,
       phone,
+      confirmed: true,
     });
 
     try {

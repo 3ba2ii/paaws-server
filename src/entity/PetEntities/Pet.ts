@@ -75,7 +75,7 @@ export class Pet extends BaseEntity {
   user: User;
 
   @Field(() => [PetBreed])
-  @OneToMany(() => PetBreed, (pb) => pb.pet, { cascade: true })
+  @OneToMany(() => PetBreed, (pb) => pb.pet, { cascade: true, eager: true })
   breeds: PetBreed[];
 
   //TODO: Should add a pet colors and pet images

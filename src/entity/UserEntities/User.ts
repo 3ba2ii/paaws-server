@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Pet } from '../PetEntities/Pet';
-import { Photo } from '../Photo';
+import { Photo } from '../MediaEntities/Photo';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';

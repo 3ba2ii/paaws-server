@@ -38,7 +38,7 @@ class PetResolver {
 
   @Mutation(() => PetResponse)
   @UseMiddleware(isAuth)
-  async createPet(
+  public async createPet(
     @Arg('createPetOptions') createPetOptions: CreatePetOptions,
     @Ctx() { req }: MyContext
   ): Promise<PetResponse> {
@@ -46,6 +46,17 @@ class PetResolver {
 
     const userId = req.session.userId;
     const user = await User.findOne(userId);
+
+    if (!user)
+      return {
+        errors: [
+          {
+            field: 'user',
+            code: 404,
+            message: 'User not found',
+          },
+        ],
+      };
 
     const pet = Pet.create({
       ...createPetOptions,

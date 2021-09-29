@@ -10,8 +10,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { PetGender, PetSize, PetType } from '../../types/types';
-import { PetBreed } from './PetBreed';
 import { User } from '../UserEntities/User';
+import { PetImages } from './../MediaEntities/PetImages';
+import { PetBreed } from './PetBreed';
 
 @ObjectType()
 @Entity()
@@ -71,20 +72,19 @@ export class Pet extends BaseEntity {
   userId!: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.pets, { cascade: true })
-  user: User;
+  @ManyToOne(() => User, (user) => user.pets, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  user!: User;
 
   @Field(() => [PetBreed])
   @OneToMany(() => PetBreed, (pb) => pb.pet, { cascade: true, eager: true })
   breeds: PetBreed[];
 
   //TODO: Should add a pet colors and pet images
-}
-/* 
-@Field(() => Int)
-@Column({ default: 0 })
-numberOfLikes: number;
 
-@Field(() => [UserFavorites], { nullable: true })
-@OneToMany(() => UserFavorites, (pb) => pb.pet)
-likes!: UserFavorites[]; */
+  @Field(() => [PetImages])
+  @OneToMany(() => PetImages, (petImages) => petImages.pet, { cascade: true })
+  images!: PetImages[];
+}

@@ -1,8 +1,8 @@
-import { Breeds, PetType, PetGender, PetSize, PetStatus } from './types';
-import { Pet } from '../entity/PetEntities/Pet';
 import { IsEmail, Length, MaxLength } from 'class-validator';
-import { Field, InputType, ObjectType, Int } from 'type-graphql';
+import { Field, InputType, Int, ObjectType } from 'type-graphql';
+import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
+import { Breeds, PetGender, PetSize, PetType } from './types';
 //
 @InputType()
 export class RegisterOptions {
@@ -98,9 +98,6 @@ export class CreatePetOptions {
   @Field()
   @MaxLength(255)
   name!: string;
-
-  @Field(() => PetStatus)
-  status!: PetStatus;
 
   @Field(() => PetType)
   type!: PetType;

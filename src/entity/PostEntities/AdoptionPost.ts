@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -21,9 +21,9 @@ export class AdoptionPost extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field()
+  @Field(() => Int)
   @Column()
-  userId: string;
+  userId: number;
 
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.adoptionPosts, {
@@ -31,20 +31,18 @@ export class AdoptionPost extends BaseEntity {
   })
   user: User;
 
-  @Field()
+  @Field(() => Int)
   @Column()
-  petId: string;
+  petId: number;
 
-  @OneToOne(() => Pet)
+  @Field(() => Pet)
+  @OneToOne(() => Pet, { cascade: true })
   @JoinColumn()
   pet: Pet;
 
   //Post Info
-  @Field()
-  @Column()
-  title: string;
 
-  @OneToOne(() => Address)
+  @OneToOne(() => Address, { nullable: true })
   @JoinColumn()
   address: Address;
 

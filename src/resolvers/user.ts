@@ -1,4 +1,4 @@
-import { Photo } from './../entity/Photo';
+import { Photo } from '../entity/MediaEntities/Photo';
 import argon2 from 'argon2';
 import { Max, Min } from 'class-validator';
 import { Pet } from '../entity/PetEntities/Pet';

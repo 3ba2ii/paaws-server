@@ -1,24 +1,48 @@
-import { Photo } from './../entity/Photo';
-import {
-  Resolver,
-  Query,
-  FieldResolver,
-  Root,
-  Arg,
-  Ctx,
-  Mutation,
-  UseMiddleware,
-} from 'type-graphql';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
-import path from 'path';
+import {
+  Arg,
+  Ctx,
+  Field,
+  FieldResolver,
+  Mutation,
+  ObjectType,
+  Resolver,
+  Root,
+  UseMiddleware,
+} from 'type-graphql';
+import { getConnection } from 'typeorm';
+import { Photo } from '../entity/MediaEntities/Photo';
 import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import { UploadImageResponse } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
-import { generateRandomString } from '../utils/generateRandomString';
-import { getConnection } from 'typeorm';
+import { createImageMetaData } from '../utils/createImage';
+import { FieldError } from './../types/responseTypes';
+
+@ObjectType()
+export class ImageMetaData {
+  @Field(() => Photo)
+  photo: Photo;
+
+  @Field(() => User)
+  user: User;
+
+  @Field()
+  pathName: string;
+
+  @Field()
+  uniqueFileName: string;
+} //
+@ObjectType()
+class CreateImageResponse {
+  @Field(() => ImageMetaData, { nullable: true })
+  metadata?: ImageMetaData;
+
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+}
 
 @Resolver(Photo)
 class PhotoResolver {
@@ -27,47 +51,54 @@ class PhotoResolver {
     if (!photo || !photo?.path) return null;
     return `${process.env.APP_URL}/images/${photo.path}`;
   }
-  @Query(() => [Photo])
-  async photos(): Promise<Photo[]> {
-    const photos = await Photo.find();
-    return photos;
-  }
 
-  @Mutation(() => UploadImageResponse)
+  @Mutation(() => ImageMetaData)
   @UseMiddleware(isAuth)
-  async uploadAvatar(
-    @Arg('image', () => GraphQLUpload) { createReadStream, filename }: Upload,
+  public async createPhoto(
+    @Arg('image', () => GraphQLUpload) { filename }: Upload,
     @Ctx() { req }: MyContext
-  ): Promise<UploadImageResponse> {
+  ): Promise<CreateImageResponse> {
     const userId = req.session.userId;
     const user = await User.findOne({ id: userId });
-    if (!user)
+
+    if (!user) {
       return {
         errors: [
           {
+            code: 404,
             field: 'user',
             message: 'User not found',
-            code: 404,
           },
         ],
-      }; //
-    const randomName = generateRandomString(12);
-    const uniqueFileName = `${randomName}-${new Date().toISOString()}-${filename}`;
-    const pathName = path.join(
-      __dirname,
-      '../',
-      `public/images/${uniqueFileName}`
-    ); //
-
-    const stream = createReadStream();
-
-    const avatar = Photo.create({
+      };
+    }
+    const { pathName, uniqueFileName } = createImageMetaData(filename);
+    const photo = Photo.create({
       creator: user,
       filename,
       path: uniqueFileName,
       isOnDisk: true,
     });
+    return {
+      metadata: { photo, user, pathName, uniqueFileName },
+    };
+  }
 
+  @Mutation(() => UploadImageResponse)
+  @UseMiddleware(isAuth)
+  async uploadAvatar(
+    @Arg('image', () => GraphQLUpload)
+    uploadProps: Upload,
+    @Ctx() ctx: MyContext
+  ): Promise<UploadImageResponse> {
+    const { createReadStream } = uploadProps;
+    const { metadata, errors } = await this.createPhoto(uploadProps, ctx);
+    if (errors?.length || !metadata) {
+      return { errors };
+    }
+    const { photo: avatar, user, pathName, uniqueFileName } = metadata;
+
+    const stream = createReadStream();
     user.avatar = avatar;
 
     const success = await getConnection().transaction(
@@ -79,11 +110,12 @@ class PhotoResolver {
         return true;
       }
     );
-
     if (success)
       return {
         url: `http://localhost:4000/images/${uniqueFileName}`,
       };
+
+    //failed to write to the local server
     return {
       errors: [
         {

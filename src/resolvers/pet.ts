@@ -22,7 +22,7 @@ class PetResolver {
   @FieldResolver()
   user(
     @Root() pet: Pet,
-    @Ctx() { userLoader }: MyContext
+    @Ctx() { dataLoaders: { userLoader } }: MyContext
   ): Promise<User | undefined> {
     return userLoader.load(pet.userId);
   }
@@ -78,7 +78,6 @@ class PetResolver {
   ): Promise<RegularResponse> {
     const userId = req.session.userId;
     const pet = await Pet.findOne(petId);
-    console.log(`🚀 ~ file: pet.ts ~ line 64 ~ PetResolver ~ pet`, pet);
     if (!pet)
       return {
         errors: [

@@ -34,4 +34,7 @@ export class Address extends BaseEntity {
   @Field(() => String, { nullable: true })
   @Column('decimal', { precision: 10, scale: 6, nullable: true })
   lng: number;
+
+  @Field({ nullable: true })
+  distance: number;
 }

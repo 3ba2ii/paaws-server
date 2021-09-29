@@ -1,3 +1,4 @@
+import { User } from './../entity/UserEntities/User';
 import session from 'express-session';
 
 declare module 'express-session' {

@@ -17,7 +17,7 @@ import { User } from '../UserEntities/User';
 @ObjectType()
 @Entity()
 export class AdoptionPost extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -41,8 +41,11 @@ export class AdoptionPost extends BaseEntity {
   pet: Pet;
 
   //Post Info
+  @Column({ nullable: true })
+  addressId: number;
 
-  @OneToOne(() => Address, { nullable: true })
+  @Field(() => Address, { nullable: true })
+  @OneToOne(() => Address, { nullable: true, cascade: true })
   @JoinColumn()
   address: Address;
 

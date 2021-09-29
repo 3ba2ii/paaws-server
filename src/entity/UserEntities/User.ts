@@ -106,7 +106,7 @@ export class User extends BaseEntity {
   pets: Pet[];
 
   @Field(() => [UserTag], { nullable: true })
-  @OneToMany(() => UserTag, (tag) => tag.user, { eager: true })
+  @OneToMany(() => UserTag, (tag) => tag.user)
   tags: UserTag[];
 
   @Field(() => [UserFavorites], { nullable: true })

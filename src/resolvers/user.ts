@@ -240,6 +240,7 @@ class UserResolver {
       password: hashedPassword,
       phone,
       confirmed: true,
+      last_login: new Date(),
     });
 
     try {

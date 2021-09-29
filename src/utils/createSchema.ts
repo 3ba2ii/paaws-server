@@ -4,6 +4,7 @@ import { buildSchema } from 'type-graphql';
 import PetResolver from '../resolvers/pet';
 import UserResolver from '../resolvers/user';
 import AdoptionPostResolver from '../resolvers/post';
+import AddressResolver from '../resolvers/address';
 
 let schema: GraphQLSchema;
 
@@ -15,6 +16,7 @@ export const createSchema = async () => {
         PetResolver,
         PhotoResolver,
         AdoptionPostResolver,
+        AddressResolver,
       ],
       validate: true,
     });

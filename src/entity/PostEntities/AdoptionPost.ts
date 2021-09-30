@@ -36,7 +36,7 @@ export class AdoptionPost extends BaseEntity {
   petId: number;
 
   @Field(() => Pet)
-  @OneToOne(() => Pet, { cascade: true })
+  @OneToOne(() => Pet, { cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
   pet: Pet;
 
@@ -45,7 +45,11 @@ export class AdoptionPost extends BaseEntity {
   addressId: number;
 
   @Field(() => Address, { nullable: true })
-  @OneToOne(() => Address, { nullable: true, cascade: true })
+  @OneToOne(() => Address, {
+    nullable: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   address: Address;
 

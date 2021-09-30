@@ -13,6 +13,7 @@ export class PetBreed extends BaseEntity {
   @Field(() => Pet)
   @ManyToOne(() => Pet, (user) => user.breeds, {
     onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
   })
   pet!: Pet;
 

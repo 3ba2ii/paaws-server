@@ -1,4 +1,3 @@
-import { Address } from './../entity/Address';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -17,7 +16,9 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
+import { PetGender, PetSize, PetType } from '../types/types';
 import { createImageMetaData } from '../utils/createImage';
+import { Address } from './../entity/Address';
 import { PetImages } from './../entity/MediaEntities/PetImages';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { Pet } from './../entity/PetEntities/Pet';
@@ -26,8 +27,8 @@ import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
 import { User } from './../entity/UserEntities/User';
 import { isAuth } from './../middleware/isAuth';
 import { CreatePetOptions, FieldError } from './../types/responseTypes';
+import { Breeds } from './../types/types';
 import { Upload } from './../types/Upload';
-import { PetType, PetGender, PetSize, Breeds } from '../types/types';
 
 @InputType()
 class AdoptionPostInput {
@@ -88,6 +89,18 @@ class AdoptionPostUpdateInput {
   breeds?: Breeds[];
 }
 
+@InputType()
+class AdoptionPetsFilters {
+  @Field(() => [PetType], { nullable: true, defaultValue: [] })
+  petTypes?: [PetType];
+
+  @Field(() => [PetGender], { nullable: true, defaultValue: [] })
+  petGenders?: [PetGender];
+
+  @Field(() => [PetSize], { nullable: true, defaultValue: [] })
+  petSizes?: [PetSize];
+}
+
 @Resolver(AdoptionPost)
 class AdoptionPostResolver {
   @FieldResolver()
@@ -119,7 +132,9 @@ class AdoptionPostResolver {
   async adoptionPosts(
     @Arg('limit', () => Int, { nullable: true, defaultValue: 20 })
     limit: number,
-    @Arg('cursor', { nullable: true }) cursor: string
+    @Arg('cursor', { nullable: true }) cursor: string,
+    @Arg('filters', () => AdoptionPetsFilters, { nullable: true })
+    filters: AdoptionPetsFilters
   ): Promise<PaginatedAdoptionPosts> {
     const realLimit = Math.min(20, limit);
     const realLimitPlusOne = realLimit + 1;
@@ -127,15 +142,48 @@ class AdoptionPostResolver {
     const replacements: any[] = [realLimitPlusOne];
     if (cursor) replacements.push(new Date(cursor));
 
-    const posts = await getConnection().query(
-      `
-        select * from adoption_post
-        ${cursor ? `where "createdAt" < $2` : ''}
-        order by "createdAt" DESC
-        limit $1;
-      `,
-      replacements
-    );
+    //TODO: Add filters that will be used to filter the posts
+    /**
+     * 1. Filter by pet type [can be multiple] - DONE
+     * 2. Filter by pet breed [can be multiple]
+     * 3. Filter by age [can be multiple]
+     * 4. Filter by gender
+     * 5. Filter by size
+     * 6. Filter by color
+     */
+
+    const { petGenders, petSizes, petTypes } = filters || {
+      petGenders: [],
+      petSizes: [],
+      petTypes: [],
+    };
+
+    const posts = await getConnection()
+      .getRepository(AdoptionPost)
+      .createQueryBuilder('ap')
+      .leftJoinAndSelect(`ap.pet`, `pet`)
+      .where((qb) => {
+        const subQuery = qb.subQuery().select('pet.id').from(Pet, 'pet');
+
+        if (petTypes?.length) {
+          subQuery.where('pet.type IN (:...petTypes)', {
+            petTypes,
+          });
+        }
+        if (petGenders?.length) {
+          subQuery.andWhere('pet.gender IN (:...petGenders)', {
+            petGenders,
+          });
+        }
+        if (petSizes?.length) {
+          subQuery.andWhere('pet.size IN (:...petSizes)', {
+            petSizes,
+          });
+        }
+        return `ap.petId IN (${subQuery.getQuery()})`;
+      })
+      .take(realLimitPlusOne)
+      .getMany();
 
     return {
       hasMore: posts.length === realLimitPlusOne,

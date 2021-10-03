@@ -3,12 +3,9 @@ import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
-  Field,
   FieldResolver,
-  InputType,
   Int,
   Mutation,
-  ObjectType,
   Query,
   Resolver,
   Root,
@@ -16,7 +13,6 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
-import { PetGender, PetSize, PetType } from '../types/types';
 import { createImageMetaData } from '../utils/createImage';
 import { Address } from './../entity/Address';
 import { PetImages } from './../entity/MediaEntities/PetImages';
@@ -26,80 +22,14 @@ import { PetBreed } from './../entity/PetEntities/PetBreed';
 import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
 import { User } from './../entity/UserEntities/User';
 import { isAuth } from './../middleware/isAuth';
-import { CreatePetOptions, FieldError } from './../types/responseTypes';
-import { Breeds } from './../types/types';
+import {
+  AdoptionPetsFilters,
+  AdoptionPostInput,
+  AdoptionPostResponse,
+  AdoptionPostUpdateInput,
+  PaginatedAdoptionPosts,
+} from './../types/responseTypes';
 import { Upload } from './../types/Upload';
-
-@InputType()
-class AdoptionPostInput {
-  @Field(() => CreatePetOptions)
-  petInfo: CreatePetOptions;
-}
-
-@ObjectType()
-class AdoptionPostResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
-
-  @Field(() => AdoptionPost, { nullable: true })
-  adoptionPost?: AdoptionPost;
-}
-
-@ObjectType()
-class PaginatedAdoptionPosts {
-  @Field(() => [AdoptionPost])
-  posts: AdoptionPost[];
-
-  @Field()
-  hasMore: boolean;
-
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
-}
-@InputType()
-class AdoptionPostUpdateInput {
-  @Field({ nullable: true })
-  name?: string;
-
-  @Field(() => PetType, { nullable: true })
-  type?: PetType;
-
-  @Field(() => PetGender, { nullable: true })
-  gender?: PetGender;
-
-  @Field(() => PetSize, { nullable: true })
-  size?: PetSize;
-
-  @Field(() => Date, { nullable: true })
-  birthDate?: Date;
-
-  @Field(() => Boolean, { nullable: true })
-  vaccinated?: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  spayed?: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  neutered?: Boolean;
-
-  @Field({ nullable: true })
-  about?: string;
-
-  @Field(() => [Breeds], { nullable: true })
-  breeds?: Breeds[];
-}
-
-@InputType()
-class AdoptionPetsFilters {
-  @Field(() => [PetType], { nullable: true, defaultValue: [] })
-  petTypes?: [PetType];
-
-  @Field(() => [PetGender], { nullable: true, defaultValue: [] })
-  petGenders?: [PetGender];
-
-  @Field(() => [PetSize], { nullable: true, defaultValue: [] })
-  petSizes?: [PetSize];
-}
 
 @Resolver(AdoptionPost)
 class AdoptionPostResolver {
@@ -216,7 +146,7 @@ class AdoptionPostResolver {
         ],
       };
 
-    const { petInfo } = input;
+    const { petInfo, address: inputAddress } = input;
     const { breeds } = petInfo;
 
     //0. Create an array of read streams
@@ -261,7 +191,13 @@ class AdoptionPostResolver {
 
     //5. create address and associate to post
     //preferred location to the user
-    const address = Address.create({
+    if (inputAddress) {
+      const address = Address.create({
+        ...inputAddress,
+      });
+      adoptionPost.address = address;
+    }
+    /* const address = Address.create({
       city: 'Tanta',
       country: 'Egypt',
       state: 'Algharbiya',
@@ -271,8 +207,8 @@ class AdoptionPostResolver {
       street: 'El Bahr',
     });
     //30.806401, 30.989634 // 30.808779, 30.990599
-
-    adoptionPost.address = address;
+ */
+    /* adoptionPost.address = address; */
 
     const success = await getConnection().transaction(
       async (_transactionalEntityManager) => {

@@ -4,6 +4,7 @@ import {
   createUserLoader,
   createPetLoader,
   createAddressLoader,
+  createImagesLoader,
 } from './utils/dataLoaders';
 
 export type MyContext = {
@@ -14,5 +15,6 @@ export type MyContext = {
     petLoader: ReturnType<typeof createPetLoader>;
     userLoader: ReturnType<typeof createUserLoader>;
     addressLoader: ReturnType<typeof createAddressLoader>;
+    petImagesLoader: ReturnType<typeof createImagesLoader>;
   };
 };

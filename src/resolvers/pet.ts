@@ -1,3 +1,4 @@
+import { PetImages } from './../entity/MediaEntities/PetImages';
 import {
   Arg,
   Ctx,
@@ -19,6 +20,14 @@ import { RegularResponse } from './../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {
+  @FieldResolver()
+  async images(
+    @Root() pet: Pet,
+    @Ctx() { dataLoaders: { petImagesLoader } }: MyContext
+  ): Promise<PetImages[]> {
+    return petImagesLoader.load(pet.id);
+  }
+
   @FieldResolver()
   user(
     @Root() pet: Pet,

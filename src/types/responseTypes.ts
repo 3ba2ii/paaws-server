@@ -1,4 +1,5 @@
 import { IsEmail, Length, MaxLength } from 'class-validator';
+import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { Field, InputType, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
@@ -152,4 +153,104 @@ export class ChangePasswordInput {
 
   @Field()
   confirmPassword!: string;
+}
+
+//ADOPTION POST
+
+@InputType()
+export class AddressInput {
+  @Field({ nullable: true })
+  street: string;
+
+  @Field({ nullable: true })
+  city: string;
+
+  @Field({ nullable: true })
+  state: string;
+
+  @Field({ nullable: true })
+  zip: string;
+
+  @Field({ nullable: true })
+  country: string;
+
+  @Field()
+  lat: number;
+
+  @Field()
+  lng: number;
+}
+
+@InputType()
+export class AdoptionPostInput {
+  @Field(() => CreatePetOptions)
+  petInfo: CreatePetOptions;
+
+  @Field(() => AddressInput, { nullable: true })
+  address?: AddressInput;
+}
+
+@ObjectType()
+export class AdoptionPostResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+
+  @Field(() => AdoptionPost, { nullable: true })
+  adoptionPost?: AdoptionPost;
+}
+
+@ObjectType()
+export class PaginatedAdoptionPosts {
+  @Field(() => [AdoptionPost])
+  posts: AdoptionPost[];
+
+  @Field()
+  hasMore: boolean;
+
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+}
+@InputType()
+export class AdoptionPostUpdateInput {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field(() => PetType, { nullable: true })
+  type?: PetType;
+
+  @Field(() => PetGender, { nullable: true })
+  gender?: PetGender;
+
+  @Field(() => PetSize, { nullable: true })
+  size?: PetSize;
+
+  @Field(() => Date, { nullable: true })
+  birthDate?: Date;
+
+  @Field(() => Boolean, { nullable: true })
+  vaccinated?: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  spayed?: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  neutered?: Boolean;
+
+  @Field({ nullable: true })
+  about?: string;
+
+  @Field(() => [Breeds], { nullable: true })
+  breeds?: Breeds[];
+}
+
+@InputType()
+export class AdoptionPetsFilters {
+  @Field(() => [PetType], { nullable: true, defaultValue: [] })
+  petTypes?: [PetType];
+
+  @Field(() => [PetGender], { nullable: true, defaultValue: [] })
+  petGenders?: [PetGender];
+
+  @Field(() => [PetSize], { nullable: true, defaultValue: [] })
+  petSizes?: [PetSize];
 }

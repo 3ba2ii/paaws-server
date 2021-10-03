@@ -26,7 +26,7 @@ export class PetImages extends BaseEntity {
   photoId: number;
 
   @Field(() => Photo)
-  @OneToOne(() => Photo, { cascade: true })
+  @OneToOne(() => Photo, { cascade: true, eager: true })
   @JoinColumn()
   photo!: Photo;
 }

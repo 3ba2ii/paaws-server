@@ -1,3 +1,4 @@
+import { Photo } from './../entity/MediaEntities/Photo';
 import { PetImages } from './../entity/MediaEntities/PetImages';
 import {
   Arg,
@@ -20,11 +21,17 @@ import { RegularResponse } from './../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {
-  @FieldResolver()
-  async images(
+  @FieldResolver({ nullable: true })
+  async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
+    if (!thumbnailId) return undefined;
+    return Photo.findOne(thumbnailId);
+  }
+
+  @FieldResolver({ nullable: true })
+  images(
     @Root() pet: Pet,
     @Ctx() { dataLoaders: { petImagesLoader } }: MyContext
-  ): Promise<PetImages[]> {
+  ): Promise<PetImages[] | undefined> {
     return petImagesLoader.load(pet.id);
   }
 
@@ -118,41 +125,3 @@ class PetResolver {
 }
 
 export default PetResolver;
-
-/* 
-
-
-
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async likePet(
-    @Arg('petId', () => Int) petId: number,
-    @Ctx() { req }: MyContext
-  ): Promise<Boolean> {
-
-    
-    
-    const pet = await Pet.findOne({ id: petId });
-    if (!pet) return false;
-
-    const user = await User.findOne({ id: req.session.userId });
-
-    const userFavorite = UserFavorites.create({ user, pet });
-
-    /*     pet.numberOfLikes += 1;
-     */
-/* try {
-      const conn = getConnection();
-      await conn.transaction(async (_transactionalEntityManager) => {
-        await conn.manager.insert(UserFavorites, userFavorite);
-        await pet.save();
-      });
-
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
-    }
-
-  }
-*/

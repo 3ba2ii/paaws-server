@@ -88,11 +88,18 @@ class AdoptionPostResolver {
       petTypes: [],
     };
 
-    const posts = await getConnection()
+    let posts = getConnection()
       .getRepository(AdoptionPost)
       .createQueryBuilder('ap')
-      .leftJoinAndSelect(`ap.pet`, `pet`)
-      .where((qb) => {
+      .leftJoinAndSelect(`ap.pet`, `pet`);
+
+    if (cursor)
+      posts.where('ap."createdAt" < :cursor', {
+        cursor: new Date(cursor),
+      });
+
+    posts
+      .andWhere((qb) => {
         const subQuery = qb.subQuery().select('pet.id').from(Pet, 'pet');
 
         if (petTypes?.length) {
@@ -112,12 +119,14 @@ class AdoptionPostResolver {
         }
         return `ap.petId IN (${subQuery.getQuery()})`;
       })
-      .take(realLimitPlusOne)
-      .getMany();
+      .orderBy('ap."createdAt"', 'DESC')
+      .limit(realLimitPlusOne);
+
+    const adoptionPosts = await posts.getMany();
 
     return {
-      hasMore: posts.length === realLimitPlusOne,
-      posts: posts.slice(0, realLimit),
+      hasMore: adoptionPosts.length === realLimitPlusOne,
+      posts: adoptionPosts.slice(0, realLimit),
     };
   }
 
@@ -147,7 +156,7 @@ class AdoptionPostResolver {
       };
 
     const { petInfo, address: inputAddress } = input;
-    const { breeds } = petInfo;
+    const { breeds, thumbnailIdx } = petInfo;
 
     //0. Create an array of read streams
     const streams = images.map(async (image) => {
@@ -169,13 +178,18 @@ class AdoptionPostResolver {
 
     //2. create pet images
 
-    const petImages = resolvedStreams.map((image) => {
+    const petImages = resolvedStreams.map((image, idx) => {
+      let isThumbnail = false;
+      if (thumbnailIdx && thumbnailIdx === idx) {
+        isThumbnail = true;
+      }
       const { uniqueFileName } = createImageMetaData(image.filename);
       return PetImages.create({
         photo: Photo.create({
           filename: image.filename,
           path: uniqueFileName,
           creator: user,
+          isThumbnail,
         }),
       });
     });
@@ -183,13 +197,21 @@ class AdoptionPostResolver {
     //3. associate pet images to pet
     pet.images = petImages; //
 
-    //4. create the adoption post
+    console.log(
+      `🚀 ~ file: post.ts ~ line 202 ~ AdoptionPostResolver ~ thumbnailIdx`,
+      thumbnailIdx
+    );
+    //4. Associate the thumbnail if exists
+    if (typeof thumbnailIdx === 'number')
+      pet.thumbnail = petImages[thumbnailIdx].photo;
+
+    //5. create the adoption post
     const adoptionPost = AdoptionPost.create({
       pet,
       user,
     });
 
-    //5. create address and associate to post
+    //6. create address and associate to post
     //preferred location to the user
     if (inputAddress) {
       const address = Address.create({
@@ -197,18 +219,6 @@ class AdoptionPostResolver {
       });
       adoptionPost.address = address;
     }
-    /* const address = Address.create({
-      city: 'Tanta',
-      country: 'Egypt',
-      state: 'Algharbiya',
-      lat: 30.808779,
-      lng: 30.990599,
-      zip: '31111',
-      street: 'El Bahr',
-    });
-    //30.806401, 30.989634 // 30.808779, 30.990599
- */
-    /* adoptionPost.address = address; */
 
     const success = await getConnection().transaction(
       async (_transactionalEntityManager) => {
@@ -237,7 +247,7 @@ class AdoptionPostResolver {
         ],
       };
 
-    // create notification to nearest users 20 that there is a new pet to adopt in their area
+    //TODO:  create notification to nearest 20 users that there is a new pet to adopt in their area
     return { adoptionPost };
   }
 
@@ -276,8 +286,7 @@ class AdoptionPostResolver {
       size,
       breeds,
       vaccinated,
-      spayed,
-      neutered,
+      spayedOrNeutered,
       about,
       type,
     } = newPetInfo;
@@ -313,8 +322,8 @@ class AdoptionPostResolver {
     }
 
     if (typeof vaccinated === 'boolean') pet.vaccinated = vaccinated;
-    if (typeof spayed === 'boolean') pet.spayed = spayed;
-    if (typeof neutered === 'boolean') pet.neutered = neutered;
+    if (typeof spayedOrNeutered === 'boolean')
+      pet.spayedOrNeutered = spayedOrNeutered;
     if (about) pet.about = about;
 
     //5. Save pet

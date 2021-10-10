@@ -26,6 +26,11 @@ export enum Breeds {
   BULLDOG = 'bulldog',
   HUSKEY = 'huskey',
 }
+export enum PetColors {
+  RED = 'red',
+  BLUE = 'blue',
+  GREEN = 'green',
+}
 
 export enum UserTagsType {
   CAT_PERSON = 'Cat Person',
@@ -36,6 +41,15 @@ export enum UserTagsType {
   ANIMAL_OWNER = 'Animal Owner',
   ANIMAL_OWNER_ADOPTER = 'Animal Owner & Adopter',
 }
+export enum PrivacyType {
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+  ONYL_ME = 'onyl_me',
+}
+registerEnumType(PrivacyType, {
+  name: 'PrivacyType',
+  description: 'Post Privacy',
+});
 
 registerEnumType(UserTagsType, {
   name: 'UserTagsType',
@@ -64,4 +78,9 @@ registerEnumType(PetGender, {
 registerEnumType(PetSize, {
   name: 'PetSize',
   description: 'Basic Pet Size',
+});
+
+registerEnumType(PetColors, {
+  name: 'PetColors',
+  description: 'Basic Pet Colors',
 });

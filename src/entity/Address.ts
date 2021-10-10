@@ -8,23 +8,23 @@ export class Address extends BaseEntity {
   id: number;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   street: string;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   city: string;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   state: string;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   zip: string;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   country: string;
 
   @Field(() => String, { nullable: true })

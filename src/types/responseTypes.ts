@@ -120,18 +120,16 @@ export class CreatePetOptions {
   @Field(() => Boolean, {
     defaultValue: false,
   })
-  spayed: Boolean;
-
-  @Field(() => Boolean, {
-    defaultValue: false,
-  })
-  neutered: Boolean;
+  spayedOrNeutered: Boolean;
 
   @Field()
   about!: string;
 
   @Field(() => [Breeds])
   breeds!: Breeds[];
+
+  @Field(() => Int)
+  thumbnailIdx!: number;
 }
 
 @ObjectType()
@@ -231,10 +229,7 @@ export class AdoptionPostUpdateInput {
   vaccinated?: Boolean;
 
   @Field(() => Boolean, { nullable: true })
-  spayed?: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  neutered?: Boolean;
+  spayedOrNeutered?: Boolean;
 
   @Field({ nullable: true })
   about?: string;

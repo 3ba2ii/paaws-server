@@ -4,15 +4,19 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { PetGender, PetSize, PetType } from '../../types/types';
+import { Photo } from '../MediaEntities/Photo';
 import { User } from '../UserEntities/User';
 import { PetImages } from './../MediaEntities/PetImages';
 import { PetBreed } from './PetBreed';
+import { PetColor } from './PetColors';
 
 @ObjectType()
 @Entity()
@@ -47,11 +51,7 @@ export class Pet extends BaseEntity {
 
   @Field(() => Boolean, { nullable: true })
   @Column({ nullable: true })
-  spayed: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  neutered: Boolean;
+  spayedOrNeutered: Boolean;
 
   @Field()
   @Column()
@@ -66,7 +66,6 @@ export class Pet extends BaseEntity {
   updatedAt: Date;
 
   //Relations
-
   @Field(() => Int)
   @Column()
   userId!: number;
@@ -82,9 +81,24 @@ export class Pet extends BaseEntity {
   @OneToMany(() => PetBreed, (pb) => pb.pet, { cascade: true, eager: true })
   breeds: PetBreed[];
 
+  @Field(() => [PetColor])
+  @OneToMany(() => PetColor, (pb) => pb.pet, { cascade: true, eager: true })
+  colors: PetColor[];
+
   //TODO: Should add a pet colors and pet images
 
-  @Field(() => [PetImages])
-  @OneToMany(() => PetImages, (petImages) => petImages.pet, { cascade: true })
-  images!: PetImages[];
+  @Field(() => [PetImages], { nullable: true })
+  @OneToMany(() => PetImages, (petImages) => petImages.pet, {
+    cascade: true,
+    eager: true,
+  })
+  images: PetImages[];
+
+  @Column({ nullable: true })
+  thumbnailId: number;
+
+  @Field(() => Photo, { nullable: true })
+  @OneToOne(() => Photo, { cascade: true })
+  @JoinColumn()
+  thumbnail: Photo;
 }

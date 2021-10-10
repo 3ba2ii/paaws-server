@@ -1,3 +1,4 @@
+import { MissingPost } from './../PostEntities/MissingPost';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -16,6 +17,7 @@ import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
 import { UserTag } from './UserTags';
+import { Updoot } from '../InteractionsEntities/Updoot';
 
 enum ProviderTypes {
   LOCAL = 'local',
@@ -118,6 +120,14 @@ export class User extends BaseEntity {
   userPets: UserPet[];
 
   @Field(() => [AdoptionPost], { nullable: true })
-  @OneToMany(() => UserPet, (userPet) => userPet.user)
-  adoptionPosts: UserPet[];
+  @OneToMany(() => AdoptionPost, (post) => post.user)
+  adoptionPosts: AdoptionPost[];
+
+  @Field(() => [MissingPost], { nullable: true })
+  @OneToMany(() => MissingPost, (post) => post.user)
+  missingPosts: MissingPost[];
+
+  @Field(() => [Updoot])
+  @OneToMany(() => Updoot, (updoot) => updoot.user)
+  updoots: Updoot[];
 }

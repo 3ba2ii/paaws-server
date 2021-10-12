@@ -46,6 +46,17 @@ export enum PrivacyType {
   PRIVATE = 'private',
   ONYL_ME = 'onyl_me',
 }
+
+export enum MissingPostTypes {
+  Missing = 'missing',
+  Found = 'found',
+}
+
+registerEnumType(MissingPostTypes, {
+  name: 'Missing Post Types',
+  description: 'Either missing or found',
+});
+
 registerEnumType(PrivacyType, {
   name: 'PrivacyType',
   description: 'Post Privacy',

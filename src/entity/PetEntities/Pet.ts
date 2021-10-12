@@ -1,3 +1,4 @@
+import { PetType, PetGender, PetSize } from '../../types/types';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -11,7 +12,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PetGender, PetSize, PetType } from '../../types/types';
 import { Photo } from '../MediaEntities/Photo';
 import { User } from '../UserEntities/User';
 import { PetImages } from './../MediaEntities/PetImages';

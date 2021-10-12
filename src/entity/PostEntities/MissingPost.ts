@@ -1,3 +1,4 @@
+import { Comment } from './../InteractionsEntities/Comment';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -11,11 +12,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PrivacyType } from '../../types/types';
+import { MissingPostTypes, PrivacyType } from '../../types/types';
 import { Address } from '../Address';
 import { Pet } from '../PetEntities/Pet';
 import { User } from '../UserEntities/User';
-import { Updoot } from '../InteractionsEntities/Updoot';
+import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 
 @ObjectType()
 @Entity()
@@ -73,12 +74,27 @@ export class MissingPost extends BaseEntity {
   })
   privacy: PrivacyType;
 
-  //updoots and comments
+  @Field(() => PrivacyType)
+  @Column({
+    nullable: true,
+    type: 'enum',
+    enum: MissingPostTypes,
+    default: MissingPostTypes.Missing,
+  })
+  type: MissingPostTypes;
+
+  //updoots Section
   @Field(() => Int)
   @Column({ default: 0 })
   points: number;
 
-  @Field(() => [Updoot])
-  @OneToMany(() => Updoot, (updoot) => updoot.post, { cascade: true })
-  updoots: Updoot[];
+  @Field(() => [PostUpdoot])
+  @OneToMany(() => PostUpdoot, (updoot) => updoot.post, { cascade: true })
+  updoots: PostUpdoot[];
+
+  //Comments Section
+
+  @Field(() => [Comment])
+  @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
+  comments: Comment[];
 }

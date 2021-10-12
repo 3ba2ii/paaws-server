@@ -1,7 +1,6 @@
-import { Photo } from '../entity/MediaEntities/Photo';
 import argon2 from 'argon2';
 import { Max, Min } from 'class-validator';
-import { Pet } from '../entity/PetEntities/Pet';
+import { Photo } from '../entity/MediaEntities/Photo';
 import {
   Arg,
   Ctx,
@@ -17,6 +16,9 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
+import { Pet } from '../entity/PetEntities/Pet';
+import { User } from '../entity/UserEntities/User';
+import { UserTag } from '../entity/UserEntities/UserTags';
 import {
   ChangePasswordInput,
   ChangePasswordResponse,
@@ -35,8 +37,6 @@ import {
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
-import { User } from '../entity/UserEntities/User';
-import { UserTag } from '../entity/UserEntities/UserTags';
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';

@@ -1,3 +1,4 @@
+import { Comment } from './../InteractionsEntities/Comment';
 import { MissingPost } from './../PostEntities/MissingPost';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
@@ -12,12 +13,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Pet } from '../PetEntities/Pet';
-import { Photo } from '../MediaEntities/Photo';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
+
+import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { UserTag } from './UserTags';
-import { Updoot } from '../InteractionsEntities/Updoot';
+import { Photo } from '../MediaEntities/Photo';
 
 enum ProviderTypes {
   LOCAL = 'local',
@@ -127,7 +129,11 @@ export class User extends BaseEntity {
   @OneToMany(() => MissingPost, (post) => post.user)
   missingPosts: MissingPost[];
 
-  @Field(() => [Updoot])
-  @OneToMany(() => Updoot, (updoot) => updoot.user)
-  updoots: Updoot[];
+  @Field(() => [PostUpdoot])
+  @OneToMany(() => PostUpdoot, (updoot) => updoot.user)
+  updoots: PostUpdoot[];
+
+  @Field(() => [Comment])
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 }

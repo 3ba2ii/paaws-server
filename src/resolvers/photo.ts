@@ -84,6 +84,22 @@ class PhotoResolver {
     };
   }
 
+  async saveImageToDisk(
+    @Arg('image', () => GraphQLUpload)
+    uploadProps: Upload,
+    @Arg('metadata') metadata: ImageMetaData
+  ): Promise<Boolean> {
+    const { createReadStream } = uploadProps;
+    if (!createReadStream) {
+      return false;
+    }
+    const stream = createReadStream();
+    const { pathName } = metadata;
+
+    await stream.pipe(createWriteStream(pathName));
+    return true;
+  }
+
   @Mutation(() => UploadImageResponse)
   @UseMiddleware(isAuth)
   async uploadAvatar(
@@ -91,20 +107,22 @@ class PhotoResolver {
     uploadProps: Upload,
     @Ctx() ctx: MyContext
   ): Promise<UploadImageResponse> {
-    const { createReadStream } = uploadProps;
+    //
     const { metadata, errors } = await this.createPhoto(uploadProps, ctx);
     if (errors?.length || !metadata) {
       return { errors };
     }
-    const { photo: avatar, user, pathName, uniqueFileName } = metadata;
+    const { photo: avatar, user, uniqueFileName } = metadata;
 
-    const stream = createReadStream();
     user.avatar = avatar;
 
     const success = await getConnection().transaction(
       async (_transactionalEntityManager) => {
         //writing to the local server
-        await stream.pipe(createWriteStream(pathName));
+        const saved = await this.saveImageToDisk(uploadProps, metadata);
+        if (!saved) {
+          return false;
+        }
 
         await user.save();
         return true;

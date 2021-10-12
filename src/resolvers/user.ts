@@ -1,3 +1,4 @@
+import { ChangePasswordResponse } from '../types/responseTypes';
 import argon2 from 'argon2';
 import { Max, Min } from 'class-validator';
 import { Photo } from '../entity/MediaEntities/Photo';
@@ -20,12 +21,8 @@ import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { UserTag } from '../entity/UserEntities/UserTags';
 import {
-  ChangePasswordInput,
-  ChangePasswordResponse,
   FieldError,
-  LoginInput,
   PaginatedUsers,
-  RegisterOptions,
   RegularResponse,
   UserResponse,
 } from '../types/responseTypes';
@@ -40,6 +37,11 @@ import {
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
+import {
+  RegisterOptions,
+  LoginInput,
+  ChangePasswordInput,
+} from '../types/inputTypes';
 
 require('dotenv-safe').config();
 

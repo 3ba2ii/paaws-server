@@ -1,5 +1,6 @@
-import { Photo } from './../entity/MediaEntities/Photo';
-import { PetImages } from './../entity/MediaEntities/PetImages';
+import { CreatePetOptions } from './../types/inputTypes';
+import { Photo } from '../entity/MediaEntities/Photo';
+import { PetImages } from '../entity/MediaEntities/PetImages';
 import {
   Arg,
   Ctx,
@@ -15,9 +16,9 @@ import { Pet } from '../entity/PetEntities/Pet';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { User } from '../entity/UserEntities/User';
 import { MyContext } from '../types';
-import { CreatePetOptions, PetResponse } from '../types/responseTypes';
-import { isAuth } from './../middleware/isAuth';
-import { RegularResponse } from './../types/responseTypes';
+import { PetResponse } from '../types/responseTypes';
+import { isAuth } from '../middleware/isAuth';
+import { RegularResponse } from '../types/responseTypes';
 
 @Resolver(Pet)
 class PetResolver {

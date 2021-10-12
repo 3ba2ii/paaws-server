@@ -23,22 +23,5 @@ export class UserFavorites extends BaseEntity {
   @ManyToOne(() => Pet, (pet) => pet.likes, {
     onDelete: 'CASCADE',
   })
-  pet!: Pet; */
+  pet!: Pet;  */
 }
-
-/* 
-export class PetBreed extends BaseEntity {
-    @Field()
-    @PrimaryColumn()
-    petId: number;
-  
-    @Field(() => Pet)
-    @ManyToOne(() => Pet, (user) => user.breeds, {
-      onDelete: 'CASCADE',
-    })
-    pet!: Pet;
-  
-    @Field(() => Breeds)
-    @PrimaryColumn({ type: 'enum', enum: Breeds, enumName: 'Breeds' })
-    breed!: Breeds;
-  } */

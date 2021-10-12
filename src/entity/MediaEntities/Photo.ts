@@ -1,25 +1,13 @@
-import { Field, Int, ObjectType } from 'type-graphql';
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Field, ObjectType } from 'type-graphql';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { User } from '../UserEntities/User';
 
 @ObjectType()
 @Entity()
-export class Photo extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Photo extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Field(() => String)
-  @Column({ default: `${new Date()}` })
+  @Column()
   filename: string;
 
   //Add bytea and path columns
@@ -43,12 +31,4 @@ export class Photo extends BaseEntity {
   @ManyToOne(() => User, (user) => user.photos)
   @JoinColumn()
   creator!: User;
-
-  @Field()
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

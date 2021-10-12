@@ -1,26 +1,11 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { Address } from '../Address';
-import { Pet } from '../PetEntities/Pet';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { User } from '../UserEntities/User';
+import { Post } from './Post';
 
 @ObjectType()
 @Entity()
-export class AdoptionPost extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class AdoptionPost extends Post {
   @Field(() => Int)
   @Column()
   userId: number;
@@ -30,34 +15,4 @@ export class AdoptionPost extends BaseEntity {
     onDelete: 'CASCADE',
   })
   user: User;
-
-  @Field(() => Int)
-  @Column()
-  petId: number;
-
-  @Field(() => Pet)
-  @OneToOne(() => Pet, { cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn()
-  pet: Pet;
-
-  //Post Info
-  @Column({ nullable: true })
-  addressId: number;
-
-  @Field(() => Address, { nullable: true })
-  @OneToOne(() => Address, {
-    nullable: true,
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn()
-  address: Address;
-
-  @Field()
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

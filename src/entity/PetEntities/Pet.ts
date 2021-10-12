@@ -1,17 +1,15 @@
-import { PetType, PetGender, PetSize } from '../../types/types';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
+import { PetGender, PetSize, PetType } from '../../types/types';
+import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { Photo } from '../MediaEntities/Photo';
 import { User } from '../UserEntities/User';
 import { PetImages } from './../MediaEntities/PetImages';
@@ -20,11 +18,7 @@ import { PetColor } from './PetColors';
 
 @ObjectType()
 @Entity()
-export class Pet extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  readonly id!: number;
-
+export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Field(() => String)
   @Column()
   name!: string;
@@ -57,14 +51,6 @@ export class Pet extends BaseEntity {
   @Column()
   about!: string;
 
-  @Field()
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
-
   //Relations
   @Field(() => Int)
   @Column()
@@ -84,8 +70,6 @@ export class Pet extends BaseEntity {
   @Field(() => [PetColor])
   @OneToMany(() => PetColor, (pb) => pb.pet, { cascade: true, eager: true })
   colors: PetColor[];
-
-  //TODO: Should add a pet colors and pet images
 
   @Field(() => [PetImages], { nullable: true })
   @OneToMany(() => PetImages, (petImages) => petImages.pet, {

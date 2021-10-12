@@ -1,25 +1,13 @@
+import { Field, Int, ObjectType } from 'type-graphql';
+import { BaseEntity, Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { MissingPost } from './../PostEntities/MissingPost';
-import { CommentUpdoot } from './CommentUpdoots';
 import { User } from './../UserEntities/User';
-import { Field, ObjectType, Int } from 'type-graphql';
-import {
-  Entity,
-  BaseEntity,
-  Column,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
+import { CommentUpdoot } from './CommentUpdoots';
 
 @ObjectType()
 @Entity()
-export class Comment extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
   parentId: number; //if it is null then it is a root comment else it is a reply
@@ -51,12 +39,4 @@ export class Comment extends BaseEntity {
   @Field(() => [CommentUpdoot])
   @OneToMany(() => CommentUpdoot, (updoot) => updoot.comment, { cascade: true })
   updoots: CommentUpdoot[];
-
-  @Field()
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

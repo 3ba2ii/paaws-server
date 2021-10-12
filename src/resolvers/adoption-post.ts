@@ -1,3 +1,4 @@
+import { AdoptionPostUpdateInput } from '../types/inputTypes';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -14,34 +15,32 @@ import {
 import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
 import { createImageMetaData } from '../utils/createImage';
-import { Address } from './../entity/Address';
-import { PetImages } from './../entity/MediaEntities/PetImages';
-import { Photo } from './../entity/MediaEntities/Photo';
-import { Pet } from './../entity/PetEntities/Pet';
-import { PetBreed } from './../entity/PetEntities/PetBreed';
-import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
-import { User } from './../entity/UserEntities/User';
-import { isAuth } from './../middleware/isAuth';
+import { Address } from '../entity/Address';
+import { PetImages } from '../entity/MediaEntities/PetImages';
+import { Photo } from '../entity/MediaEntities/Photo';
+import { Pet } from '../entity/PetEntities/Pet';
+import { PetBreed } from '../entity/PetEntities/PetBreed';
+import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
+import { User } from '../entity/UserEntities/User';
+import { isAuth } from '../middleware/isAuth';
 import {
-  AdoptionPetsFilters,
-  AdoptionPostInput,
   AdoptionPostResponse,
-  AdoptionPostUpdateInput,
   PaginatedAdoptionPosts,
-} from './../types/responseTypes';
-import { Upload } from './../types/Upload';
+} from '../types/responseTypes';
+import { Upload } from '../types/Upload';
+import { AdoptionPetsFilters, AdoptionPostInput } from '../types/inputTypes';
 
 @Resolver(AdoptionPost)
 class AdoptionPostResolver {
-  @FieldResolver()
+  @FieldResolver(() => User)
   user(
     @Root() { userId }: AdoptionPost,
     @Ctx() { dataLoaders: { userLoader } }: MyContext
-  ): Promise<User | undefined> {
+  ): Promise<User> {
     return userLoader.load(userId);
   }
 
-  @FieldResolver()
+  @FieldResolver(() => Pet)
   pet(
     @Root() { petId }: AdoptionPost,
     @Ctx() { dataLoaders: { petLoader } }: MyContext
@@ -49,7 +48,7 @@ class AdoptionPostResolver {
     return petLoader.load(petId);
   }
 
-  @FieldResolver({ nullable: true })
+  @FieldResolver(() => Address, { nullable: true })
   async address(
     @Root() { addressId }: AdoptionPost,
     @Ctx() { dataLoaders: { addressLoader } }: MyContext

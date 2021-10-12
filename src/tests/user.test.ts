@@ -2,7 +2,7 @@ import faker from 'faker';
 import { Connection } from 'typeorm';
 import { graphqlCall } from '../test-utils/graphqlCall';
 import { createTestConnection } from '../test-utils/testConn';
-import { LoginInput } from '../types/responseTypes';
+import { LoginInput } from '../types/inputTypes';
 
 let conn: Connection;
 beforeAll(async () => {

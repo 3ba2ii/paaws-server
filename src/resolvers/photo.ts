@@ -1,4 +1,3 @@
-import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -18,7 +17,7 @@ import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import { UploadImageResponse } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
-import { createImageMetaData } from '../utils/createImage';
+import { PhotoRepo } from './../repos/PhotoRepo';
 import { FieldError } from './../types/responseTypes';
 
 @ObjectType()
@@ -27,7 +26,7 @@ export class ImageMetaData {
   photo: Photo;
 
   @Field(() => User)
-  user: User;
+  creator: User;
 
   @Field()
   pathName: string;
@@ -36,25 +35,24 @@ export class ImageMetaData {
   uniqueFileName: string;
 } //
 @ObjectType()
-class CreateImageResponse {
+export class CreateImageResponse {
   @Field(() => ImageMetaData, { nullable: true })
   metadata?: ImageMetaData;
 
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
 }
-
 @Resolver(Photo)
 class PhotoResolver {
+  constructor(private readonly photoRepo: PhotoRepo) {}
+
   @FieldResolver()
   url(@Root() photo: Photo): string | null {
     if (!photo || !photo?.path) return null;
     return `${process.env.APP_URL}/images/${photo.path}`;
   }
 
-  @Mutation(() => ImageMetaData)
-  @UseMiddleware(isAuth)
-  public async createPhoto(
+  async createPhoto(
     @Arg('image', () => GraphQLUpload) { filename }: Upload,
     @Ctx() { req }: MyContext
   ): Promise<CreateImageResponse> {
@@ -72,32 +70,7 @@ class PhotoResolver {
         ],
       };
     }
-    const { pathName, uniqueFileName } = createImageMetaData(filename);
-    const photo = Photo.create({
-      creator: user,
-      filename,
-      path: uniqueFileName,
-      isOnDisk: true,
-    });
-    return {
-      metadata: { photo, user, pathName, uniqueFileName },
-    };
-  }
-
-  async saveImageToDisk(
-    @Arg('image', () => GraphQLUpload)
-    uploadProps: Upload,
-    @Arg('metadata') metadata: ImageMetaData
-  ): Promise<Boolean> {
-    const { createReadStream } = uploadProps;
-    if (!createReadStream) {
-      return false;
-    }
-    const stream = createReadStream();
-    const { pathName } = metadata;
-
-    await stream.pipe(createWriteStream(pathName));
-    return true;
+    return this.photoRepo.createPhotoObject({ creator: user, filename });
   }
 
   @Mutation(() => UploadImageResponse)
@@ -112,22 +85,23 @@ class PhotoResolver {
     if (errors?.length || !metadata) {
       return { errors };
     }
-    const { photo: avatar, user, uniqueFileName } = metadata;
+    const { photo: avatar, creator: user, uniqueFileName } = metadata;
 
+    //assign avatar to the user
     user.avatar = avatar;
 
-    const success = await getConnection().transaction(
-      async (_transactionalEntityManager) => {
-        //writing to the local server
-        const saved = await this.saveImageToDisk(uploadProps, metadata);
-        if (!saved) {
-          return false;
-        }
-
-        await user.save();
-        return true;
+    const success = await getConnection().transaction(async () => {
+      //writing to the local server
+      //1. save the image first
+      const saved = await this.photoRepo.saveImageToDisk(metadata, uploadProps);
+      if (!saved) {
+        return false;
       }
-    );
+
+      //save the object to db
+      await user.save();
+      return true;
+    });
     if (success)
       return {
         url: `http://localhost:4000/images/${uniqueFileName}`,

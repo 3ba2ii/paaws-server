@@ -53,7 +53,7 @@ export enum MissingPostTypes {
 }
 
 registerEnumType(MissingPostTypes, {
-  name: 'Missing Post Types',
+  name: 'MissingPostTypes',
   description: 'Either missing or found',
 });
 

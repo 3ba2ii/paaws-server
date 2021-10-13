@@ -1,14 +1,20 @@
-import { User } from './../UserEntities/User';
+import {
+  EntityWithBase,
+  EntityWithDates,
+  EntityWithLocation,
+} from '../../utils/class-mixins';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { BaseEntity, Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { MissingPostTypes, PrivacyType } from '../../types/types';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Comment } from './../InteractionsEntities/Comment';
-import { Post } from './Post';
+import { User } from './../UserEntities/User';
 
 @ObjectType()
 @Entity()
-export class MissingPost extends Post {
+export class MissingPost extends EntityWithDates(
+  EntityWithLocation(EntityWithBase(BaseEntity))
+) {
   @Field(() => Int)
   @Column()
   userId: number;
@@ -18,6 +24,14 @@ export class MissingPost extends Post {
     onDelete: 'CASCADE',
   })
   user: User;
+
+  @Field(() => String)
+  @Column({ type: 'text' })
+  title: string;
+
+  @Field(() => String)
+  @Column({ type: 'text' })
+  description: string;
 
   @Field(() => PrivacyType)
   @Column({

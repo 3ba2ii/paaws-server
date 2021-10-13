@@ -6,14 +6,16 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import Redis from 'ioredis';
 import path from 'path';
 import 'reflect-metadata';
-import { createConnection } from 'typeorm';
+import { createConnection, useContainer } from 'typeorm';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { createApolloServer } from './utils/createApolloServer';
+import { Container } from 'typeorm-typedi-extensions';
 
 require('dotenv-safe').config();
 
+useContainer(Container);
+
 const main = async () => {
-  console.log(path.join(__dirname, '/migration/*.js'));
   const conn = await createConnection({
     type: 'postgres',
     database: process.env.POSTGRES_DB,
@@ -63,12 +65,6 @@ const main = async () => {
     })
   );
   app.use(graphqlUploadExpress());
-
-  /* cloudinary.v2.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  }); */
 
   const apolloServer = await createApolloServer(redis);
 

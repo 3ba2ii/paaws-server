@@ -42,6 +42,7 @@ import {
   LoginInput,
   ChangePasswordInput,
 } from '../types/inputTypes';
+import { Service } from 'typedi';
 
 require('dotenv-safe').config();
 
@@ -84,6 +85,7 @@ class FindNearestUsersInput {
   radius!: number;
 }
 
+@Service()
 @Resolver(User)
 class UserResolver {
   @FieldResolver(() => Photo, { nullable: true })

@@ -64,7 +64,9 @@
     "reflect-metadata": "^0.1.13",
     "twilio": "^3.67.2",
     "type-graphql": "^1.1.1",
+    "typedi": "^0.10.0",
     "typeorm": "^0.2.37",
+    "typeorm-typedi-extensions": "^0.4.1",
     "uuid": "^8.3.2"
   }
 }

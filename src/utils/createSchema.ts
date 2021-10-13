@@ -6,6 +6,7 @@ import UserResolver from '../resolvers/user';
 import AdoptionPostResolver from '../resolvers/adoption-post';
 import AddressResolver from '../resolvers/address';
 import MissingPostResolver from '../resolvers/missing-post';
+import { Container } from 'typeorm-typedi-extensions';
 
 let schema: GraphQLSchema;
 
@@ -21,6 +22,7 @@ export const createSchema = async () => {
         MissingPostResolver,
       ],
       validate: true,
+      container: Container,
     });
   }
   return schema;

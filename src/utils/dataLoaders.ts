@@ -4,6 +4,7 @@ import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { Address } from './../entity/Address';
 import { PetImages } from './../entity/MediaEntities/PetImages';
+import { loadMappedData } from './loadMappedData';
 
 /* 
 data loader takes separate keys and return data for them without performing multiple sql queries
@@ -12,28 +13,24 @@ i.e keys = [1,2,3,4] // keys are ids
 */
 export const createUserLoader = () => {
   return new DataLoader<number, User>((userIds) => {
-    return User.findByIds(userIds as number[]);
+    return loadMappedData(User, userIds as number[]);
   });
 };
 
 export const createPetLoader = () => {
-  return new DataLoader<number, Pet>((petIds) => {
-    return Pet.findByIds(petIds as number[]);
+  return new DataLoader<number, Pet>(async (petIds) => {
+    return loadMappedData(Pet, petIds as number[]);
   });
 };
 
 export const createAddressLoader = () => {
-  return new DataLoader<number, Address>((addressIds) => {
-    return Address.findByIds(addressIds as number[]);
+  return new DataLoader<number, Address>(async (addressIds) => {
+    return loadMappedData(Address, addressIds as number[]);
   });
 };
 
 export const createImagesLoader = () => {
   return new DataLoader<number, PetImages[]>(async (petIds) => {
-    console.log(
-      `🚀 ~ file: dataLoaders.ts ~ line 34 ~ return new DataLoader<number,PetImages> ~ petIds`,
-      petIds
-    );
     //now we want to get all the pet images for the given pet ids
     const data = await PetImages.find({
       where: {

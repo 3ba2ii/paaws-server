@@ -1,6 +1,13 @@
 import { IsEmail, Length, MaxLength } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
-import { Breeds, PetGender, PetSize, PetType } from './types';
+import {
+  Breeds,
+  MissingPostTypes,
+  PetGender,
+  PetSize,
+  PetType,
+  PrivacyType,
+} from './types';
 
 @InputType()
 export class RegisterOptions {
@@ -159,5 +166,30 @@ export class AdoptionPetsFilters {
   petSizes?: [PetSize];
 }
 
+//what do i need for a missing post
+/**
+ * user
+ * title
+ * description
+ * location (address where pet was lost or found)
+ * pet images
+ * type = enum{Missing or Found}
+ * Privacy = enum{Public, Private}
+ */
 @InputType()
-export class MissingPetInput {}
+export class CreateMissingPostInput {
+  @Field()
+  title: string;
+
+  @Field()
+  description: string;
+
+  @Field(() => MissingPostTypes)
+  type: MissingPostTypes;
+
+  @Field(() => PrivacyType)
+  privacy: PrivacyType;
+
+  @Field(() => AddressInput, { nullable: true })
+  address?: AddressInput;
+}

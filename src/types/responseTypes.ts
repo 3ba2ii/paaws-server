@@ -1,3 +1,4 @@
+import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
@@ -71,4 +72,10 @@ export class PaginatedAdoptionPosts extends ErrorResponse {
 export class ChangePasswordResponse extends ErrorResponse {
   @Field(() => Boolean, { defaultValue: false })
   success: boolean;
+}
+
+@ObjectType()
+export class CreateMissingPostResponse extends ErrorResponse {
+  @Field(() => MissingPost, { nullable: true })
+  post?: MissingPost;
 }

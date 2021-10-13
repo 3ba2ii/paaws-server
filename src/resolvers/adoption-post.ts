@@ -1,4 +1,3 @@
-import { AdoptionPostUpdateInput } from '../types/inputTypes';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -13,8 +12,6 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { MyContext } from '../types';
-import { createImageMetaData } from '../utils/createImage';
 import { Address } from '../entity/Address';
 import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Photo } from '../entity/MediaEntities/Photo';
@@ -23,15 +20,23 @@ import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
+import { MyContext } from '../types';
+import {
+  AdoptionPetsFilters,
+  AdoptionPostInput,
+  AdoptionPostUpdateInput,
+} from '../types/inputTypes';
 import {
   AdoptionPostResponse,
   PaginatedAdoptionPosts,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
-import { AdoptionPetsFilters, AdoptionPostInput } from '../types/inputTypes';
+import { PhotoRepo } from './../repos/PhotoRepo';
 
 @Resolver(AdoptionPost)
 class AdoptionPostResolver {
+  constructor(private readonly photoRepo: PhotoRepo) {}
+
   @FieldResolver(() => User)
   user(
     @Root() { userId }: AdoptionPost,
@@ -71,7 +76,6 @@ class AdoptionPostResolver {
     const replacements: any[] = [realLimitPlusOne];
     if (cursor) replacements.push(new Date(cursor));
 
-    //TODO: Add filters that will be used to filter the posts
     /**
      * 1. Filter by pet type [can be multiple] - DONE
      * 2. Filter by pet breed [can be multiple]
@@ -158,15 +162,10 @@ class AdoptionPostResolver {
     const { breeds, thumbnailIdx } = petInfo;
 
     //0. Create an array of read streams
-    const streams = images.map(async (image) => {
-      const { createReadStream, filename } = await image; //IMPROVE: Duplication that needs to be improved later
-      return {
-        stream: createReadStream(),
-        filename,
-      };
-    });
 
-    const resolvedStreams = await Promise.all(streams);
+    const resolvedStreams = await this.photoRepo.getMultipleImagesStreams(
+      images
+    );
 
     //1. create the pet
     const pet = Pet.create({
@@ -177,29 +176,26 @@ class AdoptionPostResolver {
 
     //2. create pet images
 
-    const petImages = resolvedStreams.map((image, idx) => {
-      let isThumbnail = false;
-      if (thumbnailIdx && thumbnailIdx === idx) {
-        isThumbnail = true;
+    const petImages = resolvedStreams.map(
+      ({ filename, uniqueFileName }, idx) => {
+        let isThumbnail = false;
+        if (thumbnailIdx && thumbnailIdx === idx) {
+          isThumbnail = true;
+        }
+        return PetImages.create({
+          photo: Photo.create({
+            filename,
+            path: uniqueFileName,
+            creator: user,
+            isThumbnail,
+          }),
+        });
       }
-      const { uniqueFileName } = createImageMetaData(image.filename);
-      return PetImages.create({
-        photo: Photo.create({
-          filename: image.filename,
-          path: uniqueFileName,
-          creator: user,
-          isThumbnail,
-        }),
-      });
-    });
+    );
 
     //3. associate pet images to pet
-    pet.images = petImages; //
+    pet.images = petImages;
 
-    console.log(
-      `🚀 ~ file: post.ts ~ line 202 ~ AdoptionPostResolver ~ thumbnailIdx`,
-      thumbnailIdx
-    );
     //4. Associate the thumbnail if exists
     if (typeof thumbnailIdx === 'number')
       pet.thumbnail = petImages[thumbnailIdx].photo;
@@ -219,25 +215,22 @@ class AdoptionPostResolver {
       adoptionPost.address = address;
     }
 
-    const success = await getConnection().transaction(
-      async (_transactionalEntityManager) => {
-        //I want to save only the adoption post and everything related to it will be saved in cascade
-        // (pet and its images will be saved automatically)
-        //first, save the post
-        await adoptionPost.save();
+    const success = await getConnection().transaction(async (_) => {
+      //I want to save only the adoption post and everything related to it will be saved in cascade
+      // (pet and its images will be saved automatically)
+      //first, save the post
+      await adoptionPost.save();
 
-        //then write images in parallel to disk
-        await Promise.all(
-          resolvedStreams.map((s) => {
-            const { stream, filename } = s;
-            const { pathName } = createImageMetaData(filename);
+      //then write images in parallel to disk
+      await Promise.all(
+        resolvedStreams.map((s) => {
+          const { stream, pathName } = s;
 
-            return stream.pipe(createWriteStream(pathName));
-          })
-        );
-        return true;
-      }
-    );
+          return stream.pipe(createWriteStream(pathName));
+        })
+      );
+      return true;
+    });
 
     if (!success)
       return {

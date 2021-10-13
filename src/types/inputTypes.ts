@@ -192,4 +192,7 @@ export class CreateMissingPostInput {
 
   @Field(() => AddressInput, { nullable: true })
   address?: AddressInput;
+
+  @Field(() => Int, { defaultValue: 0 })
+  thumbnailIdx: number;
 }

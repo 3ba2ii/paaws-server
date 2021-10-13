@@ -4,11 +4,21 @@ import {
   EntityWithLocation,
 } from '../../utils/class-mixins';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { MissingPostTypes, PrivacyType } from '../../types/types';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Comment } from './../InteractionsEntities/Comment';
 import { User } from './../UserEntities/User';
+import { PostImages } from '../MediaEntities/PostImages';
+import { Photo } from '../MediaEntities/Photo';
 
 @ObjectType()
 @Entity()
@@ -51,6 +61,11 @@ export class MissingPost extends EntityWithDates(
   })
   type: MissingPostTypes;
 
+  //Images and Thumbnails
+  @Field(() => [PostImages])
+  @OneToMany(() => PostImages, (image) => image.post, { cascade: true })
+  images: PostImages[];
+
   //updoots Section
   @Field(() => Int)
   @Column({ default: 0 })
@@ -65,4 +80,12 @@ export class MissingPost extends EntityWithDates(
   @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
+
+  @Column({ nullable: true })
+  thumbnailId: number;
+
+  @Field(() => Photo, { nullable: true })
+  @OneToOne(() => Photo, { cascade: true })
+  @JoinColumn()
+  thumbnail: Photo;
 }

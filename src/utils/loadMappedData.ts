@@ -1,6 +1,4 @@
 import { BaseEntity, EntityTarget, getRepository } from 'typeorm';
-
-//Todo: implement a generic function to map each key to its data
 interface ConstructorWithId extends BaseEntity {
   id: number;
 }

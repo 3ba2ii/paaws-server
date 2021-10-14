@@ -1,7 +1,7 @@
-import { User } from './../entity/UserEntities/User';
 import { MyContext } from 'src/types';
 import { Ctx, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Address } from './../entity/Address';
+import { User } from './../entity/UserEntities/User';
 
 @Resolver(Address)
 class AddressResolver {

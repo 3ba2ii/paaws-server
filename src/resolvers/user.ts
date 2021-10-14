@@ -1,13 +1,8 @@
-import { ChangePasswordResponse } from '../types/responseTypes';
 import argon2 from 'argon2';
-import { Max, Min } from 'class-validator';
-import { Photo } from '../entity/MediaEntities/Photo';
 import {
   Arg,
   Ctx,
-  Field,
   FieldResolver,
-  InputType,
   Int,
   Mutation,
   Query,
@@ -17,10 +12,20 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
+import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { UserTag } from '../entity/UserEntities/UserTags';
 import {
+  ChangePasswordInput,
+  FindNearestUsersInput,
+  LoginInput,
+  RegisterOptions,
+  UpdateUserInfo,
+  WhereClause,
+} from '../types/inputTypes';
+import {
+  ChangePasswordResponse,
   FieldError,
   PaginatedUsers,
   RegularResponse,
@@ -28,6 +33,7 @@ import {
 } from '../types/responseTypes';
 import { UserTagsType } from '../types/types';
 import { checkDuplicationError } from '../utils/checkDuplicationError';
+import { createBaseResolver } from '../utils/createBaseResolver';
 import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
@@ -37,57 +43,13 @@ import {
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
-import {
-  RegisterOptions,
-  LoginInput,
-  ChangePasswordInput,
-} from '../types/inputTypes';
-import { Service } from 'typedi';
 
 require('dotenv-safe').config();
 
-@InputType()
-class UpdateUserInfo {
-  @Field({ nullable: true })
-  bio?: string;
+const UserBaseResolver = createBaseResolver('User', User);
 
-  @Field({ nullable: true })
-  avatar?: string;
-
-  @Max(80)
-  @Min(-180)
-  @Field({ nullable: true })
-  lng?: number;
-
-  @Max(90)
-  @Min(-90)
-  @Field({ nullable: true })
-  lat?: number;
-}
-
-@InputType()
-class WhereClause {
-  @Field(() => Int, { nullable: true })
-  limit: number;
-
-  @Field({ nullable: true })
-  cursor?: string;
-}
-@InputType()
-class FindNearestUsersInput {
-  @Field()
-  lat!: number;
-
-  @Field()
-  lng!: number;
-
-  @Field()
-  radius!: number;
-}
-
-@Service()
 @Resolver(User)
-class UserResolver {
+class UserResolver extends UserBaseResolver {
   @FieldResolver(() => Photo, { nullable: true })
   async avatar(@Root() user: User): Promise<Photo | undefined> {
     if (!user.avatarId) return undefined;

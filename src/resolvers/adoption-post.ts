@@ -31,11 +31,19 @@ import {
   PaginatedAdoptionPosts,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
+import { createBaseResolver } from '../utils/createBaseResolver';
 import { PhotoRepo } from './../repos/PhotoRepo';
 
+const AdoptionPostBaseResolver = createBaseResolver(
+  'AdoptionPost',
+  AdoptionPost
+);
+
 @Resolver(AdoptionPost)
-class AdoptionPostResolver {
-  constructor(private readonly photoRepo: PhotoRepo) {}
+class AdoptionPostResolver extends AdoptionPostBaseResolver {
+  constructor(private readonly photoRepo: PhotoRepo) {
+    super();
+  }
 
   @FieldResolver(() => User)
   user(
@@ -337,6 +345,11 @@ class AdoptionPostResolver {
       adoptionPost: post,
     };
   }
+}
+
+export default AdoptionPostResolver;
+/* 
+
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -374,6 +387,4 @@ class AdoptionPostResolver {
     }
     return true;
   }
-}
-
-export default AdoptionPostResolver;
+*/

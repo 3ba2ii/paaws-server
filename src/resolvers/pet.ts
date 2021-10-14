@@ -1,6 +1,3 @@
-import { CreatePetOptions } from './../types/inputTypes';
-import { Photo } from '../entity/MediaEntities/Photo';
-import { PetImages } from '../entity/MediaEntities/PetImages';
 import {
   Arg,
   Ctx,
@@ -12,16 +9,20 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
+import { PetImages } from '../entity/MediaEntities/PetImages';
+import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { User } from '../entity/UserEntities/User';
+import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import { PetResponse } from '../types/responseTypes';
-import { isAuth } from '../middleware/isAuth';
-import { RegularResponse } from '../types/responseTypes';
+import { createBaseResolver } from '../utils/createBaseResolver';
+import { CreatePetOptions } from './../types/inputTypes';
 
+const PetBaseResolver = createBaseResolver('Pet', Pet);
 @Resolver(Pet)
-class PetResolver {
+class PetResolver extends PetBaseResolver {
   @FieldResolver({ nullable: true })
   async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
     if (!thumbnailId) return undefined;
@@ -85,43 +86,6 @@ class PetResolver {
     return {
       pet,
     };
-  }
-
-  @Mutation(() => RegularResponse)
-  @UseMiddleware(isAuth)
-  async deletePet(
-    @Arg('petId', () => Int) petId: number,
-    @Ctx() { req }: MyContext
-  ): Promise<RegularResponse> {
-    const userId = req.session.userId;
-    const pet = await Pet.findOne(petId);
-    if (!pet)
-      return {
-        errors: [
-          {
-            code: 404,
-            message: 'Pet not found',
-            field: 'pet',
-          },
-        ],
-        success: false,
-      };
-    if (pet.userId !== userId) {
-      return {
-        errors: [
-          {
-            code: 403,
-            message: 'You are not allowed to delete this pet',
-            field: 'user',
-          },
-        ],
-        success: false,
-      };
-    }
-
-    await Pet.delete(petId);
-
-    return { success: true };
   }
 }
 

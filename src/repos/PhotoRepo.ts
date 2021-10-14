@@ -1,10 +1,10 @@
 import { createWriteStream } from 'fs';
+import { CreateImageResponse, ImageMetaData } from 'src/types/responseTypes';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { createImageMetaData } from '../utils/createImage';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { User } from './../entity/UserEntities/User';
-import { CreateImageResponse, ImageMetaData } from './../resolvers/photo';
 import { Upload } from './../types/Upload';
 
 interface CreatePhotoProps {

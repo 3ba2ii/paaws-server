@@ -1,27 +1,28 @@
-import { Comment } from './../InteractionsEntities/Comment';
-import { MissingPost } from './../PostEntities/MissingPost';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
+import {
+  EntityWithBase,
+  EntityWithDates,
+  EntityWithLocation,
+} from '../../utils/class-mixins';
+import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
+import { Photo } from '../MediaEntities/Photo';
 import { Pet } from '../PetEntities/Pet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
+import { Comment } from './../InteractionsEntities/Comment';
+import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
-
-import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { UserTag } from './UserTags';
-import { Photo } from '../MediaEntities/Photo';
 
-enum ProviderTypes {
+export enum ProviderTypes {
   LOCAL = 'local',
   GOOGLE = 'google',
   FACEBOOK = 'facebook',
@@ -31,11 +32,9 @@ enum ProviderTypes {
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
-  @Field(() => Int)
-  @PrimaryGeneratedColumn()
-  readonly id!: number;
-
+export class User extends EntityWithDates(
+  EntityWithBase(EntityWithLocation(BaseEntity))
+) {
   @Field()
   @Column({ unique: true })
   email!: string;
@@ -82,14 +81,6 @@ export class User extends BaseEntity {
 
   @Column()
   password!: string;
-
-  @Field()
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)

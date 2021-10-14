@@ -2,10 +2,8 @@ import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
-  Field,
   FieldResolver,
   Mutation,
-  ObjectType,
   Resolver,
   Root,
   UseMiddleware,
@@ -15,33 +13,13 @@ import { Photo } from '../entity/MediaEntities/Photo';
 import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { UploadImageResponse } from '../types/responseTypes';
+import {
+  CreateImageResponse,
+  UploadImageResponse,
+} from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { PhotoRepo } from './../repos/PhotoRepo';
-import { FieldError } from './../types/responseTypes';
 
-@ObjectType()
-export class ImageMetaData {
-  @Field(() => Photo)
-  photo: Photo;
-
-  @Field(() => User)
-  creator: User;
-
-  @Field()
-  pathName: string;
-
-  @Field()
-  uniqueFileName: string;
-} //
-@ObjectType()
-export class CreateImageResponse {
-  @Field(() => ImageMetaData, { nullable: true })
-  metadata?: ImageMetaData;
-
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
-}
 @Resolver(Photo)
 class PhotoResolver {
   constructor(private readonly photoRepo: PhotoRepo) {}

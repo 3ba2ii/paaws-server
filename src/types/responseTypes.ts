@@ -3,6 +3,7 @@ import { Field, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
+import { Photo } from '../entity/MediaEntities/Photo';
 
 @ObjectType()
 export class FieldError {
@@ -78,4 +79,36 @@ export class ChangePasswordResponse extends ErrorResponse {
 export class CreateMissingPostResponse extends ErrorResponse {
   @Field(() => MissingPost, { nullable: true })
   post?: MissingPost;
+}
+
+@ObjectType()
+export class DeleteMissingPostResponse extends ErrorResponse {
+  @Field(() => MissingPost, { nullable: true })
+  deletedPost?: MissingPost;
+}
+
+@ObjectType()
+export class DeleteResponse extends ErrorResponse {
+  @Field()
+  deleted: boolean;
+}
+
+@ObjectType()
+export class ImageMetaData {
+  @Field(() => Photo)
+  photo: Photo;
+
+  @Field(() => User)
+  creator: User;
+
+  @Field()
+  pathName: string;
+
+  @Field()
+  uniqueFileName: string;
+} //
+@ObjectType()
+export class CreateImageResponse extends ErrorResponse {
+  @Field(() => ImageMetaData, { nullable: true })
+  metadata?: ImageMetaData;
 }

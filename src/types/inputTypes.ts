@@ -1,4 +1,4 @@
-import { IsEmail, Length, MaxLength } from 'class-validator';
+import { IsEmail, Length, Max, MaxLength, Min } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
 import {
   Breeds,
@@ -195,4 +195,43 @@ export class CreateMissingPostInput {
 
   @Field(() => Int, { defaultValue: 0 })
   thumbnailIdx: number;
+}
+
+@InputType()
+export class UpdateUserInfo {
+  @Field({ nullable: true })
+  bio?: string;
+
+  @Field({ nullable: true })
+  avatar?: string;
+
+  @Max(80)
+  @Min(-180)
+  @Field({ nullable: true })
+  lng?: number;
+
+  @Max(90)
+  @Min(-90)
+  @Field({ nullable: true })
+  lat?: number;
+}
+
+@InputType()
+export class WhereClause {
+  @Field(() => Int, { nullable: true })
+  limit: number;
+
+  @Field({ nullable: true })
+  cursor?: string;
+}
+@InputType()
+export class FindNearestUsersInput {
+  @Field()
+  lat!: number;
+
+  @Field()
+  lng!: number;
+
+  @Field()
+  radius!: number;
 }

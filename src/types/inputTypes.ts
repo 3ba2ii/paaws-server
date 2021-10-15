@@ -260,3 +260,18 @@ export class CreateCommentInputType {
   })
   parentId?: number;
 }
+
+@InputType()
+export class PaginationArgs {
+  @Field(() => Int, { nullable: true })
+  limit: number = 10;
+
+  @Field({ nullable: true })
+  cursor?: string;
+}
+
+@InputType()
+export class MissingPostComments extends PaginationArgs {
+  @Field(() => Int, { nullable: true })
+  postId: number;
+}

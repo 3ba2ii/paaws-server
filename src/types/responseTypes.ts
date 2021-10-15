@@ -119,3 +119,15 @@ export class CommentResponse extends ErrorResponse {
   @Field(() => Comment, { nullable: true })
   comment?: Comment;
 }
+
+@ObjectType()
+export class PaginatedResponse extends ErrorResponse {
+  @Field()
+  hasMore: boolean;
+}
+
+@ObjectType()
+export class PaginatedComments extends PaginatedResponse {
+  @Field(() => [Comment])
+  comments: Comment[];
+}

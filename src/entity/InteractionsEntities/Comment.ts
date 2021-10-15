@@ -43,4 +43,7 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Field(() => [CommentUpdoot])
   @OneToMany(() => CommentUpdoot, (updoot) => updoot.comment, { cascade: true })
   updoots: CommentUpdoot[];
+
+  @Field(() => [Comment])
+  replies: Comment[];
 }

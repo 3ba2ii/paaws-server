@@ -11,5 +11,5 @@ export const createTestConnection = (drop: boolean = false) =>
     logging: true,
     dropSchema: drop,
 
-    entities: [path.join(__dirname, '../entity/*{.ts,.js}')],
+    entities: [path.join(__dirname, '../entity/**/*{.ts,.js}')],
   });

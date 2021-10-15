@@ -1,3 +1,4 @@
+import { Comment } from './../entity/InteractionsEntities/Comment';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -14,8 +15,14 @@ import {
 import { getConnection } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { CreateMissingPostInput } from '../types/inputTypes';
-import { CreateMissingPostResponse } from '../types/responseTypes';
+import {
+  CreateCommentInputType,
+  CreateMissingPostInput,
+} from '../types/inputTypes';
+import {
+  CommentResponse,
+  CreateMissingPostResponse,
+} from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
@@ -199,6 +206,91 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
 
     return true;
+  }
+
+  //todo: add post comments
+  @Mutation(() => CommentResponse)
+  @UseMiddleware(isAuth)
+  async comment(
+    @Arg('input') { postId, text, parentId }: CreateCommentInputType,
+    @Ctx() { req }: MyContext
+  ): Promise<CommentResponse> {
+    const isReply = parentId != null;
+    const userId = req.session.userId;
+    const user = await User.findOne(userId);
+    if (!user) {
+      return {
+        errors: [{ field: 'user', code: 404, message: 'User not found' }],
+      };
+    }
+
+    const post = await MissingPost.findOne(postId);
+    if (!post) {
+      return {
+        errors: [{ field: 'post', code: 404, message: 'Post not found' }],
+      };
+    }
+    //Two cases to cover here
+    // * 1. User is commenting on a post
+    // * 2. User is replying to a comment
+
+    let comment: Comment;
+
+    if (!isReply) {
+      //1. User is commenting on a post
+      comment = Comment.create({
+        text,
+        user,
+        post,
+      });
+    } else {
+      //2. User is replying to a comment
+      const parentComment = await Comment.findOne(parentId);
+      if (!parentComment) {
+        return {
+          errors: [
+            {
+              field: 'comment',
+              code: 404,
+              message: 'Parent comment not found',
+            },
+          ],
+        };
+      }
+      if (parentComment.parentId != null) {
+        //then the parent comment is a reply (we only allow two levels of nesting)
+        //create a comment with the grandparent comment as parent for the new comment
+        const grandParentComment = await Comment.findOne(
+          parentComment.parentId
+        );
+        if (!grandParentComment) {
+          return {
+            errors: [
+              {
+                field: 'comment',
+                code: 404,
+                message: 'Grandparent comment not found',
+              },
+            ],
+          };
+        }
+        comment = Comment.create({
+          text,
+          user,
+          post,
+          parentId: grandParentComment.id,
+        });
+      } else {
+        comment = Comment.create({
+          text,
+          user,
+          post,
+          parentId: parentComment.id,
+        });
+      }
+    }
+    await comment.save();
+    return { comment };
   }
 }
 

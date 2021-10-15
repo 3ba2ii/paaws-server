@@ -1,9 +1,10 @@
-import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { Field, Int, ObjectType } from 'type-graphql';
+import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
-import { Photo } from '../entity/MediaEntities/Photo';
+import { Comment } from './../entity/InteractionsEntities/Comment';
+import { MissingPost } from './../entity/PostEntities/MissingPost';
 
 @ObjectType()
 export class FieldError {
@@ -111,4 +112,10 @@ export class ImageMetaData {
 export class CreateImageResponse extends ErrorResponse {
   @Field(() => ImageMetaData, { nullable: true })
   metadata?: ImageMetaData;
+}
+
+@ObjectType()
+export class CommentResponse extends ErrorResponse {
+  @Field(() => Comment, { nullable: true })
+  comment?: Comment;
 }

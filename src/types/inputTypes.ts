@@ -1,5 +1,13 @@
-import { IsEmail, Length, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  Length,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
+import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
 import {
   Breeds,
   MissingPostTypes,
@@ -234,4 +242,21 @@ export class FindNearestUsersInput {
 
   @Field()
   radius!: number;
+}
+
+@InputType()
+export class CreateCommentInputType {
+  @IsNotEmpty({ message: 'Please provide a valid comment text' })
+  @IsNotBlank('text', { message: 'Please provide a valid comment text' })
+  @Field()
+  text!: string;
+
+  @Field(() => Int)
+  postId!: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'parentId refers to the parent comment id in case of replying',
+  })
+  parentId?: number;
 }

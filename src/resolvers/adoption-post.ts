@@ -32,7 +32,7 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { PhotoRepo } from './../repos/PhotoRepo';
+import { PhotoRepo } from '../repos/PhotoRepo.repo';
 
 const AdoptionPostBaseResolver = createBaseResolver(
   'AdoptionPost',

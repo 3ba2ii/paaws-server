@@ -275,3 +275,9 @@ export class MissingPostComments extends PaginationArgs {
   @Field(() => Int, { nullable: true })
   postId: number;
 }
+
+@InputType()
+export class ParentCommentReplies extends PaginationArgs {
+  @Field(() => Int, { nullable: true })
+  parentId: number;
+}

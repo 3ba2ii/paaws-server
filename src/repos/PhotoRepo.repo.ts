@@ -3,9 +3,9 @@ import { CreateImageResponse, ImageMetaData } from 'src/types/responseTypes';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { createImageMetaData } from '../utils/createImage';
-import { Photo } from './../entity/MediaEntities/Photo';
-import { User } from './../entity/UserEntities/User';
-import { Upload } from './../types/Upload';
+import { Photo } from '../entity/MediaEntities/Photo';
+import { User } from '../entity/UserEntities/User';
+import { Upload } from '../types/Upload';
 
 interface CreatePhotoProps {
   creator: User;
@@ -87,7 +87,3 @@ export class PhotoRepo extends Repository<Photo> {
     return Photo.find({});
   }
 }
-
-//1. create the image object in the database
-//2. save the image to the disk
-//3. save the image to the db

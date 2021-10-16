@@ -31,13 +31,17 @@ import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
-import { PhotoRepo } from './../repos/PhotoRepo';
+import { PhotoRepo } from '../repos/PhotoRepo.repo';
+import { UpdootRepo } from '../repos/UpdootRepo.repo';
 
 const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 
 @Resolver(MissingPost)
 class MissingPostResolver extends MissingPostBaseResolver {
-  constructor(private readonly photoRepo: PhotoRepo) {
+  constructor(
+    private readonly photoRepo: PhotoRepo,
+    private readonly updootRepo: UpdootRepo
+  ) {
     super();
   }
 
@@ -159,53 +163,43 @@ class MissingPostResolver extends MissingPostBaseResolver {
      * */
 
     //check if value is only 1 or -1
-    if (value !== 1 && value !== -1) return false;
+    if (![-1, 1].includes(value)) return false;
 
     const { userId } = req.session;
     const post = await MissingPost.findOne(postId);
     if (!post) {
       return false;
     }
+    const user = await User.findOne(userId);
+    if (!user) {
+      return false;
+    }
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
-    const conn = getConnection();
-
+    let success;
     if (!updoot) {
       //1. User has not voted for this post before
-      const newUpdoot = PostUpdoot.create({
-        postId,
-        userId,
+      success = await this.updootRepo.createUpdoot({
+        updootTarget: PostUpdoot,
+        entity: post,
+        user,
         value,
+        type: 'post',
       });
-      post.points += value;
-      await conn.transaction(async (_) => {
-        await newUpdoot.save();
-        await post.save();
-      });
-
-      await conn.transaction(async (_trx) => {});
     } else {
-      //2 User has voted for this post before
+      //2 User has voted for this post before and has changed his vote
       if (updoot.value !== value) {
-        //case 2.1 User has changed his vote
-
-        //2.1.1 Update the current updoot value to the new value
-        updoot.value = value;
-        //2.2.2 Increase/decrease the points of the post by two
-        post.points += 2 * value;
-
-        //2.1.3 Save the updoot and post using transaction
-        await conn.transaction(async (_trx) => {
-          await updoot.save();
-          await post.save();
+        success = await this.updootRepo.updateUpdootValue({
+          updoot,
+          entity: post,
+          value,
         });
       } else {
-        //case 2.2 User has not changed his vote
-        return false;
+        success = false;
       }
     }
 
-    return true;
+    return success;
   }
 
   //todo: add post comments

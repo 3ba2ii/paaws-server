@@ -1,3 +1,4 @@
+import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -18,7 +19,7 @@ import {
   UploadImageResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
-import { PhotoRepo } from './../repos/PhotoRepo';
+import { PhotoRepo } from '../repos/PhotoRepo.repo';
 
 @Resolver(Photo)
 class PhotoResolver {
@@ -39,13 +40,7 @@ class PhotoResolver {
 
     if (!user) {
       return {
-        errors: [
-          {
-            code: 404,
-            field: 'user',
-            message: 'User not found',
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
     }
     return this.photoRepo.createPhotoObject({ creator: user, filename });
@@ -87,13 +82,7 @@ class PhotoResolver {
 
     //failed to write to the local server
     return {
-      errors: [
-        {
-          field: 'image',
-          message: 'Error uploading image',
-          code: 500,
-        },
-      ],
+      errors: [INTERNAL_SERVER_ERROR],
     };
   }
 }

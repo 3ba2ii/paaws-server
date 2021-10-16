@@ -28,7 +28,6 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Column()
   postId: number;
 
-  @Field(() => MissingPost)
   @ManyToOne(() => MissingPost, (post) => post.comments)
   post: MissingPost;
 

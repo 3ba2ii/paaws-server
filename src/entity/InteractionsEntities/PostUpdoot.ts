@@ -1,17 +1,11 @@
-import { Field, ObjectType, Int } from 'type-graphql';
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { User } from '../UserEntities/User';
+import { ObjectType } from 'type-graphql';
+import { Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { MissingPost } from '../PostEntities/MissingPost';
+import { Updoot } from './Updoot';
 
 @ObjectType()
 @Entity()
-export class PostUpdoot extends BaseEntity {
-  @PrimaryColumn()
-  userId: number;
-
-  @ManyToOne(() => User, (user) => user.updoots)
-  user: User;
-
+export class PostUpdoot extends Updoot {
   @PrimaryColumn()
   postId: number;
 
@@ -19,8 +13,4 @@ export class PostUpdoot extends BaseEntity {
     onDelete: 'CASCADE',
   })
   post: MissingPost;
-
-  @Field(() => Int)
-  @Column({ type: 'int' })
-  value: number; //1 or -1
 }

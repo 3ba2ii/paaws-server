@@ -40,6 +40,13 @@ import {
   FORGET_PASSWORD_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
+import {
+  CREATE_ALREADY_EXISTS_ERROR,
+  CREATE_INVALID_ERROR,
+  CREATE_NOT_AUTHORIZED_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
+} from './../errors';
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
@@ -128,13 +135,7 @@ class UserResolver extends UserBaseResolver {
     if (!phoneNumberRegExp.test(phone)) {
       return {
         success: false,
-        errors: [
-          {
-            message: 'Phone number is not valid',
-            field: 'phone',
-            code: 400, // Bad Request Code
-          },
-        ],
+        errors: [CREATE_INVALID_ERROR('phone')],
       };
     }
 
@@ -143,18 +144,20 @@ class UserResolver extends UserBaseResolver {
     if (user) {
       const errors: FieldError[] = [];
       if (user.email === email) {
-        errors.push({
-          message: 'Email is already associated with an account',
-          field: 'email',
-          code: 409, //Conflict Code
-        });
+        errors.push(
+          CREATE_ALREADY_EXISTS_ERROR(
+            'email',
+            'Email is already associated with an account'
+          )
+        );
       }
       if (user.phone === phone) {
-        errors.push({
-          message: 'Phone number is already registered',
-          field: 'phone',
-          code: 409, //Conflict Code
-        });
+        errors.push(
+          CREATE_ALREADY_EXISTS_ERROR(
+            'phone',
+            'Phone number is already registered'
+          )
+        );
       }
       return {
         success: false,
@@ -167,13 +170,7 @@ class UserResolver extends UserBaseResolver {
     if (!sent) {
       return {
         success: false,
-        errors: [
-          {
-            field: 'phone',
-            message: 'Sending OTP failed, Please try again later',
-            code: 500,
-          },
-        ],
+        errors: [INTERNAL_SERVER_ERROR],
       };
     }
 
@@ -194,7 +191,7 @@ class UserResolver extends UserBaseResolver {
 
     if (!isValidOTP || !storedOTP) {
       return {
-        errors: [{ field: 'otp', message: 'Invalid OTP', code: 400 }],
+        errors: [CREATE_INVALID_ERROR('otp')],
       };
     }
 
@@ -243,11 +240,10 @@ class UserResolver extends UserBaseResolver {
     if (!user) {
       return {
         errors: [
-          {
-            field: 'identifier',
-            message: 'Incorrect Username or Email',
-            code: 401, // Unauthorized Code
-          },
+          CREATE_NOT_AUTHORIZED_ERROR(
+            'identifier',
+            'Incorrect Phone Number or Email'
+          ),
         ],
       };
     }
@@ -255,13 +251,7 @@ class UserResolver extends UserBaseResolver {
 
     if (!valid) {
       return {
-        errors: [
-          {
-            field: 'password',
-            message: 'Incorrect Password',
-            code: 401,
-          },
-        ],
+        errors: [CREATE_NOT_AUTHORIZED_ERROR('password', 'Incorrect password')],
       };
     }
 
@@ -345,11 +335,7 @@ class UserResolver extends UserBaseResolver {
       return {
         success: false,
         errors: [
-          {
-            field: 'confirmPassword',
-            message: 'Passwords do not match',
-            code: 400,
-          },
+          CREATE_INVALID_ERROR('confirmPassword', 'Passwords do not match'),
         ],
       };
     }
@@ -358,13 +344,7 @@ class UserResolver extends UserBaseResolver {
     if (!userId) {
       return {
         success: false,
-        errors: [
-          {
-            field: 'token',
-            message: 'Token not found',
-            code: 404,
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('token')],
       };
     }
     const userIdNum = parseInt(userId);
@@ -372,13 +352,7 @@ class UserResolver extends UserBaseResolver {
     if (!user) {
       return {
         success: false,
-        errors: [
-          {
-            field: 'user',
-            message: 'User not found',
-            code: 404,
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
     }
     const hashedPassword = await argon2.hash(password);
@@ -475,7 +449,6 @@ class UserResolver extends UserBaseResolver {
               ORDER BY distance;`;
 
     const users = (await getConnection().query(sql)) as User[] | undefined;
-    console.log(`🚀 ~ file: user.ts ~ line 463 ~ UserResolver ~ users`, users);
 
     return users;
   }

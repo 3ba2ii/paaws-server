@@ -44,13 +44,32 @@ export enum UserTagsType {
 export enum PrivacyType {
   PUBLIC = 'public',
   PRIVATE = 'private',
-  ONYL_ME = 'onyl_me',
+  ONLY_ME = 'only_me',
 }
 
 export enum MissingPostTypes {
   Missing = 'missing',
   Found = 'found',
 }
+export enum NotificationType {
+  UPDOOT_NOTIFICATION = 'UPDOOT_NOTIFICATION',
+  COMMENT_NOTIFICATION = 'COMMENT_NOTIFICATION',
+  MISSING_PET_AROUND_YOU = 'MISSING_PET_AROUND_YOU',
+}
+
+export enum NOTIFICATION_CONTENT_TYPES {
+  POST = 'POST', //postId
+  COMMENT = 'COMMENT', //commentId on postId
+  USER = 'USER', //userId
+}
+
+registerEnumType(NOTIFICATION_CONTENT_TYPES, {
+  name: 'NOTIFICATION_CONTENT_TYPES',
+});
+registerEnumType(NotificationType, {
+  name: 'NotificationType',
+  description: 'Updoot or Comment or Missing pet around you',
+});
 
 registerEnumType(MissingPostTypes, {
   name: 'MissingPostTypes',

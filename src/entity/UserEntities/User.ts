@@ -1,3 +1,4 @@
+import { Notification } from './../Notification/Notification';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -127,4 +128,8 @@ export class User extends EntityWithDates(
   @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];
+
+  @Field(() => [Notification])
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 }

@@ -73,7 +73,7 @@ export class PaginatedAdoptionPosts extends ErrorResponse {
 @ObjectType()
 export class ChangePasswordResponse extends ErrorResponse {
   @Field(() => Boolean, { defaultValue: false })
-  success: boolean;
+  success: boolean = false;
 }
 
 @ObjectType()

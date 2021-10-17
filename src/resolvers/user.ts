@@ -38,6 +38,7 @@ import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
   FORGET_PASSWORD_PREFIX,
+  PHONE_NUMBER_REG_EXP,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
 import {
@@ -128,9 +129,7 @@ class UserResolver extends UserBaseResolver {
 
     var otp = Math.floor(1000 + Math.random() * 9000);
 
-    const phoneNumberRegExp = new RegExp(
-      '^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$'
-    );
+    const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
 
     if (!phoneNumberRegExp.test(phone)) {
       return {

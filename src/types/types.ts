@@ -52,7 +52,8 @@ export enum MissingPostTypes {
   Found = 'found',
 }
 export enum NotificationType {
-  UPDOOT_NOTIFICATION = 'UPDOOT_NOTIFICATION',
+  UPVOTE = 'UPVOTE',
+  DOWNVOTE = 'DOWNVOTE',
   COMMENT_NOTIFICATION = 'COMMENT_NOTIFICATION',
   MISSING_PET_AROUND_YOU = 'MISSING_PET_AROUND_YOU',
 }
@@ -68,7 +69,7 @@ registerEnumType(NOTIFICATION_CONTENT_TYPES, {
 });
 registerEnumType(NotificationType, {
   name: 'NotificationType',
-  description: 'Updoot or Comment or Missing pet around you',
+  description: 'Upvote or downvote a post or Comment',
 });
 
 registerEnumType(MissingPostTypes, {

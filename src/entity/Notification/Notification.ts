@@ -22,3 +22,4 @@ export class Notification extends INotification {
   @Column()
   contentId: number;
 }
+//

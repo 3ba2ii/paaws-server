@@ -1,3 +1,5 @@
+import { NotificationType } from './../types/types';
+import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { Comment } from './../entity/InteractionsEntities/Comment';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
@@ -40,7 +42,8 @@ const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 class MissingPostResolver extends MissingPostBaseResolver {
   constructor(
     private readonly photoRepo: PhotoRepo,
-    private readonly updootRepo: UpdootRepo
+    private readonly updootRepo: UpdootRepo,
+    private readonly notificationRepo: NotificationRepo
   ) {
     super();
   }
@@ -145,6 +148,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       };
 
     //TODO:  create notification to nearest 20 users that there is a missing pet
+
     return { post: missingPost };
   }
 
@@ -164,9 +168,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     //check if value is only 1 or -1
     if (![-1, 1].includes(value)) return false;
+    const isUpvote = value === 1;
 
     const { userId } = req.session;
-    const post = await MissingPost.findOne(postId);
+    const post = await MissingPost.findOne(postId, { relations: ['user'] });
     if (!post) {
       return false;
     }
@@ -176,7 +181,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
-    let success;
+    let success = false;
     if (!updoot) {
       //1. User has not voted for this post before
       success = await this.updootRepo.createUpdoot({
@@ -186,23 +191,28 @@ class MissingPostResolver extends MissingPostBaseResolver {
         value,
         type: 'post',
       });
-    } else {
+    } else if (updoot.value !== value) {
       //2 User has voted for this post before and has changed his vote
-      if (updoot.value !== value) {
-        success = await this.updootRepo.updateUpdootValue({
-          updoot,
-          entity: post,
-          value,
-        });
-      } else {
-        success = false;
-      }
+
+      success = await this.updootRepo.updateUpdootValue({
+        updoot,
+        entity: post,
+        value,
+      });
+    }
+
+    if (success) {
+      this.notificationRepo.createNotification(
+        user,
+        post,
+        post.user,
+        isUpvote ? NotificationType.UPVOTE : NotificationType.DOWNVOTE
+      );
     }
 
     return success;
   }
 
-  //todo: add post comments
   @Mutation(() => CommentResponse)
   @UseMiddleware(isAuth)
   async comment(

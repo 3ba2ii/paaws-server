@@ -1,3 +1,5 @@
+import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { Notification } from './../entity/Notification/Notification';
 import argon2 from 'argon2';
 import {
   Arg,
@@ -58,6 +60,10 @@ const UserBaseResolver = createBaseResolver('User', User);
 
 @Resolver(User)
 class UserResolver extends UserBaseResolver {
+  constructor(private readonly notificationRepo: NotificationRepo) {
+    super();
+  }
+
   @FieldResolver(() => Photo, { nullable: true })
   async avatar(@Root() user: User): Promise<Photo | undefined> {
     if (!user.avatarId) return undefined;
@@ -75,6 +81,14 @@ class UserResolver extends UserBaseResolver {
   @UseMiddleware(isAuth)
   me(@Ctx() { req }: MyContext): Promise<User | undefined> {
     return User.findOne(req.session.userId);
+  }
+
+  @Query(() => [Notification])
+  @UseMiddleware(isAuth)
+  notifications(@Ctx() { req }: MyContext): Promise<Notification[]> {
+    const { userId } = req.session;
+
+    return this.notificationRepo.getNotificationsByUserId(userId as number);
   }
 
   @Query(() => Int)

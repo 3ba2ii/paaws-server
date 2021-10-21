@@ -5,14 +5,15 @@ import { Notification } from './../entity/Notification/Notification';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
 
+interface CreateNotificationInput {
+  performer: User;
+  content: MissingPost | User;
+  receiver: User;
+  notificationType: NotificationType;
+}
 @Service()
 @EntityRepository(Notification)
 export class NotificationRepo extends Repository<Notification> {
-  //Method we need here
-  //1. Get all notifications for a user
-  //2. Get all notifications for a user and filter them by type
-  //3. create a notification for a user
-
   /* 
   we have x types of notifications
   1. UPDOOT_NOTIFICATION -> someone has upvoted/downvoted a post or a comment -> post id
@@ -23,7 +24,6 @@ export class NotificationRepo extends Repository<Notification> {
 
   */
 
-  //todo: create a method that returns message for the notification based on its type
   private getMessageForNotification(
     performer: User,
     content: MissingPost | User,
@@ -39,7 +39,7 @@ export class NotificationRepo extends Repository<Notification> {
       case NotificationType.COMMENT_NOTIFICATION:
         return `${performer.full_name} commented on your ${contentType}`;
       case NotificationType.MISSING_PET_AROUND_YOU:
-        return `${performer.full_name} posted that there is a missing pet near you, Help him find it!`;
+        return `${performer.full_name} posted that there is a missing pet near you, Help him finding it!`;
       default:
         return null;
     }
@@ -50,13 +50,22 @@ export class NotificationRepo extends Repository<Notification> {
       .where('notification."userId" = :userId', { userId })
       .getMany();
   }
-  async createNotification(
-    performer: User,
-    content: MissingPost | User,
-    receiver: User,
-    notificationType: NotificationType
-  ): Promise<Notification | null> {
-    //todo: check if the notification already exists
+  /**
+   * @param performer The user who triggered the action
+   * @param content The content that was affected by the action
+   * @param receiver The user who is receiving the notification
+   * @param notificationType Either upvote, downvote, comment, missing pet around you
+   */
+  async createNotification({
+    performer,
+    content,
+    receiver,
+    notificationType,
+  }: CreateNotificationInput): Promise<Notification | null> {
+    //1. check if the performer and receiver are the same -> if yes, return null
+    if (performer.id === receiver.id) {
+      return null;
+    }
     const full_message = this.getMessageForNotification(
       performer,
       content,
@@ -68,11 +77,10 @@ export class NotificationRepo extends Repository<Notification> {
         ? NOTIFICATION_CONTENT_TYPES.POST
         : NOTIFICATION_CONTENT_TYPES.USER;
 
-    if (full_message == null) {
-      return null;
-    }
+    if (!full_message) return null;
+
     let expirationDate = new Date();
-    expirationDate.setMonth(expirationDate.getMonth() + 1);
+    expirationDate.setMonth(expirationDate.getMonth() + 1); //expires in one month (will be used with a cron job to delete old seen notifications)
 
     const notification = Notification.create({
       contentId: content.id,
@@ -82,6 +90,6 @@ export class NotificationRepo extends Repository<Notification> {
       contentType,
       expirationDate,
     });
-    return await notification.save();
+    return notification.save();
   }
 }

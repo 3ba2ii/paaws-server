@@ -1,3 +1,4 @@
+import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { Notification } from './../entity/Notification/Notification';
 import argon2 from 'argon2';
@@ -42,6 +43,7 @@ import {
   FORGET_PASSWORD_PREFIX,
   PHONE_NUMBER_REG_EXP,
   VERIFY_PHONE_NUMBER_PREFIX,
+  __prod__,
 } from './../constants';
 import {
   CREATE_ALREADY_EXISTS_ERROR,
@@ -60,7 +62,10 @@ const UserBaseResolver = createBaseResolver('User', User);
 
 @Resolver(User)
 class UserResolver extends UserBaseResolver {
-  constructor(private readonly notificationRepo: NotificationRepo) {
+  constructor(
+    private readonly notificationRepo: NotificationRepo,
+    private readonly addressRepo: AddressRepo
+  ) {
     super();
   }
 
@@ -202,7 +207,8 @@ class UserResolver extends UserBaseResolver {
 
     const isValidOTP = storedOTP?.toString() === otp.toString();
 
-    if (!isValidOTP || !storedOTP) {
+    if ((!isValidOTP || !storedOTP) && __prod__) {
+      //todo: remove __prod__ flag on production
       return {
         errors: [CREATE_INVALID_ERROR('otp')],
       };
@@ -228,6 +234,7 @@ class UserResolver extends UserBaseResolver {
       return { user };
     } catch (err) {
       const errors = checkDuplicationError(err);
+
       return {
         errors,
       };
@@ -429,41 +436,10 @@ class UserResolver extends UserBaseResolver {
   }
 
   @Query(() => [User], { nullable: true })
-  async getNearestLocations(
-    @Arg('options') options: FindNearestUsersInput
-  ): Promise<User[] | undefined> {
-    const { radius, lat: currentLat, lng: currentLong } = options;
-    /* 
-    TODO: will need optimization later as we're calculating this distance for every user and this is not efficient
-
-       Better way to build this is to hav minimum and maximum latitude and longitude like a bounding box,
-       then we can query the database for users within that bounding box,
-       and then calculate the distance for only these users
-    */
-
-    const sql = `
-              select * 
-              from 
-              (
-                SELECT 
-                id, email,phone,full_name,lat,lng,
-                (
-                  6371 *
-                  acos(cos(radians(${currentLat})) * 
-                  cos(radians(lat)) * 
-                  cos(radians(lng) - 
-                  radians(${currentLong})) + 
-                  sin(radians(${currentLat})) * 
-                  sin(radians(lat)))
-              ) AS distance 
-              from public."user"
-              ) as innerTable
-              where distance < ${radius}
-              ORDER BY distance;`;
-
-    const users = (await getConnection().query(sql)) as User[] | undefined;
-
-    return users;
+  getNearestUsers(
+    @Arg('options') { lat, lng, radius }: FindNearestUsersInput
+  ): Promise<User[]> {
+    return this.addressRepo.findNearestUsers(lat, lng, radius);
   }
 }
 

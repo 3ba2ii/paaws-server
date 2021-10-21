@@ -35,9 +35,10 @@ import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
 import {
+  CREATE_ALREADY_EXISTS_ERROR,
+  CREATE_INVALID_ERROR,
   CREATE_NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
-  CREATE_INVALID_ERROR,
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
@@ -135,7 +136,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     missingPost.images = postImages;
 
-    //4. save the post and the images
+    //5. save the post and the images
     const success = await getConnection().transaction(async (_) => {
       await Promise.all(
         resolvedStreams.map((s) => {
@@ -152,8 +153,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       return {
         errors: [INTERNAL_SERVER_ERROR],
       };
-
-    //TODO:  create notification to nearest 20 users that there is a missing pet
 
     if (address && address?.lat && address?.lng) {
       //1. get the nearest 20 users
@@ -239,7 +238,15 @@ class MissingPostResolver extends MissingPostBaseResolver {
       return { success };
     }
 
-    return { success: false, errors: [INTERNAL_SERVER_ERROR] };
+    return {
+      success: false,
+      errors: [
+        CREATE_ALREADY_EXISTS_ERROR(
+          'vote',
+          'User has already voted for this post'
+        ),
+      ],
+    };
   }
 
   @Mutation(() => CommentResponse)
@@ -249,7 +256,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     @Ctx() { req }: MyContext
   ): Promise<CommentResponse> {
     const isReply = parentId != null;
-    const userId = req.session.userId;
+    const { userId } = req.session;
     const user = await User.findOne(userId);
     if (!user)
       return {
@@ -259,12 +266,12 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const post = await MissingPost.findOne(postId);
     if (!post) {
       return {
-        errors: [{ field: 'post', code: 404, message: 'Post not found' }],
+        errors: [CREATE_NOT_FOUND_ERROR('post')],
       };
     }
-    //Two cases to cover here
-    // * 1. User is commenting on a post
-    // * 2. User is replying to a comment
+    /* Two cases to cover here
+       1. User is commenting on a post
+       2. User is replying to a comment */
 
     let comment: Comment;
 
@@ -278,15 +285,11 @@ class MissingPostResolver extends MissingPostBaseResolver {
     } else {
       //2. User is replying to a comment
       const parentComment = await Comment.findOne(parentId);
-      if (!parentComment) {
+
+      //check if the parent comment exists and it is on the same post
+      if (!parentComment || parentComment.postId !== postId) {
         return {
-          errors: [
-            {
-              field: 'comment',
-              code: 404,
-              message: 'Parent comment not found',
-            },
-          ],
+          errors: [CREATE_NOT_FOUND_ERROR('comment')],
         };
       }
       if (parentComment.parentId != null) {
@@ -297,13 +300,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
         );
         if (!grandParentComment) {
           return {
-            errors: [
-              {
-                field: 'comment',
-                code: 404,
-                message: 'Grandparent comment not found',
-              },
-            ],
+            errors: [CREATE_NOT_FOUND_ERROR('Grandparent')],
           };
         }
         comment = Comment.create({
@@ -313,6 +310,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
           parentId: grandParentComment.id,
         });
       } else {
+        //then the parent comment is a top level comment
         comment = Comment.create({
           text,
           user,
@@ -322,6 +320,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       }
     }
     await comment.save();
+    //todo: send a notification to the user who posted the post
     return { comment };
   }
 }

@@ -10,6 +10,7 @@ interface CreateNotificationInput {
   content: MissingPost | User;
   receiver: User;
   notificationType: NotificationType;
+  customMessage?: string;
 }
 @Service()
 @EntityRepository(Notification)
@@ -61,6 +62,7 @@ export class NotificationRepo extends Repository<Notification> {
     content,
     receiver,
     notificationType,
+    customMessage,
   }: CreateNotificationInput): Promise<Notification | null> {
     //1. check if the performer and receiver are the same -> if yes, return null
     if (performer.id === receiver.id) {
@@ -84,7 +86,7 @@ export class NotificationRepo extends Repository<Notification> {
 
     const notification = Notification.create({
       contentId: content.id,
-      message: full_message,
+      message: customMessage ? customMessage : full_message,
       user: receiver,
       notificationType,
       contentType,

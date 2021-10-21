@@ -85,10 +85,6 @@ class UserResolver extends UserBaseResolver {
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
   me(@Ctx() { req }: MyContext): Promise<User | undefined> {
-    this.addressRepo.findAddressWithLatLng(
-      50.806826964509096,
-      30.989887126240486
-    );
     return User.findOne(req.session.userId);
   }
 

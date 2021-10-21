@@ -79,16 +79,28 @@ export class AddressRepo extends Repository<Address> {
     return users;
   }
 
+  /**
+   *
+   * @param address - The user's address input
+   * @returns {Promise<Address | null>} - The created address object
+   */
   public async createFormattedAddress(
     address: Partial<AddressInput>
   ): Promise<Address | null> {
     const { city, country, lat, lng, state } = address;
+    let formattedAddress: Address | null = null;
     if (!lat || !lng) {
-      throw new Error('Latitude and longitude are required');
+      return formattedAddress;
     }
     if (!city || !country || !state) {
-      return await this.findAddressWithLatLng(lat, lng);
+      //in case of any missing data, we need to get the address from google maps
+      formattedAddress = await this.findAddressWithLatLng(lat, lng);
+    } else {
+      formattedAddress = Address.create({
+        ...address,
+      });
     }
-    return null;
+
+    return formattedAddress;
   }
 }

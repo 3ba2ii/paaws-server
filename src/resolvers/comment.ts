@@ -1,3 +1,4 @@
+import { INTERNAL_SERVER_ERROR, CREATE_INVALID_ERROR } from './../errors';
 import {
   Arg,
   Ctx,
@@ -185,9 +186,7 @@ export class CommentResolver extends CommentBaseResolver {
   ): Promise<CommentResponse> {
     if (![-1, 1].includes(value)) {
       return {
-        errors: [
-          { field: 'value', message: 'value must be 1 or -1', code: 400 },
-        ],
+        errors: [CREATE_INVALID_ERROR('value', 'value must be -1 or 1')],
       };
     }
 
@@ -237,13 +236,7 @@ export class CommentResolver extends CommentBaseResolver {
       });
       if (!result) {
         return {
-          errors: [
-            {
-              field: 'server',
-              message: 'Internal server error',
-              code: 500,
-            },
-          ],
+          errors: [INTERNAL_SERVER_ERROR],
         };
       }
     }

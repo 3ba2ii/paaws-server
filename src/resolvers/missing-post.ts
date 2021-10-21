@@ -196,7 +196,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const isUpvote = value === 1;
 
     const { userId } = req.session;
-    const post = await MissingPost.findOne(postId, { relations: ['user'] });
+    const post = await MissingPost.findOne(postId);
     if (!post) {
       return { errors: [CREATE_NOT_FOUND_ERROR('post')], success: false };
     }
@@ -230,7 +230,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       this.notificationRepo.createNotification({
         performer: user,
         content: post,
-        receiver: post.user,
+        receiverId: post.userId,
         notificationType: isUpvote
           ? NotificationType.UPVOTE
           : NotificationType.DOWNVOTE,
@@ -263,7 +263,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
         errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
 
-    const post = await MissingPost.findOne(postId, { relations: ['user'] });
+    const post = await MissingPost.findOne(postId);
     if (!post) {
       return {
         errors: [CREATE_NOT_FOUND_ERROR('post')],
@@ -286,7 +286,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       });
     } else {
       //2. User is replying to a comment
-      parentComment = await Comment.findOne(parentId, { relations: ['user'] });
+      parentComment = await Comment.findOne(parentId);
 
       //check if the parent comment exists and it is on the same post
       if (!parentComment || parentComment.postId !== postId) {
@@ -298,8 +298,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
         //then the parent comment is a reply (we only allow two levels of nesting)
         //create a comment with the grandparent comment as parent for the new comment
         const grandParentComment = await Comment.findOne(
-          parentComment.parentId,
-          { relations: ['user'] }
+          parentComment.parentId
         );
         if (!grandParentComment) {
           return {
@@ -336,14 +335,14 @@ class MissingPostResolver extends MissingPostBaseResolver {
       this.notificationRepo.createNotification({
         performer: user,
         content: post,
-        receiver: parentComment.user, //comment owner
+        receiverId: parentComment.userId, //comment owner
         notificationType: NotificationType.REPLY_NOTIFICATION,
       });
     }
     this.notificationRepo.createNotification({
       performer: user,
       content: post,
-      receiver: post.user, //post owner
+      receiverId: post.userId, //post owner
       notificationType: NotificationType.COMMENT_NOTIFICATION,
     });
 

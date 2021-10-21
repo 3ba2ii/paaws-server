@@ -8,9 +8,10 @@ import { User } from './../entity/UserEntities/User';
 interface CreateNotificationInput {
   performer: User;
   content: MissingPost | User;
-  receiver: User;
+  receiver?: User;
   notificationType: NotificationType;
   customMessage?: string;
+  receiverId?: number;
 }
 @Service()
 @EntityRepository(Notification)
@@ -50,6 +51,7 @@ export class NotificationRepo extends Repository<Notification> {
   async getNotificationsByUserId(userId: number): Promise<Notification[]> {
     return await Notification.createQueryBuilder('notification')
       .where('notification."userId" = :userId', { userId })
+      .leftJoinAndSelect('notification.user', 'user')
       .getMany();
   }
   /**
@@ -64,9 +66,13 @@ export class NotificationRepo extends Repository<Notification> {
     receiver,
     notificationType,
     customMessage,
+    receiverId,
   }: CreateNotificationInput): Promise<Notification | null> {
+    if (!receiverId && !receiver) {
+      return null;
+    }
     //1. check if the performer and receiver are the same -> if yes, return null
-    if (performer.id === receiver.id) {
+    if (performer.id === receiver?.id || performer.id === receiverId) {
       console.log(
         '❌ Performer is the same as receiver, so dont send a notification'
       );
@@ -88,13 +94,20 @@ export class NotificationRepo extends Repository<Notification> {
     let expirationDate = new Date();
     expirationDate.setMonth(expirationDate.getMonth() + 1); //expires in one month (will be used with a cron job to delete old seen notifications)
 
-    const notification = Notification.create({
+    let notificationData: Partial<Notification> = {
       contentId: content.id,
       message: customMessage ? customMessage : full_message,
-      user: receiver,
       notificationType,
       contentType,
       expirationDate,
+    };
+    if (receiverId && typeof receiverId == 'number') {
+      notificationData!.userId = receiverId;
+    } else {
+      notificationData!.user = receiver;
+    }
+    const notification = Notification.create({
+      ...notificationData,
     });
     return notification.save();
   }

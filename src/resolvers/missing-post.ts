@@ -263,7 +263,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
         errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
 
-    const post = await MissingPost.findOne(postId);
+    const post = await MissingPost.findOne(postId, { relations: ['user'] });
     if (!post) {
       return {
         errors: [CREATE_NOT_FOUND_ERROR('post')],
@@ -271,9 +271,11 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
     /* Two cases to cover here
        1. User is commenting on a post
-       2. User is replying to a comment */
+       2. User is replying to a comment   
+    */
 
     let comment: Comment;
+    let parentComment: Comment | undefined;
 
     if (!isReply) {
       //1. User is commenting on a post
@@ -284,7 +286,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       });
     } else {
       //2. User is replying to a comment
-      const parentComment = await Comment.findOne(parentId);
+      parentComment = await Comment.findOne(parentId, { relations: ['user'] });
 
       //check if the parent comment exists and it is on the same post
       if (!parentComment || parentComment.postId !== postId) {
@@ -296,7 +298,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
         //then the parent comment is a reply (we only allow two levels of nesting)
         //create a comment with the grandparent comment as parent for the new comment
         const grandParentComment = await Comment.findOne(
-          parentComment.parentId
+          parentComment.parentId,
+          { relations: ['user'] }
         );
         if (!grandParentComment) {
           return {
@@ -309,6 +312,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
           post,
           parentId: grandParentComment.id,
         });
+        parentComment = grandParentComment;
       } else {
         //then the parent comment is a top level comment
         comment = Comment.create({
@@ -320,7 +324,29 @@ class MissingPostResolver extends MissingPostBaseResolver {
       }
     }
     await comment.save();
-    //todo: send a notification to the user who posted the post
+    /*
+    Two cases for comment:
+    1. User is commenting on a post -> send a notification to the user who posted the post
+    2. User is replying to a comment -> send a notification to the user owns the parent comment and the post owner as well
+
+    so either ways we will send a notification to the post owner
+    */
+
+    if (parentComment != null) {
+      this.notificationRepo.createNotification({
+        performer: user,
+        content: post,
+        receiver: parentComment.user, //comment owner
+        notificationType: NotificationType.REPLY_NOTIFICATION,
+      });
+    }
+    this.notificationRepo.createNotification({
+      performer: user,
+      content: post,
+      receiver: post.user, //post owner
+      notificationType: NotificationType.COMMENT_NOTIFICATION,
+    });
+
     return { comment };
   }
 }

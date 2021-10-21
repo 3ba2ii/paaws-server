@@ -22,7 +22,6 @@ export class NotificationRepo extends Repository<Notification> {
   3. MISSING_PET_AROUND_NOTIFICATION -> someone has posted a post for a missing pet near you -> post id
   todo next 
     * 4. NEW_PET_FOUND_NOTIFICATION -> someone has posted a post for a new pet near you -> post id
-
   */
 
   private getMessageForNotification(
@@ -39,6 +38,8 @@ export class NotificationRepo extends Repository<Notification> {
         return `${performer.full_name} downvoted your ${contentType}`;
       case NotificationType.COMMENT_NOTIFICATION:
         return `${performer.full_name} commented on your ${contentType}`;
+      case NotificationType.REPLY_NOTIFICATION:
+        return `${performer.full_name} replied on your comment`;
       case NotificationType.MISSING_PET_AROUND_YOU:
         return `${performer.full_name} posted that there is a missing pet near you, Help him finding it!`;
       default:
@@ -55,7 +56,7 @@ export class NotificationRepo extends Repository<Notification> {
    * @param performer The user who triggered the action
    * @param content The content that was affected by the action
    * @param receiver The user who is receiving the notification
-   * @param notificationType Either upvote, downvote, comment, missing pet around you
+   * @param notificationType Either upvote, downvote, comment, reply, missing pet around you
    */
   async createNotification({
     performer,
@@ -66,6 +67,9 @@ export class NotificationRepo extends Repository<Notification> {
   }: CreateNotificationInput): Promise<Notification | null> {
     //1. check if the performer and receiver are the same -> if yes, return null
     if (performer.id === receiver.id) {
+      console.log(
+        '❌ Performer is the same as receiver, so dont send a notification'
+      );
       return null;
     }
     const full_message = this.getMessageForNotification(

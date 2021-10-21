@@ -1,3 +1,4 @@
+import { AddressInput } from './../types/inputTypes';
 import { GoogleAddressParser } from './../utils/GoogleAddressParser';
 import { Language, LatLng } from '@googlemaps/google-maps-services-js';
 import { Service } from 'typedi';
@@ -76,5 +77,18 @@ export class AddressRepo extends Repository<Address> {
 
     const users = (await getConnection().query(sql)) as User[];
     return users;
+  }
+
+  public async createFormattedAddress(
+    address: Partial<AddressInput>
+  ): Promise<Address | null> {
+    const { city, country, lat, lng, state } = address;
+    if (!lat || !lng) {
+      throw new Error('Latitude and longitude are required');
+    }
+    if (!city || !country || !state) {
+      return await this.findAddressWithLatLng(lat, lng);
+    }
+    return null;
   }
 }

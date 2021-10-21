@@ -23,6 +23,7 @@ import {
 import {
   CommentResponse,
   CreateMissingPostResponse,
+  VotingResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
@@ -33,7 +34,11 @@ import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
-import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import {
+  CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
+  CREATE_INVALID_ERROR,
+} from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { NotificationType } from './../types/types';
@@ -172,13 +177,13 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return { post: missingPost };
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => VotingResponse)
   @UseMiddleware(isAuth)
   async vote(
     @Arg('postId', () => Int) postId: number,
     @Arg('value', () => Int) value: number,
     @Ctx() { req }: MyContext
-  ): Promise<boolean> {
+  ): Promise<VotingResponse> {
     /** There is two cases to cover here
      *  1. User has not voted for this post before -> Create a new vote and increase/decrease the points by one (TRANSACTION)
      *  2. User has voted for this post
@@ -187,17 +192,18 @@ class MissingPostResolver extends MissingPostBaseResolver {
       */
 
     //check if value is only 1 or -1
-    if (![-1, 1].includes(value)) return false;
+    if (![-1, 1].includes(value))
+      return { errors: [CREATE_INVALID_ERROR('value')], success: false };
     const isUpvote = value === 1;
 
     const { userId } = req.session;
     const post = await MissingPost.findOne(postId, { relations: ['user'] });
     if (!post) {
-      return false;
+      return { errors: [CREATE_NOT_FOUND_ERROR('post')], success: false };
     }
     const user = await User.findOne(userId);
     if (!user) {
-      return false;
+      return { errors: [CREATE_NOT_FOUND_ERROR('user')], success: false };
     }
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
@@ -230,9 +236,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
           ? NotificationType.UPVOTE
           : NotificationType.DOWNVOTE,
       });
+      return { success };
     }
 
-    return success;
+    return { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 
   @Mutation(() => CommentResponse)
@@ -244,11 +251,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const isReply = parentId != null;
     const userId = req.session.userId;
     const user = await User.findOne(userId);
-    if (!user) {
+    if (!user)
       return {
-        errors: [{ field: 'user', code: 404, message: 'User not found' }],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
-    }
 
     const post = await MissingPost.findOne(postId);
     if (!post) {

@@ -1,13 +1,49 @@
-import { User } from './../entity/UserEntities/User';
+import { GoogleAddressParser } from './../utils/GoogleAddressParser';
+import { Language, LatLng } from '@googlemaps/google-maps-services-js';
 import { Service } from 'typedi';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { createGoogleMapsClient } from '../utils/createGoogleMapsClient';
 import { Address } from './../entity/Address';
+import { User } from './../entity/UserEntities/User';
 @Service()
 @EntityRepository(Address)
 export class AddressRepo extends Repository<Address> {
+  async findAddressWithLatLng(
+    lat: number,
+    lng: number
+  ): Promise<Address | null> {
+    const googleMapsClient = createGoogleMapsClient();
+    const latlng: LatLng = [lat, lng];
+
+    try {
+      const { status, data } = await googleMapsClient.reverseGeocode({
+        params: {
+          key: process.env.GOOGLE_MAPS_API_KEY + '',
+          latlng,
+          language: Language.en,
+        },
+      });
+
+      if (status && status === 200 && data?.results?.length) {
+        //We found some locations
+
+        //1. get the most accurate location that has the most address components
+        const { address_components } = data.results.sort((a, b) =>
+          a.address_components?.length < b.address_components?.length ? 1 : -1
+        )[0];
+
+        //2. get the address components
+        return new GoogleAddressParser(address_components).result();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return null;
+  }
   /**
- * Find nearest 20 users from the current location within a radius
- * @param lat: number - latitude of the current location
+   Find nearest 20 users from the current location within a radius
+   @param lat: number - latitude of the current location
    @param lng: number - longitude of the current location
    @param radius: number - radius of the search in kilometers
    @returns Promise<User[]>

@@ -1,4 +1,3 @@
-import { Comment } from './../entity/InteractionsEntities/Comment';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -14,6 +13,8 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
+import { PhotoRepo } from '../repos/PhotoRepo.repo';
+import { UpdootRepo } from '../repos/UpdootRepo.repo';
 import { MyContext } from '../types';
 import {
   CreateCommentInputType,
@@ -26,13 +27,16 @@ import {
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
+import { Comment } from './../entity/InteractionsEntities/Comment';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
-import { PhotoRepo } from '../repos/PhotoRepo.repo';
-import { UpdootRepo } from '../repos/UpdootRepo.repo';
+import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { AddressRepo } from './../repos/AddressRepo.repo';
+import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { NotificationType } from './../types/types';
 
 const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 
@@ -40,7 +44,9 @@ const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 class MissingPostResolver extends MissingPostBaseResolver {
   constructor(
     private readonly photoRepo: PhotoRepo,
-    private readonly updootRepo: UpdootRepo
+    private readonly updootRepo: UpdootRepo,
+    private readonly notificationRepo: NotificationRepo,
+    private readonly addressRepo: AddressRepo
   ) {
     super();
   }
@@ -77,7 +83,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const user = await User.findOne(userId);
     if (!user)
       return {
-        errors: [{ field: 'user', code: 404, message: 'User not found' }],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
 
     //1. Create the location
@@ -139,12 +145,30 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     if (!success)
       return {
-        errors: [
-          { code: 500, message: 'Internal Server Error', field: 'server' },
-        ],
+        errors: [INTERNAL_SERVER_ERROR],
       };
 
     //TODO:  create notification to nearest 20 users that there is a missing pet
+
+    if (address && address?.lat && address?.lng) {
+      //1. get the nearest 20 users
+      const nearbyUsers = await this.addressRepo.findNearestUsers(
+        address.lat,
+        address.lng,
+        2
+      );
+
+      //2. send them a notification that there is a pet missing around them
+      nearbyUsers?.forEach((receiver) => {
+        this.notificationRepo.createNotification({
+          performer: user,
+          content: missingPost,
+          receiver,
+          notificationType: NotificationType.MISSING_PET_AROUND_YOU,
+        });
+      });
+    }
+
     return { post: missingPost };
   }
 
@@ -155,18 +179,19 @@ class MissingPostResolver extends MissingPostBaseResolver {
     @Arg('value', () => Int) value: number,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    /* There is two cases to cover here
+    /** There is two cases to cover here
      *  1. User has not voted for this post before -> Create a new vote and increase/decrease the points by one (TRANSACTION)
      *  2. User has voted for this post
-     *    * 2.1 User has changed his vote -> Update the current vote and increase/decrease the points by two (TRANSACTION)
-     *    * 2.2 User has not changed his vote -> Do Nothing
-     * */
+         2.1 User has changed his vote -> Update the current vote and increase/decrease the points by two (TRANSACTION)
+         2.2 User has not changed his vote -> Do Nothing
+      */
 
     //check if value is only 1 or -1
     if (![-1, 1].includes(value)) return false;
+    const isUpvote = value === 1;
 
     const { userId } = req.session;
-    const post = await MissingPost.findOne(postId);
+    const post = await MissingPost.findOne(postId, { relations: ['user'] });
     if (!post) {
       return false;
     }
@@ -176,7 +201,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
-    let success;
+    let success = false;
     if (!updoot) {
       //1. User has not voted for this post before
       success = await this.updootRepo.createUpdoot({
@@ -186,23 +211,30 @@ class MissingPostResolver extends MissingPostBaseResolver {
         value,
         type: 'post',
       });
-    } else {
+    } else if (updoot.value !== value) {
       //2 User has voted for this post before and has changed his vote
-      if (updoot.value !== value) {
-        success = await this.updootRepo.updateUpdootValue({
-          updoot,
-          entity: post,
-          value,
-        });
-      } else {
-        success = false;
-      }
+
+      success = await this.updootRepo.updateUpdootValue({
+        updoot,
+        entity: post,
+        value,
+      });
+    }
+
+    if (success) {
+      this.notificationRepo.createNotification({
+        performer: user,
+        content: post,
+        receiver: post.user,
+        notificationType: isUpvote
+          ? NotificationType.UPVOTE
+          : NotificationType.DOWNVOTE,
+      });
     }
 
     return success;
   }
 
-  //todo: add post comments
   @Mutation(() => CommentResponse)
   @UseMiddleware(isAuth)
   async comment(

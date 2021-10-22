@@ -1,6 +1,10 @@
 import { AddressInput } from './../types/inputTypes';
 import { GoogleAddressParser } from './../utils/GoogleAddressParser';
-import { Language, LatLng } from '@googlemaps/google-maps-services-js';
+import {
+  GeocodeComponents,
+  Language,
+  LatLng,
+} from '@googlemaps/google-maps-services-js';
 import { Service } from 'typedi';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { createGoogleMapsClient } from '../utils/createGoogleMapsClient';
@@ -10,18 +14,51 @@ import { User } from './../entity/UserEntities/User';
 @EntityRepository(Address)
 export class AddressRepo extends Repository<Address> {
   private readonly API_KEY = process.env.GOOGLE_MAPS_API_KEY + '';
+  private readonly googleMapsClient = createGoogleMapsClient();
+
   /**
-   * This will return the latitude and longitude for the given address
+   * This method will return the latitude and longitude for the given address components
+   * @param address - The user's address components
+   * @example
+   * const components = {
+      country: 'Egypt',
+      locality: 'Al Gharbiya',
+      administrative_area: 'country',
+      route: 'Tanta',
+    }
+   * this.findLatLngWithComponents(components) -> {lat: -37.814, lng: 144.963}
+   */
+  async findLatLngWithComponents(
+    components: GeocodeComponents
+  ): Promise<LatLng | null> {
+    if (!components) return null;
+    try {
+      const { data, status } = await this.googleMapsClient.geocode({
+        params: { key: this.API_KEY, components },
+      });
+      if (status && status === 200 && data?.results?.length) {
+        //We found some locations
+        const { lat, lng } = data.results[0].geometry.location;
+
+        return { lat, lng };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  }
+
+  /**
+   * This method will return the latitude and longitude for the given address string
    * @param address - The user's address input for example
    * @example
-   * this.findLatLng('High Ridge Drive Gloucester') -> {lat: -37.814, lng: 144.963}
+   * this.findLatLngWithStringAddress('High Ridge Drive Gloucester') -> {lat: -37.814, lng: 144.963}
    */
   async findLatLngWithStringAddress(address: string): Promise<LatLng | null> {
     if (!address) return null;
-    const googleMapsClient = createGoogleMapsClient();
 
     try {
-      const { data, status } = await googleMapsClient.geocode({
+      const { data, status } = await this.googleMapsClient.geocode({
         params: { key: this.API_KEY, address },
       });
 
@@ -41,11 +78,10 @@ export class AddressRepo extends Repository<Address> {
     lat: number,
     lng: number
   ): Promise<Address | null> {
-    const googleMapsClient = createGoogleMapsClient();
     const latlng: LatLng = [lat, lng];
 
     try {
-      const { status, data } = await googleMapsClient.reverseGeocode({
+      const { status, data } = await this.googleMapsClient.reverseGeocode({
         params: {
           key: this.API_KEY,
           latlng,

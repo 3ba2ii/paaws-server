@@ -55,6 +55,7 @@ import {
 import { isAuth } from './../middleware/isAuth';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
+import { GeocodeComponents } from '@googlemaps/google-maps-services-js';
 
 require('dotenv-safe').config();
 
@@ -85,6 +86,15 @@ class UserResolver extends UserBaseResolver {
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
   me(@Ctx() { req }: MyContext): Promise<User | undefined> {
+    const components: GeocodeComponents = {
+      country: 'Egypt',
+      locality: 'Al Gharbiya',
+      administrative_area: 'country',
+      postal_code: '',
+      route: 'Tanta',
+    };
+    this.addressRepo.findLatLngWithComponents(components);
+
     return User.findOne(req.session.userId);
   }
 

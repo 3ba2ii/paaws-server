@@ -21,14 +21,16 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   userId: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.comments)
+  @ManyToOne(() => User, (user) => user.comments, { onDelete: 'CASCADE' })
   user: User;
 
   @Field(() => Int)
   @Column()
   postId: number;
 
-  @ManyToOne(() => MissingPost, (post) => post.comments)
+  @ManyToOne(() => MissingPost, (post) => post.comments, {
+    onDelete: 'CASCADE',
+  })
   post: MissingPost;
 
   @Field(() => Int)

@@ -26,7 +26,7 @@ export class AddressRepo extends Repository<Address> {
       administrative_area: 'country',
       route: 'Tanta',
     }
-   * this.findLatLngWithComponents(components) -> {lat: -37.814, lng: 144.963}
+   * const {lat,lng} = await this.findLatLngWithComponents(components)
    */
   async findLatLngWithComponents(
     components: GeocodeComponents
@@ -52,7 +52,7 @@ export class AddressRepo extends Repository<Address> {
    * This method will return the latitude and longitude for the given address string
    * @param address - The user's address input for example
    * @example
-   * this.findLatLngWithStringAddress('High Ridge Drive Gloucester') -> {lat: -37.814, lng: 144.963}
+   * const {lat,lng} = this.findLatLngWithStringAddress('High Ridge Drive Gloucester')
    */
   async findLatLngWithStringAddress(address: string): Promise<LatLng | null> {
     if (!address) return null;

@@ -9,6 +9,34 @@ import { User } from './../entity/UserEntities/User';
 @Service()
 @EntityRepository(Address)
 export class AddressRepo extends Repository<Address> {
+  private readonly API_KEY = process.env.GOOGLE_MAPS_API_KEY + '';
+  /**
+   * This will return the latitude and longitude for the given address
+   * @param address - The user's address input for example
+   * @example
+   * this.findLatLng('High Ridge Drive Gloucester') -> {lat: -37.814, lng: 144.963}
+   */
+  async findLatLngWithStringAddress(address: string): Promise<LatLng | null> {
+    if (!address) return null;
+    const googleMapsClient = createGoogleMapsClient();
+
+    try {
+      const { data, status } = await googleMapsClient.geocode({
+        params: { key: this.API_KEY, address },
+      });
+
+      if (status && status === 200 && data?.results?.length) {
+        //We found some locations
+        const { lat, lng } = data.results[0].geometry.location;
+
+        return { lat, lng };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  }
+
   async findAddressWithLatLng(
     lat: number,
     lng: number
@@ -19,7 +47,7 @@ export class AddressRepo extends Repository<Address> {
     try {
       const { status, data } = await googleMapsClient.reverseGeocode({
         params: {
-          key: process.env.GOOGLE_MAPS_API_KEY + '',
+          key: this.API_KEY,
           latlng,
           language: Language.en,
         },
@@ -41,6 +69,29 @@ export class AddressRepo extends Repository<Address> {
     }
 
     return null;
+  }
+  /**
+   * @param address - The user's address input
+   * @returns {Promise<Address | null>} - The created address object
+   */
+  public async createFormattedAddress(
+    address: Partial<AddressInput>
+  ): Promise<Address | null> {
+    const { city, country, lat, lng, state } = address;
+    let formattedAddress: Address | null = null;
+    if (!lat || !lng) {
+      return formattedAddress;
+    }
+    if (!city || !country || !state) {
+      //in case of any missing data, we need to get the address from google maps
+      formattedAddress = await this.findAddressWithLatLng(lat, lng);
+    } else {
+      formattedAddress = Address.create({
+        ...address,
+      });
+    }
+
+    return formattedAddress;
   }
   /**
    Find nearest 20 users from the current location within a radius
@@ -77,30 +128,5 @@ export class AddressRepo extends Repository<Address> {
 
     const users = (await getConnection().query(sql)) as User[];
     return users;
-  }
-
-  /**
-   *
-   * @param address - The user's address input
-   * @returns {Promise<Address | null>} - The created address object
-   */
-  public async createFormattedAddress(
-    address: Partial<AddressInput>
-  ): Promise<Address | null> {
-    const { city, country, lat, lng, state } = address;
-    let formattedAddress: Address | null = null;
-    if (!lat || !lng) {
-      return formattedAddress;
-    }
-    if (!city || !country || !state) {
-      //in case of any missing data, we need to get the address from google maps
-      formattedAddress = await this.findAddressWithLatLng(lat, lng);
-    } else {
-      formattedAddress = Address.create({
-        ...address,
-      });
-    }
-
-    return formattedAddress;
   }
 }

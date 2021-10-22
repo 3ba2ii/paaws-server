@@ -36,12 +36,12 @@ export class Address extends BaseEntity {
   @Column({ nullable: true })
   formatted_address?: string;
 
-  @Field(() => String, { nullable: true })
-  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  @Field(() => String)
+  @Column('decimal', { precision: 10, scale: 6 })
   lat: number;
 
-  @Field(() => String, { nullable: true })
-  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  @Field(() => String)
+  @Column('decimal', { precision: 10, scale: 6 })
   lng: number;
 
   @Field({ nullable: true })

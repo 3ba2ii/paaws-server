@@ -27,7 +27,6 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { Address } from './../entity/Address';
 import { Comment } from './../entity/InteractionsEntities/Comment';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
@@ -102,12 +101,13 @@ class MissingPostResolver extends MissingPostBaseResolver {
     });
 
     //todo: given the lng and lat, find the closest location if not provided
+
     //2. Create the address
     if (address) {
-      const new_address = Address.create({
+      const new_address = await this.addressRepo.createFormattedAddress({
         ...address,
       });
-      missingPost.address = new_address;
+      if (new_address) missingPost.address = new_address;
     }
     //3. Create the images
     const resolvedStreams = await this.photoRepo.getMultipleImagesStreams(

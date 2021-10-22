@@ -1,10 +1,4 @@
 import {
-  INTERNAL_SERVER_ERROR,
-  CREATE_INVALID_ERROR,
-  CREATE_NOT_FOUND_ERROR,
-  CREATE_NOT_AUTHORIZED_ERROR,
-} from './../errors';
-import {
   Arg,
   Ctx,
   Int,
@@ -13,11 +7,16 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
-import { In, LessThan, getConnection } from 'typeorm';
-import { createBaseResolver } from '../utils/createBaseResolver';
+import { getConnection, In, LessThan } from 'typeorm';
 import { Comment } from './../entity/InteractionsEntities/Comment';
 import { CommentUpdoot } from './../entity/InteractionsEntities/CommentUpdoots';
 import { User } from './../entity/UserEntities/User';
+import {
+  CREATE_INVALID_ERROR,
+  CREATE_NOT_AUTHORIZED_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
+} from './../errors';
 import { isAuth } from './../middleware/isAuth';
 import { UpdootRepo } from './../repos/UpdootRepo.repo';
 import { MyContext } from './../types';
@@ -25,14 +24,15 @@ import {
   MissingPostComments,
   ParentCommentReplies,
 } from './../types/inputTypes';
-import { CommentResponse, PaginatedComments } from './../types/responseTypes';
+import {
+  CommentResponse,
+  DeleteResponse,
+  PaginatedComments,
+} from './../types/responseTypes';
 
-const CommentBaseResolver = createBaseResolver('Comment', Comment);
 @Resolver(Comment)
-export class CommentResolver extends CommentBaseResolver {
-  constructor(private readonly updootRepo: UpdootRepo) {
-    super();
-  }
+export class CommentResolver {
+  constructor(private readonly updootRepo: UpdootRepo) {}
 
   private async getReplies(
     parentId: number | number[],
@@ -59,8 +59,6 @@ export class CommentResolver extends CommentBaseResolver {
   async comments(
     @Arg('options') { limit, postId, cursor }: MissingPostComments
   ): Promise<PaginatedComments> {
-    //1. Fetch the latest 10 comments for the given post id where parentID equals null
-
     /*     
     1. Select all the comments where postId = given postId and parentId is NULL 
     2. SELECT all the comments where parentId in the list of parentIds
@@ -78,10 +76,7 @@ export class CommentResolver extends CommentBaseResolver {
       order: { createdAt: 'DESC' },
       take: realLimitPlusOne,
     });
-    /* 
-     todo: can be improved by using a FieldResolver instead of always fetching the replies
-     * -> But its not really needed as the whole mutation performs only two sql queries
-    */
+
     const { comments: replies, errors } = await this.getReplies(
       comments.map((c) => c.id),
       null,
@@ -117,13 +112,7 @@ export class CommentResolver extends CommentBaseResolver {
       (typeof text === 'string' && text.trim().length === 0)
     ) {
       return {
-        errors: [
-          {
-            field: 'text',
-            message: 'Not a valid text',
-            code: 400,
-          },
-        ],
+        errors: [CREATE_INVALID_ERROR('text')],
       };
     }
     const comment = await Comment.findOne(commentId);
@@ -243,21 +232,21 @@ export class CommentResolver extends CommentBaseResolver {
     };
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => DeleteResponse)
   @UseMiddleware(isAuth)
   async deleteComment(
     @Arg('commentId', () => Int) commentId: number,
     @Ctx() { req }: MyContext
-  ) {
+  ): Promise<DeleteResponse> {
     const { userId } = req.session;
 
     const comment = await Comment.findOne(commentId);
 
     if (!comment) {
-      return false;
+      return { errors: [CREATE_NOT_FOUND_ERROR('comment')], deleted: false };
     }
     if (comment.userId !== userId) {
-      return false;
+      return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')], deleted: false };
     }
     if (typeof comment.parentId === 'number') {
       //then it is a reply -> just delete the reply
@@ -273,6 +262,6 @@ export class CommentResolver extends CommentBaseResolver {
         [comment.id]
       );
     }
-    return true;
+    return { deleted: true };
   }
 }

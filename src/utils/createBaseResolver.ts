@@ -34,9 +34,7 @@ export function createBaseResolver<T extends ClassType>(
         };
       if (instance.userId !== userId) {
         return {
-          errors: [
-            { field: 'user', code: 403, message: 'Not authorized user' },
-          ],
+          errors: [{ field: 'user', code: 403, message: 'Not Authorized' }],
           deleted: false,
         };
       }

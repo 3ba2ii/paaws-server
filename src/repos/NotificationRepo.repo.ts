@@ -22,7 +22,7 @@ export class NotificationRepo extends Repository<Notification> {
   2. COMMENT_NOTIFICATION -> someone has commented on a post -> post id 
   3. MISSING_PET_AROUND_NOTIFICATION -> someone has posted a post for a missing pet near you -> post id
   todo next 
-    * 4. NEW_PET_FOUND_NOTIFICATION -> someone has posted a post for a new pet near you -> post id
+    * 4. NEW_PET_NOTIFICATION -> someone has posted a post for a new pet near you -> post id
   */
 
   private getMessageForNotification(

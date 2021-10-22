@@ -54,8 +54,9 @@ export class UpdootRepo extends Repository<Updoot> {
   }: UpdateUpdootProps): Promise<boolean> {
     //1. check if the user has changed his updoot so many times in the last 5 minutes (to prevent spam)
     const diffInMinutes = this.getLastChangeTimeDiff(updoot);
-    if (diffInMinutes < 10 && updoot.changes > 5) {
+    if (diffInMinutes <= 10 && updoot.changes > 5) {
       //user has changed his vote more than 5 times in 10 minutes (SPAM)
+      console.log('❌ SPAM');
       return false;
     }
     //if the user has already updooted the comment and now wants to change the value

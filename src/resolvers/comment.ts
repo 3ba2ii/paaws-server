@@ -1,4 +1,9 @@
-import { INTERNAL_SERVER_ERROR, CREATE_INVALID_ERROR } from './../errors';
+import {
+  INTERNAL_SERVER_ERROR,
+  CREATE_INVALID_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+  CREATE_NOT_AUTHORIZED_ERROR,
+} from './../errors';
 import {
   Arg,
   Ctx,
@@ -8,7 +13,7 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
-import { In, LessThan } from 'typeorm';
+import { In, LessThan, getConnection } from 'typeorm';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Comment } from './../entity/InteractionsEntities/Comment';
 import { CommentUpdoot } from './../entity/InteractionsEntities/CommentUpdoots';
@@ -124,23 +129,16 @@ export class CommentResolver extends CommentBaseResolver {
     const comment = await Comment.findOne(commentId);
     if (!comment) {
       return {
-        errors: [
-          {
-            field: 'commentId',
-            message: 'Comment not found',
-            code: 404,
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('comment')],
       };
     }
     if (comment.userId !== req.session.userId) {
       return {
         errors: [
-          {
-            field: 'commentId',
-            message: 'you are not the owner of this comment',
-            code: 403,
-          },
+          CREATE_NOT_AUTHORIZED_ERROR(
+            'comment',
+            'you are not the owner of this comment'
+          ),
         ],
       };
     }
@@ -194,25 +192,13 @@ export class CommentResolver extends CommentBaseResolver {
     const user = await User.findOne(userId);
     if (!user) {
       return {
-        errors: [
-          {
-            field: 'user',
-            message: 'User not found',
-            code: 404,
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
     }
     const comment = await Comment.findOne(commentId);
     if (!comment) {
       return {
-        errors: [
-          {
-            field: 'commentId',
-            message: 'Comment not found',
-            code: 404,
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('comment')],
       };
     }
     const updoot = await CommentUpdoot.findOne({
@@ -220,11 +206,23 @@ export class CommentResolver extends CommentBaseResolver {
     });
     if (updoot && updoot.value !== value) {
       //if the user has already updooted the comment and now wants to change the value
-      await this.updootRepo.updateUpdootValue({
+      const success = await this.updootRepo.updateUpdootValue({
         updoot,
         entity: comment,
         value,
       });
+      if (!success) {
+        return {
+          errors: [
+            {
+              field: 'user',
+              code: 400,
+              message:
+                'User has changed his vote more than 5 times in the last 10 minutes',
+            },
+          ],
+        };
+      }
     } else if (!updoot) {
       //if the user has never updooted the comment
       const result = await this.updootRepo.createUpdoot({
@@ -244,5 +242,37 @@ export class CommentResolver extends CommentBaseResolver {
       comment,
     };
   }
-  //todo: in case of deleting a parent comment, delete all the comments that are connected to it
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteComment(
+    @Arg('commentId', () => Int) commentId: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const { userId } = req.session;
+
+    const comment = await Comment.findOne(commentId);
+
+    if (!comment) {
+      return false;
+    }
+    if (comment.userId !== userId) {
+      return false;
+    }
+    if (typeof comment.parentId === 'number') {
+      //then it is a reply -> just delete the reply
+      await comment.remove();
+    } else if (comment.parentId != null) {
+      //then it is a parent comment -> cascade delete the comment and all the replies related to id
+      await getConnection().query(
+        `
+        delete from comment
+        where "parentId" = $1 or id = $1
+        --> this sql query will remove all the comments that are connected to the given comment and also the given comment
+      `,
+        [comment.id]
+      );
+    }
+    return true;
+  }
 }

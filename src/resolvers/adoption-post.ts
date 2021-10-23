@@ -20,6 +20,7 @@ import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
+import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
 import {
   AdoptionPetsFilters,
@@ -32,7 +33,6 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { PhotoRepo } from '../repos/PhotoRepo.repo';
 
 const AdoptionPostBaseResolver = createBaseResolver(
   'AdoptionPost',

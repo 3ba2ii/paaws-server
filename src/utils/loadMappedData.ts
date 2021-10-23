@@ -1,5 +1,6 @@
-import { BaseEntity, EntityTarget, getRepository } from 'typeorm';
-interface ConstructorWithId extends BaseEntity {
+import { ClassType } from 'type-graphql';
+import { BaseEntity, EntityTarget, getRepository, In } from 'typeorm';
+export interface ConstructorWithId extends BaseEntity {
   id: number;
 }
 
@@ -18,3 +19,28 @@ export const loadMappedData = async <T extends ConstructorWithId>(
   });
   return idList.map((id) => mappedData[id]);
 };
+
+export async function createOneToManyLoader<T extends Partial<ClassType>>(
+  entity: EntityTarget<T>,
+  ids: number[],
+  keyField: string = 'id'
+): Promise<T[][]> {
+  const repo = getRepository(entity);
+  const data = (await repo.find({
+    where: {
+      [keyField]: In(ids),
+    },
+  })) as T[];
+  const map: Record<number, T[]> = {};
+  //{1: []}
+
+  //we need to map the input ids to the output data (data) and group by petId
+  data.forEach((item: any) => {
+    if (!map[item[keyField]]) {
+      map[item[keyField]] = [];
+    }
+    map[item[keyField]].push(item);
+  });
+
+  return ids.map((id) => map[id]);
+}

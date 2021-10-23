@@ -2,7 +2,8 @@ import {
   createUserLoader,
   createPetLoader,
   createAddressLoader,
-  createImagesLoader,
+  createPetImagesLoader,
+  createPostImageLoader,
 } from './dataLoaders';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
@@ -20,7 +21,8 @@ export const createApolloServer = async (redis: Redis) => {
         petLoader: createPetLoader(),
         userLoader: createUserLoader(),
         addressLoader: createAddressLoader(),
-        petImagesLoader: createImagesLoader(),
+        petImagesLoader: createPetImagesLoader(),
+        postImagesLoader: createPostImageLoader(),
       },
     }),
     schema: await createSchema(),

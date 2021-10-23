@@ -1,10 +1,10 @@
 import DataLoader from 'dataloader';
-import { In } from 'typeorm';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { Address } from './../entity/Address';
 import { PetImages } from './../entity/MediaEntities/PetImages';
-import { loadMappedData } from './loadMappedData';
+import { PostImages } from './../entity/MediaEntities/PostImages';
+import { createOneToManyLoader, loadMappedData } from './loadMappedData';
 
 /* 
 data loader takes separate keys and return data for them without performing multiple sql queries
@@ -29,25 +29,24 @@ export const createAddressLoader = () => {
   });
 };
 
-export const createImagesLoader = () => {
+export const createPetImagesLoader = () => {
   return new DataLoader<number, PetImages[]>(async (petIds) => {
-    //now we want to get all the pet images for the given pet ids
-    const data = await PetImages.find({
-      where: {
-        petId: In(petIds as number[]),
-      },
-    });
-
-    //we must map the input ids (petIds) to the output data (data) and group by petId
-    // {2: [{info}]}
-    let petImages: Record<number, PetImages[]> = {};
-    data.forEach((petImage) => {
-      if (!petImages[petImage.petId]) {
-        petImages[petImage.petId] = [];
-      }
-      petImages[petImage.petId].push(petImage);
-    });
-
-    return petIds.map((petId) => petImages[petId]);
+    const data = await createOneToManyLoader(
+      PetImages,
+      petIds as number[],
+      'petId'
+    );
+    return data;
   });
 };
+export const createPostImageLoader = () => {
+  return new DataLoader<number, PostImages[]>(async (postIds) => {
+    const data = await createOneToManyLoader(
+      PostImages,
+      postIds as number[],
+      'postId'
+    );
+    return data;
+  });
+};
+//we need to make a method that creates a data loader for an entity that returns multiples results for a single id

@@ -64,6 +64,25 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return userLoader.load(userId);
   }
 
+  @FieldResolver({ nullable: true })
+  async images(
+    @Root() { id }: MissingPost,
+    @Ctx() { dataLoaders: { postImagesLoader } }: MyContext
+  ): Promise<PostImages[]> {
+    //we have the post id, we can load the images related to it
+
+    return postImagesLoader.load(id);
+  }
+
+  @FieldResolver({ nullable: true })
+  async thumbnail(
+    @Root() { thumbnailId }: MissingPost,
+    @Ctx() { dataLoaders: { postImagesLoader } }: MyContext
+  ): Promise<Photo | undefined> {
+    //we have the post id, we can load the images related to it
+    return Photo.findOne(thumbnailId);
+  }
+
   @Query(() => [MissingPost])
   async missingPosts(): Promise<MissingPost[]> {
     return MissingPost.find({ order: { createdAt: 'DESC' } });
@@ -116,7 +135,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const postImages = resolvedStreams.map(
       ({ filename, uniqueFileName }, idx) => {
         let isThumbnail = false;
-        if (thumbnailIdx && thumbnailIdx === idx) {
+        if (typeof thumbnailIdx === 'number' && thumbnailIdx === idx) {
           isThumbnail = true;
         }
         return PostImages.create({
@@ -126,6 +145,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
             creator: user,
             isThumbnail,
           }),
+          postId: missingPost.id,
         });
       }
     );
@@ -172,6 +192,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
         });
       });
     }
+    console.log(
+      `🚀 ~ file: missing-post.ts ~ line 197 ~ MissingPostResolver ~ missingPost`,
+      missingPost
+    );
 
     return { post: missingPost };
   }

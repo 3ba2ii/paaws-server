@@ -77,10 +77,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
   @FieldResolver({ nullable: true })
   async thumbnail(
     @Root() { thumbnailId }: MissingPost,
-    @Ctx() { dataLoaders: { postImagesLoader } }: MyContext
+    @Ctx() { dataLoaders: { thumbnailLoader } }: MyContext
   ): Promise<Photo | undefined> {
     //we have the post id, we can load the images related to it
-    return Photo.findOne(thumbnailId);
+    return thumbnailLoader.load(thumbnailId);
   }
 
   @Query(() => [MissingPost])

@@ -1,3 +1,4 @@
+import { Photo } from './../entity/MediaEntities/Photo';
 import DataLoader from 'dataloader';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
@@ -28,6 +29,11 @@ export const createAddressLoader = () => {
     return loadMappedData(Address, addressIds as number[]);
   });
 };
+export const createThumbnailLoader = () => {
+  return new DataLoader<number, Photo>(async (photoIds) => {
+    return loadMappedData(Photo, photoIds as number[]);
+  });
+};
 
 export const createPetImagesLoader = () => {
   return new DataLoader<number, PetImages[]>(async (petIds) => {
@@ -49,4 +55,3 @@ export const createPostImageLoader = () => {
     return data;
   });
 };
-//we need to make a method that creates a data loader for an entity that returns multiples results for a single id

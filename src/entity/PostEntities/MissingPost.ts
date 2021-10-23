@@ -81,6 +81,7 @@ export class MissingPost extends EntityWithDates(
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
 
+  @Field(() => Int)
   @Column({ nullable: true })
   thumbnailId: number;
 

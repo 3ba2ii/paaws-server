@@ -98,7 +98,11 @@ export class AddressRepo extends Repository<Address> {
         )[0];
 
         //2. get the address components
-        return new GoogleAddressParser(address_components).result();
+        const address = new GoogleAddressParser(address_components).result();
+        address.lat = lat;
+        address.lng = lng;
+
+        return address;
       }
     } catch (e) {
       console.error(e);
@@ -118,12 +122,19 @@ export class AddressRepo extends Repository<Address> {
     if (!lat || !lng) {
       return formattedAddress;
     }
+    console.log(
+      `🚀 ~ file: AddressRepo.repo.ts ~ line 119 ~ AddressRepo ~ lat`,
+      lat,
+      lng
+    );
     if (!city || !country || !state) {
       //in case of any missing data, we need to get the address from google maps
       formattedAddress = await this.findAddressWithLatLng(lat, lng);
     } else {
       formattedAddress = Address.create({
         ...address,
+        lat,
+        lng,
       });
     }
 
@@ -134,7 +145,7 @@ export class AddressRepo extends Repository<Address> {
    @param lat: number - latitude of the current location
    @param lng: number - longitude of the current location
    @param radius: number - radius of the search in kilometers
-   @returns Promise<User[]>
+   @returns Promise<User[]> - The nearest 20 users
  */
   async findNearestUsers(
     lat: number,

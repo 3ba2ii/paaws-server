@@ -9,7 +9,7 @@ import {
   Query,
   Resolver,
   Root,
-  UseMiddleware
+  UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
@@ -18,12 +18,12 @@ import { UpdootRepo } from '../repos/UpdootRepo.repo';
 import { MyContext } from '../types';
 import {
   CreateCommentInputType,
-  CreateMissingPostInput
+  CreateMissingPostInput,
 } from '../types/inputTypes';
 import {
   CommentResponse,
   CreateMissingPostResponse,
-  VotingResponse
+  VotingResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
@@ -37,7 +37,7 @@ import {
   CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
   CREATE_NOT_FOUND_ERROR,
-  INTERNAL_SERVER_ERROR
+  INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';

@@ -137,3 +137,9 @@ export class PaginatedReplies extends PaginatedResponse {
   @Field(() => [Comment])
   replies: Comment[];
 }
+
+@ObjectType()
+export class VotingResponse extends ErrorResponse {
+  @Field(() => Boolean, { defaultValue: false })
+  success: boolean = false;
+}

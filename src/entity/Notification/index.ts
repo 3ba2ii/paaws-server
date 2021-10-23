@@ -26,4 +26,7 @@ export abstract class INotification extends EntityWithDates(
   @Field(() => User) //this is the receiver not the creator
   @ManyToOne(() => User, (user) => user.notifications)
   user: User;
+
+  @Field()
+  url: string;
 }

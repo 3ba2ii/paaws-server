@@ -8,6 +8,7 @@ import MissingPostResolver from '../resolvers/missing-post';
 import PetResolver from '../resolvers/pet';
 import PhotoResolver from '../resolvers/photo';
 import UserResolver from '../resolvers/user';
+import { NotificationResolver } from './../resolvers/notification';
 
 let schema: GraphQLSchema;
 
@@ -22,6 +23,7 @@ export const createSchema = async () => {
         AddressResolver,
         MissingPostResolver,
         CommentResolver,
+        NotificationResolver,
       ],
       validate: true,
       container: Container,

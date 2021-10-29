@@ -13,7 +13,11 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { MissingPostTypes, PrivacyType } from '../../types/types';
+import {
+  MissingPostTags,
+  MissingPostTypes,
+  PrivacyType,
+} from '../../types/types';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Comment } from './../InteractionsEntities/Comment';
 import { User } from './../UserEntities/User';
@@ -75,6 +79,9 @@ export class MissingPost extends EntityWithDates(
   @OneToMany(() => PostUpdoot, (updoot) => updoot.post, { cascade: true })
   updoots: PostUpdoot[];
 
+  @Field(() => Int, { nullable: true })
+  voteStatus: number; // 1 for upvote, -1 for downvote, null for no vote
+
   //Comments Section
 
   @Field(() => [Comment])
@@ -89,4 +96,7 @@ export class MissingPost extends EntityWithDates(
   @OneToOne(() => Photo, { cascade: true })
   @JoinColumn()
   thumbnail: Photo;
+
+  @Field(() => [MissingPostTags])
+  tags: [MissingPostTags];
 }

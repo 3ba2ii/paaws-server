@@ -27,6 +27,7 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
+import { Address } from './../entity/Address';
 import { Comment } from './../entity/InteractionsEntities/Comment';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
@@ -41,7 +42,11 @@ import {
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
-import { NotificationType } from './../types/types';
+import {
+  MissingPostTags,
+  MissingPostTypes,
+  NotificationType,
+} from './../types/types';
 
 const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 
@@ -55,6 +60,37 @@ class MissingPostResolver extends MissingPostBaseResolver {
   ) {
     super();
   }
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() { id }: MissingPost,
+    @Ctx() { req, dataLoaders: { votingLoader } }: MyContext
+  ): Promise<number | null> {
+    if (!req.session.userId) return null;
+
+    const updoot = await votingLoader.load({
+      postId: id,
+      userId: req.session.userId,
+    });
+
+    return updoot ? updoot.value : null;
+  }
+
+  @FieldResolver(() => [MissingPostTags])
+  async tags(
+    @Root() { type }: MissingPost,
+    @Ctx() {}: MyContext
+  ): Promise<MissingPostTags[]> {
+    const tags: MissingPostTags[] = [];
+    //1. check if the pet is missing or found
+    if (type === MissingPostTypes.Missing) {
+      tags.push(MissingPostTags.Missing);
+    } else {
+      tags.push(MissingPostTags.Found);
+    }
+    //2. get the distance between the current user and the missing post location
+    //this can be done on the frontend as there is no need to load the missing post
+    return tags;
+  }
 
   @FieldResolver(() => User)
   user(
@@ -62,6 +98,16 @@ class MissingPostResolver extends MissingPostBaseResolver {
     @Ctx() { dataLoaders: { userLoader } }: MyContext
   ): Promise<User> {
     return userLoader.load(userId);
+  }
+
+  @FieldResolver(() => Address, { nullable: true })
+  async address(
+    @Root() { addressId }: MissingPost,
+    @Ctx() { dataLoaders: { addressLoader } }: MyContext
+  ): Promise<Address | undefined> {
+    if (!addressId) return undefined;
+    //we have the post id, we can load the images related to it
+    return addressLoader.load(addressId);
   }
 
   @FieldResolver({ nullable: true })
@@ -77,10 +123,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
   @FieldResolver({ nullable: true })
   async thumbnail(
     @Root() { thumbnailId }: MissingPost,
-    @Ctx() { dataLoaders: { thumbnailLoader } }: MyContext
+    @Ctx() { dataLoaders: { photoLoader } }: MyContext
   ): Promise<Photo | undefined> {
     //we have the post id, we can load the images related to it
-    return thumbnailLoader.load(thumbnailId);
+    return photoLoader.load(thumbnailId);
   }
 
   @Query(() => [MissingPost])

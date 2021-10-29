@@ -6,7 +6,8 @@ import {
   createAddressLoader,
   createPetImagesLoader,
   createPostImageLoader,
-  createThumbnailLoader,
+  createPhotoLoader,
+  createVoteStatusLoader,
 } from './utils/dataLoaders';
 
 export type MyContext = {
@@ -19,6 +20,7 @@ export type MyContext = {
     addressLoader: ReturnType<typeof createAddressLoader>;
     petImagesLoader: ReturnType<typeof createPetImagesLoader>;
     postImagesLoader: ReturnType<typeof createPostImageLoader>;
-    thumbnailLoader: ReturnType<typeof createThumbnailLoader>;
+    photoLoader: ReturnType<typeof createPhotoLoader>;
+    votingLoader: ReturnType<typeof createVoteStatusLoader>;
   };
 };

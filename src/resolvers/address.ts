@@ -6,6 +6,12 @@ import { calculateDistance } from '../utils/calculateDistance';
 
 @Resolver(Address)
 class AddressResolver {
+  /**
+   *
+   * @param lat - The latitude of the stored address
+   * @param lng - The longitude of the stored address
+   * @returns - The distance between the stored address and the current logged in user
+   */
   @FieldResolver()
   async distance(
     @Root() { lat, lng }: Address,

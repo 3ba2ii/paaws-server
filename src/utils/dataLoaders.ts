@@ -1,9 +1,10 @@
-import { Photo } from './../entity/MediaEntities/Photo';
 import DataLoader from 'dataloader';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { Address } from './../entity/Address';
+import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { PetImages } from './../entity/MediaEntities/PetImages';
+import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { createOneToManyLoader, loadMappedData } from './loadMappedData';
 
@@ -29,12 +30,26 @@ export const createAddressLoader = () => {
     return loadMappedData(Address, addressIds as number[]);
   });
 };
-export const createThumbnailLoader = () => {
+export const createPhotoLoader = () => {
   return new DataLoader<number, Photo>(async (photoIds) => {
     return loadMappedData(Photo, photoIds as number[]);
   });
 };
 
+export const createVoteStatusLoader = () => {
+  return new DataLoader<{ postId: number; userId: number }, PostUpdoot | null>(
+    async (keys) => {
+      const updoots = await PostUpdoot.findByIds(keys as any);
+      const updootIdsToUsers: Record<string, PostUpdoot> = {};
+      updoots.forEach((updoot) => {
+        updootIdsToUsers[`${updoot.userId}|${updoot.postId}`] = updoot;
+      });
+      return keys.map((key) => updootIdsToUsers[`${key.userId}|${key.postId}`]);
+    }
+  );
+};
+
+/* One to Many Loaders */
 export const createPetImagesLoader = () => {
   return new DataLoader<number, PetImages[]>(async (petIds) => {
     const data = await createOneToManyLoader(

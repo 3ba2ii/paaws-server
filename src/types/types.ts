@@ -64,6 +64,18 @@ export enum NOTIFICATION_CONTENT_TYPES {
   COMMENT = 'COMMENT', //commentId on postId
   USER = 'USER', //userId
 }
+export enum MissingPostTags {
+  Missing = 'missing',
+  Found = 'found',
+  Rescued = 'rescued',
+  NearYou = 'near-you',
+  Urgent = 'urgent',
+}
+
+registerEnumType(MissingPostTags, {
+  name: 'MissingPostTags',
+  description: 'Missing Post Tags',
+});
 
 registerEnumType(NOTIFICATION_CONTENT_TYPES, {
   name: 'NOTIFICATION_CONTENT_TYPES',

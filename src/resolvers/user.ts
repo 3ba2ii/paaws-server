@@ -1,6 +1,3 @@
-import { AddressRepo } from './../repos/AddressRepo.repo';
-import { NotificationRepo } from './../repos/NotificationRepo.repo';
-import { Notification } from './../entity/Notification/Notification';
 import argon2 from 'argon2';
 import {
   Arg,
@@ -45,6 +42,7 @@ import {
   VERIFY_PHONE_NUMBER_PREFIX,
   __prod__,
 } from './../constants';
+import { Notification } from './../entity/Notification/Notification';
 import {
   CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
@@ -53,9 +51,10 @@ import {
   INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { isAuth } from './../middleware/isAuth';
+import { AddressRepo } from './../repos/AddressRepo.repo';
+import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { MyContext } from './../types';
 import { sendSMS } from './../utils/sendSMS';
-import { GeocodeComponents } from '@googlemaps/google-maps-services-js';
 
 require('dotenv-safe').config();
 
@@ -71,11 +70,13 @@ class UserResolver extends UserBaseResolver {
   }
 
   @FieldResolver(() => Photo, { nullable: true })
-  async avatar(@Root() user: User): Promise<Photo | undefined> {
-    if (!user.avatarId) return undefined;
-    const userAvatar = await Photo.findOne(user.avatarId);
+  async avatar(
+    @Root() { avatarId }: User,
+    @Ctx() { dataLoaders: { photoLoader } }: MyContext
+  ): Promise<Photo | undefined> {
+    if (!avatarId) return undefined;
 
-    return userAvatar;
+    return photoLoader.load(avatarId);
   }
 
   @FieldResolver(() => [Pet])
@@ -86,15 +87,6 @@ class UserResolver extends UserBaseResolver {
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
   me(@Ctx() { req }: MyContext): Promise<User | undefined> {
-    const components: GeocodeComponents = {
-      country: 'Egypt',
-      locality: 'Al Gharbiya',
-      administrative_area: 'country',
-      postal_code: '',
-      route: 'Tanta',
-    };
-    this.addressRepo.findLatLngWithComponents(components);
-
     return User.findOne(req.session.userId);
   }
 

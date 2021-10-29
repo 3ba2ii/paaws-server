@@ -4,6 +4,15 @@ export interface ConstructorWithId extends BaseEntity {
   id: number;
 }
 
+const mapDataToIds = <T extends ConstructorWithId>(data: T[]) => {
+  let mappedData: Record<number, T> = {};
+  data.forEach((d) => {
+    if (d) {
+      mappedData[d.id] = d;
+    }
+  });
+  return mappedData;
+};
 export const loadMappedData = async <T extends ConstructorWithId>(
   entity: EntityTarget<T>,
   idList: number[]
@@ -11,12 +20,7 @@ export const loadMappedData = async <T extends ConstructorWithId>(
   const repo = getRepository(entity);
   const data = await repo.findByIds(idList);
 
-  let mappedData: Record<number, T> = {};
-  data.forEach((d) => {
-    if (d) {
-      mappedData[d.id] = d;
-    }
-  });
+  const mappedData: Record<number, T> = mapDataToIds(data);
   return idList.map((id) => mappedData[id]);
 };
 

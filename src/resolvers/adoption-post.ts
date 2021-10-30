@@ -259,6 +259,7 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     newPetInfo: AdoptionPostUpdateInput,
     @Ctx() { req }: MyContext
   ): Promise<AdoptionPostResponse> {
+    //todo: Fix this cognitive complex function
     const post = await AdoptionPost.findOne(id, { relations: ['pet'] });
 
     if (!post) {

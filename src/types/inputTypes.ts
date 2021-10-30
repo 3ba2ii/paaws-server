@@ -263,7 +263,7 @@ export class CreateCommentInputType {
 
 @InputType()
 export class PaginationArgs {
-  @Field(() => Int, { nullable: true })
+  @Field(() => Int, { nullable: true, defaultValue: 10 })
   limit: number = 10;
 
   @Field({ nullable: true })
@@ -281,3 +281,6 @@ export class ParentCommentReplies extends PaginationArgs {
   @Field(() => Int, { nullable: true })
   parentId: number;
 }
+
+@InputType()
+export class PaginatedMissingPostsInput extends PaginationArgs {}

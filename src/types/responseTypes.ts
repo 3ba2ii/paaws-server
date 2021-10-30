@@ -143,3 +143,9 @@ export class VotingResponse extends ErrorResponse {
   @Field(() => Boolean, { defaultValue: false })
   success: boolean = false;
 }
+
+@ObjectType()
+export class PaginatedMissingPosts extends PaginatedResponse {
+  @Field(() => [MissingPost])
+  missingPosts: MissingPost[];
+}

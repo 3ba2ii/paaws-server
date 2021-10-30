@@ -19,6 +19,7 @@ import { MyContext } from '../types';
 import {
   CreateCommentInputType,
   CreateMissingPostInput,
+  PaginatedMissingPostsInput,
 } from '../types/inputTypes';
 import {
   CommentResponse,
@@ -35,13 +36,13 @@ import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
 import {
-  CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
   CREATE_NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { PaginatedMissingPosts } from './../types/responseTypes';
 import {
   MissingPostTags,
   MissingPostTypes,
@@ -76,10 +77,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
   }
 
   @FieldResolver(() => [MissingPostTags])
-  async tags(
-    @Root() { type }: MissingPost,
-    @Ctx() {}: MyContext
-  ): Promise<MissingPostTags[]> {
+  async tags(@Root() { type }: MissingPost): Promise<MissingPostTags[]> {
     const tags: MissingPostTags[] = [];
     //1. check if the pet is missing or found
     if (type === MissingPostTypes.Missing) {
@@ -129,9 +127,31 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return photoLoader.load(thumbnailId);
   }
 
-  @Query(() => [MissingPost])
-  async missingPosts(): Promise<MissingPost[]> {
-    return MissingPost.find({ order: { createdAt: 'DESC' } });
+  @Query(() => PaginatedMissingPosts)
+  async missingPosts(
+    @Arg('input') { limit, cursor }: PaginatedMissingPostsInput
+  ): Promise<PaginatedMissingPosts> {
+    const realLimit = Math.min(20, limit ? limit : 10);
+    const realLimitPlusOne = realLimit + 1;
+
+    let posts = getConnection()
+      .getRepository(MissingPost)
+      .createQueryBuilder('mp');
+
+    if (cursor)
+      posts.andWhere('mp."createdAt" < :cursor', {
+        cursor: new Date(cursor),
+      });
+
+    const results = await posts
+      .orderBy('mp."createdAt"', 'DESC')
+      .limit(realLimitPlusOne)
+      .getMany();
+
+    return {
+      missingPosts: results.slice(0, realLimit),
+      hasMore: results.length === realLimitPlusOne,
+    };
   }
 
   @Mutation(() => CreateMissingPostResponse)
@@ -238,10 +258,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
         });
       });
     }
-    console.log(
-      `🚀 ~ file: missing-post.ts ~ line 197 ~ MissingPostResolver ~ missingPost`,
-      missingPost
-    );
 
     return { post: missingPost };
   }
@@ -276,10 +292,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
-    let success = false;
+    let votingRes: VotingResponse = { success: false };
     if (!updoot) {
       //1. User has not voted for this post before
-      success = await this.updootRepo.createUpdoot({
+      votingRes = await this.updootRepo.createUpdoot({
         updootTarget: PostUpdoot,
         entity: post,
         user,
@@ -289,14 +305,14 @@ class MissingPostResolver extends MissingPostBaseResolver {
     } else if (updoot.value !== value) {
       //2 User has voted for this post before and has changed his vote
 
-      success = await this.updootRepo.updateUpdootValue({
+      votingRes = await this.updootRepo.updateUpdootValue({
         updoot,
         entity: post,
         value,
       });
     }
 
-    if (success) {
+    if (votingRes.success) {
       this.notificationRepo.createNotification({
         performer: user,
         content: post,
@@ -305,20 +321,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
           ? NotificationType.UPVOTE
           : NotificationType.DOWNVOTE,
       });
-      return { success };
     }
 
-    return {
-      success: false,
-      errors: [
-        CREATE_ALREADY_EXISTS_ERROR(
-          'vote',
-          'User has already voted for this post'
-        ),
-      ],
-    };
+    return votingRes;
   }
-
   @Mutation(() => CommentResponse)
   @UseMiddleware(isAuth)
   async comment(

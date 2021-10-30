@@ -10,6 +10,8 @@ import { Comment } from '../entity/InteractionsEntities/Comment';
 import { Updoot } from '../entity/InteractionsEntities/Updoot';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
+import { INTERNAL_SERVER_ERROR } from './../errors';
+import { VotingResponse } from './../types/responseTypes';
 
 interface UpdateUpdootProps {
   updoot: Updoot;
@@ -51,20 +53,32 @@ export class UpdootRepo extends Repository<Updoot> {
     updoot,
     entity,
     value,
-  }: UpdateUpdootProps): Promise<boolean> {
+  }: UpdateUpdootProps): Promise<VotingResponse> {
     //1. check if the user has changed his updoot so many times in the last 5 minutes (to prevent spam)
     const diffInMinutes = this.getLastChangeTimeDiff(updoot);
     if (diffInMinutes <= 10 && updoot.changes > 5) {
       //user has changed his vote more than 5 times in 10 minutes (SPAM)
       console.log('❌ SPAM');
-      return false;
+      return {
+        success: false,
+        errors: [
+          {
+            code: 400,
+            message:
+              'You have changed your vote more than 5 times in the last 10 minutes. Please stop spamming',
+            field: 'spam',
+          },
+        ],
+      };
     }
     //if the user has already updooted the comment and now wants to change the value
     updoot.value = value;
     entity.points += 2 * value;
     updoot.changes += 1;
 
-    return await this.saveUpdoot(updoot, entity);
+    const success = await this.saveUpdoot(updoot, entity);
+    if (success) return { success: true };
+    return { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 
   public async createUpdoot<T extends MissingPost | Comment>({
@@ -73,7 +87,7 @@ export class UpdootRepo extends Repository<Updoot> {
     user,
     value,
     type,
-  }: CreateUpdootProps<T>): Promise<boolean> {
+  }: CreateUpdootProps<T>): Promise<VotingResponse> {
     const repo = this.conn.getRepository(updootTarget);
     const newUpdoot = repo.create({
       [type]: entity,
@@ -81,6 +95,8 @@ export class UpdootRepo extends Repository<Updoot> {
       value,
     });
     entity.points += value;
-    return await this.saveUpdoot(newUpdoot, entity);
+    const success = await this.saveUpdoot(newUpdoot, entity);
+    if (success) return { success: true };
+    return { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 }

@@ -118,7 +118,7 @@ class UserResolver extends UserBaseResolver {
     const users = await getConnection().query(
       `
           select * from public."user"
-          ${cursor ? `where "createdAt" < $2` : ''}
+          ${cursor ? 'where "createdAt" < $2' : ''}
           order by "createdAt" DESC
           limit $1;
     `,
@@ -315,7 +315,7 @@ class UserResolver extends UserBaseResolver {
 
     const otp = Math.floor(1000 + Math.random() * 9000);
 
-    const token = isEmail ? await v4() : otp;
+    const token = isEmail ? v4() : otp;
 
     const expirationDate = isEmail ? 60 * 60 * 24 : 60 * 10;
     await redis.set(
@@ -325,18 +325,22 @@ class UserResolver extends UserBaseResolver {
       expirationDate
     ); //1 day expiration if email, 10 minutes expiration if phone number)
 
-    isEmail
-      ? await sendEmail(
-          processedIdentifier,
-          `<a href='http://localhost:3000/change-password/${token}'>Reset Password</a>`,
-          'Reset Password Email'
-        )
-      : await sendSMS(
-          `Your requested a reset password here is your ${otp}`,
-          processedIdentifier
-        );
+    try {
+      isEmail
+        ? await sendEmail(
+            processedIdentifier,
+            `<a href='http://localhost:3000/change-password/${token}'>Reset Password</a>`,
+            'Reset Password Email'
+          )
+        : await sendSMS(
+            `Your requested a reset password here is your ${otp}`,
+            processedIdentifier
+          );
 
-    return true;
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
   @Query(() => Boolean)
@@ -392,7 +396,7 @@ class UserResolver extends UserBaseResolver {
   async addUserTag(
     @Arg('tag', () => UserTagsType) tag: UserTagsType,
     @Ctx() { req }: MyContext
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const user = await User.findOne({ id: req.session.userId });
 
     const newTag = UserTag.create({ user, tagName: tag });
@@ -411,7 +415,7 @@ class UserResolver extends UserBaseResolver {
   async updateUser(
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const { bio, lat, lng } = updateOptions;
 
     const userId = req.session.userId;

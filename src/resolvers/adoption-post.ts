@@ -19,6 +19,7 @@ import { Pet } from '../entity/PetEntities/Pet';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
+import { CREATE_NOT_AUTHORIZED_ERROR } from '../errors';
 import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
@@ -33,6 +34,8 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
+import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import { PetRepo } from './../repos/Pet.repo';
 
 const AdoptionPostBaseResolver = createBaseResolver(
   'AdoptionPost',
@@ -41,7 +44,10 @@ const AdoptionPostBaseResolver = createBaseResolver(
 
 @Resolver(AdoptionPost)
 class AdoptionPostResolver extends AdoptionPostBaseResolver {
-  constructor(private readonly photoRepo: PhotoRepo) {
+  constructor(
+    private readonly photoRepo: PhotoRepo,
+    private readonly petRepo: PetRepo
+  ) {
     super();
   }
 
@@ -80,9 +86,6 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
   ): Promise<PaginatedAdoptionPosts> {
     const realLimit = Math.min(20, limit);
     const realLimitPlusOne = realLimit + 1;
-
-    const replacements: any[] = [realLimitPlusOne];
-    if (cursor) replacements.push(new Date(cursor));
 
     /**
      * 1. Filter by pet type [can be multiple] - DONE
@@ -259,88 +262,23 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     newPetInfo: AdoptionPostUpdateInput,
     @Ctx() { req }: MyContext
   ): Promise<AdoptionPostResponse> {
-    //todo: Fix this cognitive complex function
-    const post = await AdoptionPost.findOne(id, { relations: ['pet'] });
+    const post = await AdoptionPost.findOne(id);
 
-    if (!post) {
+    if (!post)
       return {
-        errors: [{ field: 'post', code: 404, message: 'Post not found' }],
+        errors: [CREATE_NOT_FOUND_ERROR('post')],
       };
-    }
 
-    if (post.userId !== req.session.userId) {
-      //Not post owner
+    if (post.userId !== req.session.userId)
       return {
-        errors: [
-          {
-            field: 'post',
-            code: 401,
-            message: 'Not authorized',
-          },
-        ],
+        errors: [CREATE_NOT_AUTHORIZED_ERROR('user')],
       };
-    }
-    const {
-      name,
-      birthDate,
-      gender,
-      size,
-      breeds,
-      vaccinated,
-      spayedOrNeutered,
-      about,
-      type,
-    } = newPetInfo;
-    const { pet } = post;
-    console.log(
-      `🚀 ~ file: post.ts ~ line 306 ~ AdoptionPostResolver ~ pet`,
-      pet.breeds[0]
-    );
 
-    if (name) pet.name = name;
-    if (birthDate) pet.birthDate = birthDate;
-    if (gender) pet.gender = gender;
-    if (size) pet.size = size;
-    if (type) pet.type = type;
-    if (breeds) {
-      //check if the breed already exists on the pet -> no need to create a new one
-      const newBreeds: PetBreed[] = [];
-      breeds.forEach((breed) => {
-        const existingBreed = pet.breeds.find(
-          (pBreed) => pBreed.breed === breed
-        );
-
-        //if not existing breed, create a new one
-        if (!existingBreed) {
-          newBreeds.push(PetBreed.create({ breed }));
-        } else {
-          //if existing breed, add it to the newBreeds array
-          newBreeds.push(existingBreed);
-        }
-      });
-
-      pet.breeds = newBreeds;
-    }
-
-    if (typeof vaccinated === 'boolean') pet.vaccinated = vaccinated;
-    if (typeof spayedOrNeutered === 'boolean')
-      pet.spayedOrNeutered = spayedOrNeutered;
-    if (about) pet.about = about;
-
-    //5. Save pet
-    try {
-      await pet.save();
-    } catch (e) {
+    const { errors } = await this.petRepo.updatePetInfo(newPetInfo, post.petId);
+    if (errors?.length)
       return {
-        errors: [
-          {
-            field: 'pet',
-            code: 500,
-            message: 'Internal Server Error',
-          },
-        ],
+        errors,
       };
-    }
 
     return {
       adoptionPost: post,

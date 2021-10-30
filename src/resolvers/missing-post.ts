@@ -185,8 +185,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       user,
     });
 
-    //todo: given the lng and lat, find the closest location if not provided
-
     //2. Create the address
     if (address) {
       const new_address = await this.addressRepo.createFormattedAddress({

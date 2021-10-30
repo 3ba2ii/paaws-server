@@ -19,7 +19,7 @@ import { MyContext } from '../types';
 import {
   CreateCommentInputType,
   CreateMissingPostInput,
-  PaginatedMissingPostsInput,
+  PaginationArgs,
 } from '../types/inputTypes';
 import {
   CommentResponse,
@@ -129,7 +129,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
   @Query(() => PaginatedMissingPosts)
   async missingPosts(
-    @Arg('input') { limit, cursor }: PaginatedMissingPostsInput
+    @Arg('input') { limit, cursor }: PaginationArgs
   ): Promise<PaginatedMissingPosts> {
     const realLimit = Math.min(20, limit ? limit : 10);
     const realLimitPlusOne = realLimit + 1;

@@ -1,4 +1,5 @@
 import {
+  IsDateString,
   IsEmail,
   IsNotEmpty,
   Length,
@@ -266,7 +267,8 @@ export class PaginationArgs {
   @Field(() => Int, { nullable: true, defaultValue: 10 })
   limit: number = 10;
 
-  @Field({ nullable: true })
+  @IsDateString()
+  @Field({ nullable: true, description: 'Date must be ISO8601 Format' })
   cursor?: string;
 }
 
@@ -281,6 +283,3 @@ export class ParentCommentReplies extends PaginationArgs {
   @Field(() => Int, { nullable: true })
   parentId: number;
 }
-
-@InputType()
-export class PaginatedMissingPostsInput extends PaginationArgs {}

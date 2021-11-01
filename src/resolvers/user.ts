@@ -231,7 +231,7 @@ class UserResolver extends UserBaseResolver {
       await user.save();
       await redis.del(redisKey);
 
-      req.session!.userId = user.id;
+      req.session.userId = user.id;
 
       return { user };
     } catch (err) {
@@ -280,14 +280,14 @@ class UserResolver extends UserBaseResolver {
     user.last_login = new Date();
     user.save();
 
-    req!.session!.userId = user.id;
+    req.session.userId = user.id;
 
     return { user };
   }
 
   //LOGOUT Mutation
   @Mutation(() => Boolean)
-  async logout(@Ctx() { req, res }: MyContext): Promise<Boolean> {
+  async logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
     return new Promise((response) =>
       req.session?.destroy((err) => {
         res.clearCookie(COOKIE_NAME);
@@ -303,7 +303,7 @@ class UserResolver extends UserBaseResolver {
   async forgotPassword(
     @Arg('identifier') identifier: string,
     @Ctx() { redis }: MyContext
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const isEmail = identifier.includes('@');
     const processedIdentifier = identifier.trim().toLowerCase();
     const user = await User.findOne(

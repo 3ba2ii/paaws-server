@@ -83,9 +83,7 @@ class PetResolver extends PetBaseResolver {
     });
     await pet.save();
 
-    return {
-      pet,
-    };
+    return { pet };
   }
 }
 

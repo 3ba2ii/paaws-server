@@ -281,16 +281,16 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     const { userId } = req.session;
     const post = await MissingPost.findOne(postId);
-    if (!post) {
+    if (!post)
       return { errors: [CREATE_NOT_FOUND_ERROR('post')], success: false };
-    }
+
     const user = await User.findOne(userId);
-    if (!user) {
+    if (!user)
       return { errors: [CREATE_NOT_FOUND_ERROR('user')], success: false };
-    }
+
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 
-    let votingRes: VotingResponse = { success: false };
+    let votingRes: VotingResponse;
     if (!updoot) {
       //1. User has not voted for this post before
       votingRes = await this.updootRepo.createUpdoot({
@@ -308,6 +308,9 @@ class MissingPostResolver extends MissingPostBaseResolver {
         entity: post,
         value,
       });
+    } else {
+      //2. User has not changed his vote so he want to delete it
+      votingRes = await this.updootRepo.deleteUpdoot(updoot, post);
     }
 
     if (votingRes.success) {

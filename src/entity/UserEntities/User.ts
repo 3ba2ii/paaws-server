@@ -49,6 +49,9 @@ export class User extends EntityWithDates(
   full_name!: string;
 
   @Field()
+  displayName: string;
+
+  @Field()
   @Column({ default: ProviderTypes.LOCAL })
   provider: ProviderTypes;
 

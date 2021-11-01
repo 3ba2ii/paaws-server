@@ -34,6 +34,7 @@ import {
 import { UserTagsType } from '../types/types';
 import { checkDuplicationError } from '../utils/checkDuplicationError';
 import { createBaseResolver } from '../utils/createBaseResolver';
+import { getDisplayName } from '../utils/getDisplayName';
 import { sendEmail } from '../utils/sendEmail';
 import {
   COOKIE_NAME,
@@ -67,6 +68,11 @@ class UserResolver extends UserBaseResolver {
     private readonly addressRepo: AddressRepo
   ) {
     super();
+  }
+
+  @FieldResolver(() => String)
+  displayName(@Root() { full_name }: User): string {
+    return getDisplayName(full_name);
   }
 
   @FieldResolver(() => Photo, { nullable: true })

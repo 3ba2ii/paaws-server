@@ -1,4 +1,3 @@
-import { Post } from 'src/entity/PostEntities/Post';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';

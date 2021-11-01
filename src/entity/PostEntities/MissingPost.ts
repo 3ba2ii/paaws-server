@@ -47,6 +47,9 @@ export class MissingPost extends EntityWithDates(
   @Column({ type: 'text' })
   description: string;
 
+  @Field(() => String)
+  descriptionSnippet: string;
+
   @Field(() => PrivacyType)
   @Column({
     nullable: true,

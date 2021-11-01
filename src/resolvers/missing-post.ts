@@ -61,6 +61,18 @@ class MissingPostResolver extends MissingPostBaseResolver {
   ) {
     super();
   }
+  @FieldResolver(() => String)
+  descriptionSnippet(
+    @Root() { description }: MissingPost,
+    @Arg('length', () => Int, { nullable: true }) length: number
+  ) {
+    if (!description) return null;
+    let snippet = description.substring(0, length || 80);
+    if (description.length > snippet.length) {
+      snippet += '...';
+    }
+    return snippet;
+  }
   @FieldResolver(() => Int, { nullable: true })
   async voteStatus(
     @Root() { id }: MissingPost,

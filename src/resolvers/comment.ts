@@ -239,6 +239,7 @@ export class CommentResolver {
     @Arg('commentId', () => Int) commentId: number,
     @Ctx() { req }: MyContext
   ): Promise<DeleteResponse> {
+    //!! NEEDS REFACTORING
     const { userId } = req.session;
 
     const comment = await Comment.findOne(commentId);
@@ -255,10 +256,11 @@ export class CommentResolver {
     if (!post) {
       return { errors: [CREATE_NOT_FOUND_ERROR('post')], deleted: false };
     }
+    //we will decrease the comments count by one anyways
     post.commentsCount -= 1;
 
     if (typeof comment.parentId === 'number') {
-      //we must also update the parent's replies count
+      //we must also update the parent comment's replies count, as we're deleting one of his children (reply)
       const parentComment = await Comment.findOne(comment.parentId);
       if (!parentComment) {
         return {
@@ -266,7 +268,7 @@ export class CommentResolver {
           deleted: false,
         };
       }
-      parentComment.repliesCount -= 1;
+      parentComment.repliesCount = Math.max(parentComment.repliesCount - 1, 0);
 
       //then it is a reply -> just delete the reply
       await getConnection().transaction(async (_tm) => {
@@ -275,8 +277,12 @@ export class CommentResolver {
         await post.save();
       });
     } else if (comment.parentId == null) {
-      //then it is a parent comment -> cascade delete the comment and all the replies related to it
-      post.commentsCount -= comment.repliesCount;
+      //it is a parent comment -> cascade delete the comment and all the replies related to it,
+      //and decrease the post's commentsCount again by the number of replies
+      post.commentsCount = Math.max(
+        post.commentsCount - comment.repliesCount,
+        0
+      );
 
       await getConnection().transaction(async (_tm) => {
         await getConnection().query(

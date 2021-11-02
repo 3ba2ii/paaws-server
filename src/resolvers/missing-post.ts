@@ -352,6 +352,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     @Arg('input') { postId, text, parentId }: CreateCommentInputType,
     @Ctx() { req }: MyContext
   ): Promise<CommentResponse> {
+    //!! NEEDS REFACTORING
     const isReply = parentId != null;
     const { userId } = req.session;
     const user = await User.findOne(userId);

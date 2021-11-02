@@ -105,7 +105,7 @@ class UserResolver extends UserBaseResolver {
   }
 
   @Query(() => Int)
-  async usersCount(): Promise<number> {
+  usersCount(): Promise<number> {
     return User.count();
   }
   @Query(() => PaginatedUsers)

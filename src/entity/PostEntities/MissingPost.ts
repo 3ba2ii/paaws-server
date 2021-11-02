@@ -86,6 +86,9 @@ export class MissingPost extends EntityWithDates(
   voteStatus: number; // 1 for upvote, -1 for downvote, null for no vote
 
   //Comments Section
+  @Field(() => Int)
+  @Column({ default: 0 })
+  commentsCount: number;
 
   @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })

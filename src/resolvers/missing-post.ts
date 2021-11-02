@@ -419,7 +419,11 @@ class MissingPostResolver extends MissingPostBaseResolver {
         });
       }
     }
-    await comment.save();
+    post.commentsCount += 1;
+    await getConnection().transaction(async (transactionManager) => {
+      await transactionManager.save(comment);
+      await transactionManager.save(post);
+    });
     /*
     Two cases for comment:
     1. User is commenting on a post -> send a notification to the user who posted the post

@@ -419,9 +419,12 @@ class MissingPostResolver extends MissingPostBaseResolver {
         });
       }
     }
+    //increase the number of replies for the parent comment
+    if (parentComment) parentComment.repliesCount += 1;
     post.commentsCount += 1;
     await getConnection().transaction(async (transactionManager) => {
       await transactionManager.save(comment);
+      if (parentComment) await parentComment.save();
       await transactionManager.save(post);
     });
     /*

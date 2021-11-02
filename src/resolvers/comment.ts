@@ -258,16 +258,27 @@ export class CommentResolver {
     post.commentsCount -= 1;
 
     if (typeof comment.parentId === 'number') {
-      //then it is a reply -> just delete the reply
+      //we must also update the parent's replies count
+      const parentComment = await Comment.findOne(comment.parentId);
+      if (!parentComment) {
+        return {
+          errors: [CREATE_NOT_FOUND_ERROR('parent comment')],
+          deleted: false,
+        };
+      }
+      parentComment.repliesCount -= 1;
 
+      //then it is a reply -> just delete the reply
       await getConnection().transaction(async (_tm) => {
         await comment.remove();
+        await parentComment.save();
         await post.save();
       });
     } else if (comment.parentId == null) {
-      await getConnection().transaction(async (_tm) => {
-        //then it is a parent comment -> cascade delete the comment and all the replies related to id
+      //then it is a parent comment -> cascade delete the comment and all the replies related to it
+      post.commentsCount -= comment.repliesCount;
 
+      await getConnection().transaction(async (_tm) => {
         await getConnection().query(
           `
           delete from comment

@@ -12,6 +12,10 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Column({ nullable: true })
   parentId: number; //if it is null then it is a root comment else it is a reply
 
+  @Field(() => Int)
+  @Column({ default: 0 })
+  repliesCount: number; //number of replies
+
   @Field()
   @Column()
   text: string;

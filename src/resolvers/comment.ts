@@ -1,3 +1,4 @@
+import { MissingPost } from './../entity/PostEntities/MissingPost';
 import {
   Arg,
   Ctx,
@@ -248,20 +249,37 @@ export class CommentResolver {
     if (comment.userId !== userId) {
       return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')], deleted: false };
     }
+    //then decrease the number of comments of the post
+    const post = await MissingPost.findOne(comment.postId);
+
+    if (!post) {
+      return { errors: [CREATE_NOT_FOUND_ERROR('post')], deleted: false };
+    }
+    post.commentsCount -= 1;
+
     if (typeof comment.parentId === 'number') {
       //then it is a reply -> just delete the reply
-      await comment.remove();
-    } else if (comment.parentId != null) {
-      //then it is a parent comment -> cascade delete the comment and all the replies related to id
-      await getConnection().query(
-        `
-        delete from comment
-        where "parentId" = $1 or id = $1
-        --> this sql query will remove all the comments that are connected to the given comment and also the given comment
-      `,
-        [comment.id]
-      );
+
+      await getConnection().transaction(async (_tm) => {
+        await comment.remove();
+        await post.save();
+      });
+    } else if (comment.parentId == null) {
+      await getConnection().transaction(async (_tm) => {
+        //then it is a parent comment -> cascade delete the comment and all the replies related to id
+
+        await getConnection().query(
+          `
+          delete from comment
+          where "parentId" = $1 or id = $1
+          --> this sql query will remove all the comments that are connected to the given comment and also the given comment
+        `,
+          [comment.id]
+        );
+        await post.save();
+      });
     }
+
     return { deleted: true };
   }
 }

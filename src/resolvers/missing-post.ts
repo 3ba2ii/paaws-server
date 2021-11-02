@@ -141,7 +141,12 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
   @Query(() => PaginatedMissingPosts)
   async missingPosts(
-    @Arg('input') { limit, cursor }: PaginationArgs
+    @Arg('input') { limit, cursor }: PaginationArgs,
+    @Arg('types', () => [MissingPostTypes], {
+      nullable: true,
+      defaultValue: [MissingPostTypes.ALL],
+    })
+    types: MissingPostTypes[]
   ): Promise<PaginatedMissingPosts> {
     const realLimit = Math.min(20, limit ? limit : 10);
     const realLimitPlusOne = realLimit + 1;
@@ -154,6 +159,9 @@ class MissingPostResolver extends MissingPostBaseResolver {
       posts.andWhere('mp."createdAt" < :cursor', {
         cursor: new Date(cursor),
       });
+
+    if (!types.includes(MissingPostTypes.ALL))
+      posts.andWhere('mp.type IN (:...types)', { types });
 
     const results = await posts
       .orderBy('mp."createdAt"', 'DESC')

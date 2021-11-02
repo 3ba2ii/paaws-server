@@ -50,6 +50,8 @@ export enum PrivacyType {
 export enum MissingPostTypes {
   Missing = 'missing',
   Found = 'found',
+  Rescued = 'rescued',
+  ALL = 'All',
 }
 export enum NotificationType {
   UPVOTE = 'UPVOTE',
@@ -87,7 +89,7 @@ registerEnumType(NotificationType, {
 
 registerEnumType(MissingPostTypes, {
   name: 'MissingPostTypes',
-  description: 'Either missing or found',
+  description: 'Either missing, found, rescued, or all',
 });
 
 registerEnumType(PrivacyType, {

@@ -1,3 +1,4 @@
+import { Comment } from './../entity/InteractionsEntities/Comment';
 import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -29,7 +30,6 @@ import {
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
-import { Comment } from './../entity/InteractionsEntities/Comment';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
@@ -41,6 +41,7 @@ import {
   INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
+import { CommentRepo } from './../repos/CommentRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { PaginatedMissingPosts } from './../types/responseTypes';
 import {
@@ -57,7 +58,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
     private readonly photoRepo: PhotoRepo,
     private readonly updootRepo: UpdootRepo,
     private readonly notificationRepo: NotificationRepo,
-    private readonly addressRepo: AddressRepo
+    private readonly addressRepo: AddressRepo,
+    private readonly commentRepo: CommentRepo
   ) {
     super();
   }
@@ -349,85 +351,40 @@ class MissingPostResolver extends MissingPostBaseResolver {
   @Mutation(() => CommentResponse)
   @UseMiddleware(isAuth)
   async comment(
-    @Arg('input') { postId, text, parentId }: CreateCommentInputType,
+    @Arg('input') commentInfo: CreateCommentInputType,
     @Ctx() { req }: MyContext
   ): Promise<CommentResponse> {
-    //!! NEEDS REFACTORING
-    const isReply = parentId != null;
+    const isReply = commentInfo.parentId !== null;
     const { userId } = req.session;
     const user = await User.findOne(userId);
     if (!user)
       return {
         errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
-
-    const post = await MissingPost.findOne(postId);
-    if (!post) {
-      return {
-        errors: [CREATE_NOT_FOUND_ERROR('post')],
-      };
-    }
     /* Two cases to cover here
        1. User is commenting on a post
        2. User is replying to a comment   
     */
+    const post = await MissingPost.findOne(commentInfo.postId);
+    if (!post) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
 
-    let comment: Comment;
+    let response: CommentResponse;
     let parentComment: Comment | undefined;
-
-    if (!isReply) {
-      //1. User is commenting on a post
-      comment = Comment.create({
-        text,
-        user,
+    if (isReply) {
+      //we have to find the parent comment
+      parentComment = await Comment.findOne(commentInfo.parentId);
+      if (!parentComment)
+        return { errors: [CREATE_NOT_FOUND_ERROR('comment')] };
+      response = await this.commentRepo.reply(
+        commentInfo,
+        parentComment,
         post,
-      });
+        user.id
+      );
     } else {
-      //2. User is replying to a comment
-      parentComment = await Comment.findOne(parentId);
-
-      //check if the parent comment exists and it is on the same post
-      if (!parentComment || parentComment.postId !== postId) {
-        return {
-          errors: [CREATE_NOT_FOUND_ERROR('comment')],
-        };
-      }
-      if (parentComment.parentId != null) {
-        //then the parent comment is a reply (we only allow two levels of nesting)
-        //create a comment with the grandparent comment as parent for the new comment
-        const grandParentComment = await Comment.findOne(
-          parentComment.parentId
-        );
-        if (!grandParentComment) {
-          return {
-            errors: [CREATE_NOT_FOUND_ERROR('Grandparent')],
-          };
-        }
-        comment = Comment.create({
-          text,
-          user,
-          post,
-          parentId: grandParentComment.id,
-        });
-        parentComment = grandParentComment;
-      } else {
-        //then the parent comment is a top level comment
-        comment = Comment.create({
-          text,
-          user,
-          post,
-          parentId: parentComment.id,
-        });
-      }
+      response = await this.commentRepo.comment(commentInfo, post, user.id);
     }
-    //increase the number of replies for the parent comment
-    if (parentComment) parentComment.repliesCount += 1;
-    post.commentsCount += 1;
-    await getConnection().transaction(async (transactionManager) => {
-      await transactionManager.save(comment);
-      if (parentComment) await parentComment.save();
-      await transactionManager.save(post);
-    });
+
     /*
     Two cases for comment:
     1. User is commenting on a post -> send a notification to the user who posted the post
@@ -435,23 +392,23 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     so either ways we will send a notification to the post owner
     */
+    if (response?.errors?.length === 0)
+      this.notificationRepo.createNotification({
+        performer: user,
+        content: post,
+        receiverId: post.userId, //post owner
+        notificationType: NotificationType.COMMENT_NOTIFICATION,
+      });
+    //if its a reply we also need to send a notification to the user who commented on the parent comment that someone has replied to his comment
 
-    if (parentComment != null) {
+    parentComment &&
       this.notificationRepo.createNotification({
         performer: user,
         content: post,
         receiverId: parentComment.userId, //comment owner
         notificationType: NotificationType.REPLY_NOTIFICATION,
       });
-    }
-    this.notificationRepo.createNotification({
-      performer: user,
-      content: post,
-      receiverId: post.userId, //post owner
-      notificationType: NotificationType.COMMENT_NOTIFICATION,
-    });
-
-    return { comment };
+    return response;
   }
 }
 

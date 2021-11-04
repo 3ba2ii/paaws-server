@@ -239,7 +239,6 @@ export class CommentResolver {
     @Arg('commentId', () => Int) commentId: number,
     @Ctx() { req }: MyContext
   ): Promise<DeleteResponse> {
-    //!! NEEDS REFACTORING
     const { userId } = req.session;
 
     const comment = await Comment.findOne(commentId);
@@ -260,7 +259,7 @@ export class CommentResolver {
     post.commentsCount -= 1;
 
     if (typeof comment.parentId === 'number') {
-      //we must also update the parent comment's replies count, as we're deleting one of his children (reply)
+      //we must also update the parent comment's replies count, as we're deleting one of his children (a reply)
       const parentComment = await Comment.findOne(comment.parentId);
       if (!parentComment) {
         return {

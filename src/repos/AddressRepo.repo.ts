@@ -93,7 +93,7 @@ export class AddressRepo extends Repository<Address> {
         //We found some locations
 
         //1. get the most accurate location that has the most address components
-        const { address_components } = data.results.sort((a, b) =>
+        const { address_components } = [...data.results].sort((a, b) =>
           a.address_components?.length < b.address_components?.length ? 1 : -1
         )[0];
 

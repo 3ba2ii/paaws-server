@@ -4,20 +4,18 @@ jobs:
   Build-Repository:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Started Building"
-      - uses: actions/checkout@v2
-      - run: echo "Fetched Repository ✅"
-
-      - name: Install Node.js
-      - uses: actions/setup-node@v2
+      - name: Installing Node.js
+        uses: actions/setup-node@v1
         with:
-          node-version: '16'
+          node-version: '16.x'
       - run: npm -v
-      - run: echo "Installed npm ✅"
 
-      - name: Installing Dependencies
-      - run: npm install
-      - run: echo "Installed dev dependencies ✅"
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        run: echo "Downloaded repository code"
 
-      - run: npm run build
-      - run: echo "🎉 Build Succeeded"
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Building the application
+        run: npm build

@@ -18,12 +18,8 @@ useContainer(Container);
 const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
-    host: process.env.POSTGRES_HOST || '127.0.0.1',
-    database: process.env.POSTGRES_DB,
-    username: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
-    port: (process.env.POSTGRES_PORT || 5432) as number,
-    synchronize: true,
+    url: process.env.DATABASE_URL,
+    synchronize: !__prod__,
     logging: !__prod__,
     entities: [path.join(__dirname, '/entity/**/*.js')],
     migrations: [path.join(__dirname, '/migration/*.js')],
@@ -38,11 +34,13 @@ const main = async () => {
 
   // Redis session store
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  const redis = new Redis(process.env.REDIS_URL);
+
+  app.set('trust proxy', 1);
 
   app.use(
     cors({
-      origin: ['http://localhost:3000', 'https://studio.apollographql.com'],
+      origin: [process.env.CORS_ORIGIN, 'https://studio.apollographql.com'],
       credentials: true,
     })
   );
@@ -60,9 +58,10 @@ const main = async () => {
         httpOnly: true,
         secure: __prod__, // cookie only works in https on production
         sameSite: 'lax', // CSRF protection
+        domain: __prod__ ? '.3ba2i.software' : undefined,
       },
       saveUninitialized: false,
-      secret: process.env.SESSION_REDIS_SECRET_KEY + '',
+      secret: process.env.SESSION_REDIS_SECRET_KEY,
       resave: false, // don't save session if unmodified
     })
   );
@@ -80,9 +79,12 @@ const main = async () => {
   //applying static routes 'public'
   app.use(express.static(path.join(__dirname, 'public')));
 
-  app.listen(4000, () => {
-    console.log(`🚀 Now listening on port http://localhost:4000/graphql`);
+  const port = parseInt(process.env.PORT) || 4000;
+  app.listen(port, () => {
+    console.log(`🚀 Now listening on port http://localhost:${port}/graphql`);
   });
 };
 
-main();
+main().catch((err) => {
+  console.error(err);
+});

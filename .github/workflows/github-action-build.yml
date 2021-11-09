@@ -9,15 +9,15 @@ jobs:
       - run: echo "Fetched Repository ✅"
 
       - name: Install Node.js
-        - uses: actions/setup-node@v2
-          with:
-            node-version: '16'
-        - run: npm -v
-        - run: echo "Installed npm ✅"
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: npm -v
+      - run: echo "Installed npm ✅"
 
       - name: Installing Dependencies
-        - run: npm install
-        - run: echo "Installed dev dependencies ✅"
+      - run: npm install
+      - run: echo "Installed dev dependencies ✅"
 
-        - run: npm run build
-        - run: echo "🎉 Build Succeeded"
+      - run: npm run build
+      - run: echo "🎉 Build Succeeded"

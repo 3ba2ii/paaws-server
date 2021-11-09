@@ -56,8 +56,8 @@ const main = async () => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 30,
         httpOnly: true,
+        sameSite: __prod__ ? 'none' : 'lax', // CSRF protection
         secure: __prod__, // cookie only works in https on production
-        sameSite: 'lax', // CSRF protection
         domain: __prod__ ? '.3ba2i.software' : undefined,
       },
       saveUninitialized: false,

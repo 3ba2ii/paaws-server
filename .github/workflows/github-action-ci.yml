@@ -20,6 +20,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
         id: docker_build
+        with:
+          push: true
+          tags: user/app:latest
         env:
           SESSION_REDIS_SECRET_KEY: ${{ secrets.SESSION_REDIS_SECRET_KEY }} #naming used below
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
@@ -48,6 +51,3 @@ jobs:
            --build-arg GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
            --build-arg CORS_ORIGIN=$CORS_ORIGIN
           build .
-        with:
-          push: true
-          tags: user/app:latest

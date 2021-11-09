@@ -18,6 +18,7 @@ useContainer(Container);
 const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
+    host: process.env.POSTGRES_HOST || '127.0.0.1',
     database: process.env.POSTGRES_DB,
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,

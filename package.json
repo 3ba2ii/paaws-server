@@ -69,5 +69,8 @@
     "typeorm": "^0.2.37",
     "typeorm-typedi-extensions": "^0.4.1",
     "uuid": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=0.12"
   }
 }

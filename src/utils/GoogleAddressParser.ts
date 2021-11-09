@@ -33,9 +33,7 @@ export class GoogleAddressParser {
       throw Error('Address Components is empty');
     }
 
-    for (let i = 0; i < this.address_components.length; i++) {
-      const component: AddressComponent = this.address_components[i];
-
+    for (let component of this.address_components) {
       if (this.isStreetNumber(component)) {
         this.address.street_number = parseInt(component.long_name);
         this.createFormattedAddress(component.long_name);

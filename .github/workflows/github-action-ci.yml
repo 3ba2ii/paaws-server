@@ -50,3 +50,7 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push 3ba2ii/paaws:lastest
+
+      - name: Deploy to Dokku
+        run: |
+          ssh root@165.22.16.231 "docker pull 3ba2ii/paaws:latest && docker tag 3ba2ii/paaws:latest dokku/api:latest && dokku deploy api latest"

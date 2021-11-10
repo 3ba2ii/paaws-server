@@ -40,13 +40,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: __prod__
-        ? process.env.CORS_ORIGIN
-        : [
-            process.env.CORS_ORIGIN,
-            'http://localhost:3000/*',
-            'https://studio.apollographql.com',
-          ],
+      origin: ['http://localhost:3000', process.env.CORS_ORIGIN],
       credentials: true,
     })
   );
@@ -80,7 +74,10 @@ const main = async () => {
   //Creating a GraphQL endpoint
   apolloServer.applyMiddleware({
     app,
-    cors: true,
+    cors: {
+      credentials: true,
+      origin: ['http://localhost:3000', process.env.CORS_ORIGIN],
+    },
   });
   //applying static routes 'public'
   app.use(express.static(path.join(__dirname, 'public')));

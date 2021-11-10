@@ -80,7 +80,7 @@ const main = async () => {
   //Creating a GraphQL endpoint
   apolloServer.applyMiddleware({
     app,
-    cors: false,
+    cors: true,
   });
   //applying static routes 'public'
   app.use(express.static(path.join(__dirname, 'public')));

@@ -40,8 +40,14 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: [process.env.CORS_ORIGIN, 'https://studio.apollographql.com'],
+      origin: [
+        process.env.CORS_ORIGIN,
+        'http://localhost:3000',
+        'https://3ba2i.software',
+        'https://studio.apollographql.com',
+      ],
       credentials: true,
+      methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
     })
   );
 

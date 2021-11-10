@@ -46,3 +46,6 @@ jobs:
         id: docker_build
         run: |
           docker build -t 3ba2ii/paaws:latest .
+      - name: Push Docker Image
+        run: |
+          docker push 3ba2ii/paaws:latest

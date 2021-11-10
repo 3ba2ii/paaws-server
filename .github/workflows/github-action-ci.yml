@@ -37,7 +37,7 @@ jobs:
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
         run: |
           docker build \
-           -t 3ba2ii/paaws:lastest \
+           -t 3ba2ii/paaws:latest \
            --build-arg SESSION_REDIS_SECRET_KEY=$SESSION_REDIS_SECRET_KEY \
            --build-arg TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID \
            --build-arg TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN \
@@ -49,7 +49,7 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push 3ba2ii/paaws:lastest
+          docker push 3ba2ii/paaws:latest
 
       - name: Deploy to Dokku
         run: |

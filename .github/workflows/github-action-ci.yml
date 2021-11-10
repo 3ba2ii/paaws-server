@@ -27,14 +27,14 @@ jobs:
           cd ${{ github.workspace }} && touch .env.production
       - name: Add values to the .env.production file
         run: |
-          echo "SESSION_REDIS_SECRET_KEY: ${{ secrets.SESSION_REDIS_SECRET_KEY }}" >> .env.production \
-          echo "TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}" >> .env.production \
-          echo "TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}" >> .env.production \
-          echo "SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}" >> .env.production \
-          echo "APP_URL: ${{ secrets.APP_URL }}" >> .env.production \
-          echo "GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env.production \
-          echo "CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}" >> .env.production \
-          touch .env
+          echo "SESSION_REDIS_SECRET_KEY= ${{ secrets.SESSION_REDIS_SECRET_KEY }}" >> .env.production \
+          && echo "TWILIO_ACCOUNT_SID= ${{ secrets.TWILIO_ACCOUNT_SID }}" >> .env.production \
+          && echo "TWILIO_AUTH_TOKEN= ${{ secrets.TWILIO_AUTH_TOKEN }}" >> .env.production \
+          && echo "SENDGRID_API_KEY= ${{ secrets.SENDGRID_API_KEY }}" >> .env.production \
+          && echo "APP_URL= ${{ secrets.APP_URL }}" >> .env.production \
+          && echo "GOOGLE_MAPS_API_KEY= ${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env.production \
+          && echo "CORS_ORIGIN= ${{ secrets.CORS_ORIGIN }}" >> .env.production \
+          && touch .env
       - name: Copy values to the .env file
         run: |
           cp .env.production .env
@@ -46,11 +46,3 @@ jobs:
         id: docker_build
         run: |
           docker build -t 3ba2ii/paaws:latest .
-
-      - name: Push Docker Image
-        run: |
-          docker push 3ba2ii/paaws:latest
-
-      - name: Deploy to Dokku
-        run: |
-          ssh root@165.22.16.231 "docker pull 3ba2ii/paaws:latest && docker tag 3ba2ii/paaws:latest dokku/api:latest && dokku deploy api latest"

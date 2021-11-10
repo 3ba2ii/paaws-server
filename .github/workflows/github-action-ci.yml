@@ -25,7 +25,7 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - name: Build and push
+      - name: Build Docker Image
         id: docker_build
         env:
           SESSION_REDIS_SECRET_KEY: ${{ secrets.SESSION_REDIS_SECRET_KEY }}
@@ -46,3 +46,10 @@ jobs:
            --build-arg GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY \
            --build-arg CORS_ORIGIN=$CORS_ORIGIN \
            .
+      - name: Push Docker Image to DockerHub
+        uses: docker/push-action@v1
+        with:
+          image: 3ba2ii/paaws:lastest
+          tag: lastest
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}

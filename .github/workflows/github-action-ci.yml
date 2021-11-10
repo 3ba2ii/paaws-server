@@ -24,7 +24,7 @@ jobs:
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: Make a .env.production file
         run: |
-          touch .env.production
+          cd ${{ github.workspace }} && touch .env.production
       - name: Add values to the .env.production file
         run: |
           echo "SESSION_REDIS_SECRET_KEY: ${{ secrets.SESSION_REDIS_SECRET_KEY }}" >> .env.production \
@@ -35,6 +35,10 @@ jobs:
           echo "GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env.production \
           echo "CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}" >> .env.production \
           touch .env
+      - name: Copy values to the .env file
+        run: |
+          cp .env.production .env
+
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}

@@ -46,10 +46,7 @@ jobs:
            --build-arg GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY \
            --build-arg CORS_ORIGIN=$CORS_ORIGIN \
            .
-      - name: Push Docker Image to DockerHub
-        uses: docker/push-action@v1
-        with:
-          image: 3ba2ii/paaws:lastest
-          tag: lastest
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker Image
+        run: |
+          docker push 3ba2ii/paaws:lastest

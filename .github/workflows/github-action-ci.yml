@@ -29,12 +29,12 @@ jobs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
         run: |
-          docker \
-           --build-arg SESSION_REDIS_SECRET_KEY=$SESSION_REDIS_SECRET_KEY
-           --build-arg TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
-           --build-arg TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
-           --build-arg SENDGRID_API_KEY=$SENDGRID_API_KEY
-           --build-arg APP_URL=$APP_URL
-           --build-arg GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
-           --build-arg CORS_ORIGIN=$CORS_ORIGIN
-          build .
+          docker build \
+           -t --build-arg SESSION_REDIS_SECRET_KEY=$SESSION_REDIS_SECRET_KEY \
+           --build-arg TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID \
+           --build-arg TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN \
+           --build-arg SENDGRID_API_KEY=$SENDGRID_API_KEY \
+           --build-arg APP_URL=$APP_URL \
+           --build-arg GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY \
+           --build-arg CORS_ORIGIN=$CORS_ORIGIN \
+           .

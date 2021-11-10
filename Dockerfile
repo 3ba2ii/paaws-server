@@ -21,7 +21,6 @@ ARG APP_URL=
 ARG GOOGLE_MAPS_API_KEY=
 ARG CORS_ORIGIN=
 
-
 #COPY .env.production .env
 
 RUN yarn build

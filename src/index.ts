@@ -20,7 +20,7 @@ const main = async () => {
     type: 'postgres',
     url: process.env.DATABASE_URL,
     synchronize: !__prod__,
-    logging: !__prod__,
+    logging: true,
     entities: [path.join(__dirname, '/entity/**/*.js')],
     migrations: [path.join(__dirname, '/migration/*.js')],
     migrationsTableName: 'migrations',
@@ -40,7 +40,11 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: ['http://localhost:3000', process.env.CORS_ORIGIN],
+      origin: [
+        'http://localhost:3000',
+        process.env.CORS_ORIGIN,
+        'https://studio.apollographql.com',
+      ],
       credentials: true,
     })
   );
@@ -76,9 +80,14 @@ const main = async () => {
     app,
     cors: {
       credentials: true,
-      origin: ['http://localhost:3000', process.env.CORS_ORIGIN],
+      origin: [
+        'http://localhost:3000',
+        process.env.CORS_ORIGIN,
+        'https://studio.apollographql.com',
+      ],
     },
   });
+
   //applying static routes 'public'
   app.use(express.static(path.join(__dirname, 'public')));
 

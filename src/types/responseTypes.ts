@@ -149,3 +149,8 @@ export class PaginatedMissingPosts extends PaginatedResponse {
   @Field(() => [MissingPost])
   missingPosts: MissingPost[];
 }
+@ObjectType()
+export class S3URLResponse extends ErrorResponse {
+  @Field({ nullable: true })
+  s3URL?: string;
+}

@@ -1,3 +1,4 @@
+import { AWSS3 } from './../utils/s3';
 import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 import { GraphQLUpload } from 'graphql-upload';
 import {
@@ -5,6 +6,7 @@ import {
   Ctx,
   FieldResolver,
   Mutation,
+  Query,
   Resolver,
   Root,
   UseMiddleware,
@@ -16,6 +18,7 @@ import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import {
   CreateImageResponse,
+  S3URLResponse,
   UploadImageResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
@@ -84,6 +87,12 @@ class PhotoResolver {
     return {
       errors: [INTERNAL_SERVER_ERROR],
     };
+  }
+  @Query(() => S3URLResponse)
+  @UseMiddleware(isAuth)
+  async getS3URL(): Promise<S3URLResponse> {
+    const S3 = new AWSS3();
+    return S3.generateUploadUrl();
   }
 }
 export default PhotoResolver;

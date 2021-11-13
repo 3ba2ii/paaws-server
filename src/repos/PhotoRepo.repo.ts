@@ -1,5 +1,3 @@
-import { createWriteStream } from 'fs';
-import { ImageMetaData } from 'src/types/responseTypes';
 import { Stream } from 'stream';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
@@ -45,22 +43,6 @@ export class PhotoRepo extends Repository<Photo> {
     return Promise.all(streams);
   }
 
-  async saveImageToDisk(
-    metadata: ImageMetaData,
-    uploadProps: Upload
-  ): Promise<Boolean> {
-    //we need to split the operations as it will be used separately inside a transaction
-    //save image to disk
-    const { createReadStream } = uploadProps;
-    if (!createReadStream) {
-      return false;
-    }
-    const { pathName } = metadata;
-    const stream = createReadStream();
-    await stream.pipe(createWriteStream(pathName));
-
-    return true;
-  }
   async getAllImages(): Promise<Photo[]> {
     return Photo.find({});
   }

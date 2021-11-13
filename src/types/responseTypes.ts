@@ -1,9 +1,9 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
 import { Comment } from './../entity/InteractionsEntities/Comment';
+import { Photo } from './../entity/MediaEntities/Photo';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 
 @ObjectType()
@@ -30,11 +30,6 @@ export class PaginatedUsers extends ErrorResponse {
 
   @Field()
   hasMore: boolean;
-}
-@ObjectType()
-export class UploadImageResponse extends ErrorResponse {
-  @Field({ nullable: true })
-  url?: string;
 }
 
 @ObjectType()
@@ -150,7 +145,16 @@ export class PaginatedMissingPosts extends PaginatedResponse {
   missingPosts: MissingPost[];
 }
 @ObjectType()
-export class S3URLResponse extends ErrorResponse {
+export class UploadImageResponse extends ErrorResponse {
   @Field({ nullable: true })
-  s3URL?: string;
+  url?: string;
+
+  @Field({ nullable: true })
+  filename?: string;
+}
+
+@ObjectType()
+export class ImageObjectResponse extends ErrorResponse {
+  @Field(() => Photo)
+  photo?: Photo;
 }

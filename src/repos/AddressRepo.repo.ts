@@ -43,7 +43,7 @@ export class AddressRepo extends Repository<Address> {
         return { lat, lng };
       }
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
     }
     return null;
   }

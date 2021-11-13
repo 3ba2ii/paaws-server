@@ -1,5 +1,3 @@
-import { Comment } from './../entity/InteractionsEntities/Comment';
-import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -30,6 +28,7 @@ import {
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
+import { Comment } from './../entity/InteractionsEntities/Comment';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
@@ -193,8 +192,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
     @Arg('images', () => [GraphQLUpload]) images: Upload[]
   ): Promise<CreateMissingPostResponse> {
     const userId = req.session.userId;
+
     const user = await User.findOne(userId);
-    if (!user)
+
+    if (!userId || !user)
       return {
         errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
@@ -207,7 +208,14 @@ class MissingPostResolver extends MissingPostBaseResolver {
       privacy,
       user,
     });
+    console.log(
+      `🚀 ~ file: missing-post.ts ~ line 211 ~ MissingPostResolver ~ missingPost`,
+      missingPost
+    );
 
+    /* return {
+      errors: [CREATE_NOT_FOUND_ERROR('user')],
+    }; */
     //2. Create the address
     if (address) {
       const new_address = await this.addressRepo.createFormattedAddress({
@@ -215,28 +223,26 @@ class MissingPostResolver extends MissingPostBaseResolver {
       });
       if (new_address) missingPost.address = new_address;
     }
-    //3. Create the images
-    const resolvedStreams = await this.photoRepo.getMultipleImagesStreams(
-      images
+    //3. Create the images - this will create the photos
+    let resolvedPhotos: Photo[] = [];
+    await Promise.all(
+      images.map(async (image) => {
+        const { photo, errors } = await this.photoRepo.createPhoto(
+          image,
+          userId
+        );
+        if (!errors?.length && photo) resolvedPhotos.push(photo);
+      })
     );
-    const postImages = resolvedStreams.map(
-      ({ filename, uniqueFileName }, idx) => {
-        let isThumbnail = false;
-        if (typeof thumbnailIdx === 'number' && thumbnailIdx === idx) {
-          isThumbnail = true;
-        }
-        return PostImages.create({
-          photo: Photo.create({
-            filename,
-            path: uniqueFileName,
-            creator: user,
-            isThumbnail,
-          }),
-          postId: missingPost.id,
-        });
-      }
+
+    console.log(
+      `🚀 ~ file: missing-post.ts ~ line 233 ~ MissingPostResolver ~ postImages ~ missingPost`,
+      missingPost
     );
-    //
+    const postImages = resolvedPhotos.map((photo) => {
+      return PostImages.create({ photo, postId: missingPost.id });
+    });
+
     //4. Associate the thumbnail if exists
     if (typeof thumbnailIdx === 'number')
       missingPost.thumbnail = postImages[thumbnailIdx].photo;
@@ -244,15 +250,11 @@ class MissingPostResolver extends MissingPostBaseResolver {
     missingPost.images = postImages;
 
     //5. save the post and the images
-    const success = await getConnection().transaction(async (_) => {
-      await Promise.all(
-        resolvedStreams.map((s) => {
-          const { stream, pathName } = s;
+    const success = await getConnection().transaction(async () => {
+      //save the photos
+      await missingPost.save(); // save the missing post to get the address
+      //await Promise.all(postImages.map((photo) => photo.save()));
 
-          return stream.pipe(createWriteStream(pathName));
-        })
-      );
-      await missingPost.save();
       return true;
     });
 

@@ -24,13 +24,14 @@ const main = async () => {
     entities: [path.join(__dirname, '/entity/**/*.js')],
     migrations: [path.join(__dirname, '/migration/*.js')],
     migrationsTableName: 'migrations',
+
     cli: {
       migrationsDir: path.join(__dirname, '/migration'),
     },
   });
-
+  //
   const app = express();
-  await conn.runMigrations(); //
+  __prod__ && (await conn.runMigrations()); //
 
   // Redis session store
   const RedisStore = connectRedis(session);

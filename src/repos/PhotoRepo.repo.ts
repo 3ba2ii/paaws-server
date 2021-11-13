@@ -1,19 +1,19 @@
 import { createWriteStream } from 'fs';
-import { CreateImageResponse, ImageMetaData } from 'src/types/responseTypes';
+import { ImageMetaData } from 'src/types/responseTypes';
+import { Stream } from 'stream';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
-import { createImageMetaData } from '../utils/createImage';
 import { Photo } from '../entity/MediaEntities/Photo';
-import { User } from '../entity/UserEntities/User';
 import { Upload } from '../types/Upload';
-
-interface CreatePhotoProps {
-  creator: User;
-  filename: string;
-}
+import { createImageMetaData } from '../utils/createImage';
+import {
+  ImageObjectResponse,
+  UploadImageResponse,
+} from './../types/responseTypes';
+import { AWSS3 } from './../utils/s3';
 
 interface IGetMultipleImagesStream {
-  stream: import('stream').Stream;
+  stream: Stream;
   filename: string;
   uniqueFileName: string;
   pathName: string;
@@ -42,29 +42,7 @@ export class PhotoRepo extends Repository<Photo> {
       };
     });
 
-    const resolvedStreams = await Promise.all(streams);
-
-    return resolvedStreams;
-  }
-  async createPhotoObject({
-    creator,
-    filename,
-  }: CreatePhotoProps): Promise<CreateImageResponse> {
-    const { pathName, uniqueFileName } = createImageMetaData(filename);
-
-    const photo = Photo.create({
-      creator,
-      filename,
-      path: uniqueFileName,
-    });
-    return {
-      metadata: {
-        photo,
-        creator,
-        pathName,
-        uniqueFileName,
-      },
-    };
+    return Promise.all(streams);
   }
 
   async saveImageToDisk(
@@ -85,5 +63,26 @@ export class PhotoRepo extends Repository<Photo> {
   }
   async getAllImages(): Promise<Photo[]> {
     return Photo.find({});
+  }
+  async uploadToS3(file: Upload): Promise<UploadImageResponse> {
+    return new AWSS3().uploadFileToS3(file);
+  }
+  async createPhoto(
+    file: Upload,
+    userId: number
+  ): Promise<ImageObjectResponse> {
+    //2. upload image to s3
+    const { url, filename, errors } = await new AWSS3().uploadFileToS3(file);
+    console.log(
+      `🚀 ~ file: PhotoRepo.repo.ts ~ line 76 ~ PhotoRepo ~ errors`,
+      errors
+    );
+    if (errors && errors.length) {
+      return { errors };
+    }
+    //3. create image object with the given data
+    const photo = Photo.create({ creatorId: userId, url, filename });
+
+    return { photo };
   }
 }

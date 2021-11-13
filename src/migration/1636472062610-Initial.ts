@@ -5,7 +5,7 @@ export class Initial1636472062610 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "address" ("id" SERIAL NOT NULL, "street_name" character varying, "street_number" integer, "city" character varying, "state" character varying, "zip" character varying, "country" character varying, "formatted_address" character varying, "lat" numeric(10,6) NOT NULL, "lng" numeric(10,6) NOT NULL, CONSTRAINT "PK_d92de1f82754668b5f5f5dd4fd5" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "address" ("id" SERIAL NOT NULL, "street_name" character varying, "street_number" integer, "city" character varying, "state" character varying, "zip" character varying, "country" character varying, "formatted_address" character varying, "lat" numeric(10,6) NOT NULL, "lng" numeric(10,6) NOT NULL, CONSTRAINT "PK_d92de1f82754668b5f5f5dd4fd5" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
       `CREATE TYPE "notification_notificationtype_enum" AS ENUM('UPVOTE', 'DOWNVOTE', 'COMMENT_NOTIFICATION', 'REPLY_NOTIFICATION', 'MISSING_PET_AROUND_YOU')`
@@ -14,25 +14,25 @@ export class Initial1636472062610 implements MigrationInterface {
       `CREATE TYPE "notification_contenttype_enum" AS ENUM('POST', 'COMMENT', 'USER')`
     );
     await queryRunner.query(
-      `CREATE TABLE "notification" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "isRead" boolean NOT NULL DEFAULT false, "message" character varying NOT NULL, "expirationDate" TIMESTAMP NOT NULL, "userId" integer NOT NULL, "notificationType" "notification_notificationtype_enum" NOT NULL, "contentType" "notification_contenttype_enum" NOT NULL, "contentId" integer NOT NULL, CONSTRAINT "PK_705b6c7cdf9b2c2ff7ac7872cb7" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "notification" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "isRead" boolean NOT NULL DEFAULT false, "message" character varying NOT NULL, "expirationDate" TIMESTAMP NOT NULL, "userId" integer NOT NULL, "notificationType" "notification_notificationtype_enum" NOT NULL, "contentType" "notification_contenttype_enum" NOT NULL, "contentId" integer NOT NULL, CONSTRAINT "PK_705b6c7cdf9b2c2ff7ac7872cb7" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "photo" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "filename" character varying NOT NULL, "path" character varying, "isOnDisk" boolean NOT NULL DEFAULT true, "isThumbnail" boolean NOT NULL DEFAULT false, "creatorId" integer, CONSTRAINT "PK_723fa50bf70dcfd06fb5a44d4ff" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "photo" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "filename" character varying NOT NULL, "path" character varying, "isOnDisk" boolean NOT NULL DEFAULT true, "isThumbnail" boolean NOT NULL DEFAULT false, "creatorId" integer, CONSTRAINT "PK_723fa50bf70dcfd06fb5a44d4ff" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "pet_images" ("petId" integer NOT NULL, "photoId" integer NOT NULL, CONSTRAINT "REL_da9644c1c13b9dfe3cb6b90649" UNIQUE ("photoId"), CONSTRAINT "PK_2865a46b6a82150f96c11456e26" PRIMARY KEY ("petId", "photoId"))`
+      `CREATE TABLE IF NOT EXISTS "pet_images" ("petId" integer NOT NULL, "photoId" integer NOT NULL, CONSTRAINT "REL_da9644c1c13b9dfe3cb6b90649" UNIQUE ("photoId"), CONSTRAINT "PK_2865a46b6a82150f96c11456e26" PRIMARY KEY ("petId", "photoId"))`
     );
     await queryRunner.query(
       `CREATE TYPE "Breeds" AS ENUM('bulldog', 'huskey')`
     );
     await queryRunner.query(
-      `CREATE TABLE "pet_breed" ("petId" integer NOT NULL, "breed" "Breeds" NOT NULL, CONSTRAINT "PK_d8c7e6a90d7e01819582b247484" PRIMARY KEY ("petId", "breed"))`
+      `CREATE TABLE IF NOT EXISTS "pet_breed" ("petId" integer NOT NULL, "breed" "Breeds" NOT NULL, CONSTRAINT "PK_d8c7e6a90d7e01819582b247484" PRIMARY KEY ("petId", "breed"))`
     );
     await queryRunner.query(
       `CREATE TYPE "Pet_Colors" AS ENUM('red', 'blue', 'green')`
     );
     await queryRunner.query(
-      `CREATE TABLE "pet_color" ("petId" integer NOT NULL, "color" "Pet_Colors" NOT NULL, CONSTRAINT "PK_200ddf060884b200e873547b0b1" PRIMARY KEY ("petId", "color"))`
+      `CREATE TABLE IF NOT EXISTS "pet_color" ("petId" integer NOT NULL, "color" "Pet_Colors" NOT NULL, CONSTRAINT "PK_200ddf060884b200e873547b0b1" PRIMARY KEY ("petId", "color"))`
     );
     await queryRunner.query(
       `CREATE TYPE "pet_type_enum" AS ENUM('dog', 'cat', 'rabbit')`
@@ -44,31 +44,31 @@ export class Initial1636472062610 implements MigrationInterface {
       `CREATE TYPE "pet_size_enum" AS ENUM('sm', 'md', 'lg')`
     );
     await queryRunner.query(
-      `CREATE TABLE "pet" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "type" "pet_type_enum" NOT NULL, "gender" "pet_gender_enum" NOT NULL, "size" "pet_size_enum" NOT NULL, "birthDate" TIMESTAMP NOT NULL, "vaccinated" boolean, "spayedOrNeutered" boolean, "about" character varying NOT NULL, "userId" integer NOT NULL, "thumbnailId" integer, CONSTRAINT "REL_40734110f8582f54c03aec4e5f" UNIQUE ("thumbnailId"), CONSTRAINT "PK_b1ac2e88e89b9480e0c5b53fa60" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "pet" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "type" "pet_type_enum" NOT NULL, "gender" "pet_gender_enum" NOT NULL, "size" "pet_size_enum" NOT NULL, "birthDate" TIMESTAMP NOT NULL, "vaccinated" boolean, "spayedOrNeutered" boolean, "about" character varying NOT NULL, "userId" integer NOT NULL, "thumbnailId" integer, CONSTRAINT "REL_40734110f8582f54c03aec4e5f" UNIQUE ("thumbnailId"), CONSTRAINT "PK_b1ac2e88e89b9480e0c5b53fa60" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "adoption_post" ("id" SERIAL NOT NULL, "addressId" integer, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "petId" integer NOT NULL, "userId" integer NOT NULL, CONSTRAINT "REL_83ce5a69bcd0d81050bad6c12f" UNIQUE ("addressId"), CONSTRAINT "REL_1fb76a6f864aa223d144617c17" UNIQUE ("petId"), CONSTRAINT "PK_7919ae7210dbcbbec98b55f9906" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "adoption_post" ("id" SERIAL NOT NULL, "addressId" integer, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "petId" integer NOT NULL, "userId" integer NOT NULL, CONSTRAINT "REL_83ce5a69bcd0d81050bad6c12f" UNIQUE ("addressId"), CONSTRAINT "REL_1fb76a6f864aa223d144617c17" UNIQUE ("petId"), CONSTRAINT "PK_7919ae7210dbcbbec98b55f9906" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "user_favorites" ("userId" integer NOT NULL, "petId" integer NOT NULL, CONSTRAINT "PK_741b95cd3d269feced46542806c" PRIMARY KEY ("userId", "petId"))`
+      `CREATE TABLE IF NOT EXISTS "user_favorites" ("userId" integer NOT NULL, "petId" integer NOT NULL, CONSTRAINT "PK_741b95cd3d269feced46542806c" PRIMARY KEY ("userId", "petId"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "user_pet" ("userId" integer NOT NULL, "petId" integer NOT NULL, CONSTRAINT "REL_0bc6a403d8216ab10f2f025451" UNIQUE ("petId"), CONSTRAINT "PK_dc4324972daa98568584fd69be4" PRIMARY KEY ("userId", "petId"))`
+      `CREATE TABLE IF NOT EXISTS "user_pet" ("userId" integer NOT NULL, "petId" integer NOT NULL, CONSTRAINT "REL_0bc6a403d8216ab10f2f025451" UNIQUE ("petId"), CONSTRAINT "PK_dc4324972daa98568584fd69be4" PRIMARY KEY ("userId", "petId"))`
     );
     await queryRunner.query(
       `CREATE TYPE "user_tag_tagname_enum" AS ENUM('Cat Person', 'Dog Person', 'Adopter', 'Animal Friend', 'Animal Partner', 'Animal Owner', 'Animal Owner & Adopter')`
     );
     await queryRunner.query(
-      `CREATE TABLE "user_tag" ("userId" integer NOT NULL, "tagName" "user_tag_tagname_enum" NOT NULL, CONSTRAINT "PK_a82d168436b8c48dcbab76389db" PRIMARY KEY ("userId", "tagName"))`
+      `CREATE TABLE IF NOT EXISTS "user_tag" ("userId" integer NOT NULL, "tagName" "user_tag_tagname_enum" NOT NULL, CONSTRAINT "PK_a82d168436b8c48dcbab76389db" PRIMARY KEY ("userId", "tagName"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "user" ("addressId" integer, "id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "email" character varying NOT NULL, "phone" character varying NOT NULL, "full_name" character varying NOT NULL, "provider" character varying NOT NULL DEFAULT 'local', "provider_id" integer, "lat" numeric(10,6), "lng" numeric(10,6), "bio" character varying, "confirmed" boolean NOT NULL DEFAULT false, "blocked" boolean NOT NULL DEFAULT false, "last_login" TIMESTAMP, "password" character varying NOT NULL, "avatarId" integer, CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "UQ_8e1f623798118e629b46a9e6299" UNIQUE ("phone"), CONSTRAINT "REL_217ba147c5de6c107f2fa7fa27" UNIQUE ("addressId"), CONSTRAINT "REL_58f5c71eaab331645112cf8cfa" UNIQUE ("avatarId"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "user" ("addressId" integer, "id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "email" character varying NOT NULL, "phone" character varying NOT NULL, "full_name" character varying NOT NULL, "provider" character varying NOT NULL DEFAULT 'local', "provider_id" integer, "lat" numeric(10,6), "lng" numeric(10,6), "bio" character varying, "confirmed" boolean NOT NULL DEFAULT false, "blocked" boolean NOT NULL DEFAULT false, "last_login" TIMESTAMP, "password" character varying NOT NULL, "avatarId" integer, CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "UQ_8e1f623798118e629b46a9e6299" UNIQUE ("phone"), CONSTRAINT "REL_217ba147c5de6c107f2fa7fa27" UNIQUE ("addressId"), CONSTRAINT "REL_58f5c71eaab331645112cf8cfa" UNIQUE ("avatarId"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "post_updoot" ("updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "value" integer NOT NULL, "changes" integer NOT NULL DEFAULT '0', "postId" integer NOT NULL, CONSTRAINT "PK_4c66f4349aeab3b4f9799aa2e27" PRIMARY KEY ("userId", "postId"))`
+      `CREATE TABLE IF NOT EXISTS "post_updoot" ("updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "value" integer NOT NULL, "changes" integer NOT NULL DEFAULT '0', "postId" integer NOT NULL, CONSTRAINT "PK_4c66f4349aeab3b4f9799aa2e27" PRIMARY KEY ("userId", "postId"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "post_images" ("postId" integer NOT NULL, "photoId" integer NOT NULL, CONSTRAINT "REL_8a5b7e26858b5eb043ce2b9908" UNIQUE ("photoId"), CONSTRAINT "PK_3aa97a53b8accbea293f4c08039" PRIMARY KEY ("postId", "photoId"))`
+      `CREATE TABLE IF NOT EXISTS "post_images" ("postId" integer NOT NULL, "photoId" integer NOT NULL, CONSTRAINT "REL_8a5b7e26858b5eb043ce2b9908" UNIQUE ("photoId"), CONSTRAINT "PK_3aa97a53b8accbea293f4c08039" PRIMARY KEY ("postId", "photoId"))`
     );
     await queryRunner.query(
       `CREATE TYPE "missing_post_privacy_enum" AS ENUM('public', 'private', 'only_me')`
@@ -77,13 +77,13 @@ export class Initial1636472062610 implements MigrationInterface {
       `CREATE TYPE "missing_post_type_enum" AS ENUM('missing', 'found', 'rescued', 'All')`
     );
     await queryRunner.query(
-      `CREATE TABLE "missing_post" ("id" SERIAL NOT NULL, "addressId" integer, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "title" text NOT NULL, "description" text NOT NULL, "privacy" "missing_post_privacy_enum" DEFAULT 'public', "type" "missing_post_type_enum" DEFAULT 'missing', "points" integer NOT NULL DEFAULT '0', "commentsCount" integer NOT NULL DEFAULT '0', "thumbnailId" integer, CONSTRAINT "REL_583c9b02331fdb7c28a1bdcc25" UNIQUE ("addressId"), CONSTRAINT "REL_0e84abeabb4844d84e2d563a2f" UNIQUE ("thumbnailId"), CONSTRAINT "PK_218ad2ead5f6086cbd2dd4abb02" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "missing_post" ("id" SERIAL NOT NULL, "addressId" integer, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "title" text NOT NULL, "description" text NOT NULL, "privacy" "missing_post_privacy_enum" DEFAULT 'public', "type" "missing_post_type_enum" DEFAULT 'missing', "points" integer NOT NULL DEFAULT '0', "commentsCount" integer NOT NULL DEFAULT '0', "thumbnailId" integer, CONSTRAINT "REL_583c9b02331fdb7c28a1bdcc25" UNIQUE ("addressId"), CONSTRAINT "REL_0e84abeabb4844d84e2d563a2f" UNIQUE ("thumbnailId"), CONSTRAINT "PK_218ad2ead5f6086cbd2dd4abb02" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "comment_updoot" ("updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "value" integer NOT NULL, "changes" integer NOT NULL DEFAULT '0', "commentId" integer NOT NULL, CONSTRAINT "PK_c991c46466783171c8a7a96fd0f" PRIMARY KEY ("userId", "commentId"))`
+      `CREATE TABLE IF NOT EXISTS "comment_updoot" ("updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer NOT NULL, "value" integer NOT NULL, "changes" integer NOT NULL DEFAULT '0', "commentId" integer NOT NULL, CONSTRAINT "PK_c991c46466783171c8a7a96fd0f" PRIMARY KEY ("userId", "commentId"))`
     );
     await queryRunner.query(
-      `CREATE TABLE "comment" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "parentId" integer, "repliesCount" integer NOT NULL DEFAULT '0', "text" character varying NOT NULL, "userId" integer NOT NULL, "postId" integer NOT NULL, "points" integer NOT NULL DEFAULT '0', "isEdited" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_0b0e4bbc8415ec426f87f3a88e2" PRIMARY KEY ("id"))`
+      `CREATE TABLE IF NOT EXISTS "comment" ("id" SERIAL NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "parentId" integer, "repliesCount" integer NOT NULL DEFAULT '0', "text" character varying NOT NULL, "userId" integer NOT NULL, "postId" integer NOT NULL, "points" integer NOT NULL DEFAULT '0', "isEdited" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_0b0e4bbc8415ec426f87f3a88e2" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
       `ALTER TABLE "notification" ADD CONSTRAINT "FK_1ced25315eb974b73391fb1c81b" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`

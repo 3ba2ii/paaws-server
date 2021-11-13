@@ -43,7 +43,7 @@ export class AddressRepo extends Repository<Address> {
         return { lat, lng };
       }
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
     }
     return null;
   }
@@ -90,8 +90,6 @@ export class AddressRepo extends Repository<Address> {
       });
 
       if (status && status === 200 && data?.results?.length) {
-        //We found some locations
-
         //1. get the most accurate location that has the most address components
         const { address_components } = [...data.results].sort((a, b) =>
           a.address_components?.length < b.address_components?.length ? 1 : -1
@@ -130,6 +128,10 @@ export class AddressRepo extends Repository<Address> {
     if (!city || !country || !state) {
       //in case of any missing data, we need to get the address from google maps
       formattedAddress = await this.findAddressWithLatLng(lat, lng);
+      console.log(
+        `🚀 ~ file: AddressRepo.repo.ts ~ line 133 ~ AddressRepo ~ formattedAddress`,
+        formattedAddress
+      );
     } else {
       formattedAddress = Address.create({
         ...address,

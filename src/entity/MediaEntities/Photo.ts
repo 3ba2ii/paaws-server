@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, ObjectType, Int } from 'type-graphql';
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { User } from '../UserEntities/User';
@@ -10,22 +10,13 @@ export class Photo extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Column()
   filename: string;
 
-  //Add bytea and path columns
-
-  @Field(() => String)
-  @Column({ nullable: true })
-  path: string;
-
-  @Field(() => Boolean)
-  @Column({ default: true })
-  isOnDisk: boolean;
-
   @Field({ nullable: true })
+  @Column()
   url: string;
 
-  @Field(() => Boolean)
-  @Column({ default: false })
-  isThumbnail: boolean;
+  @Field(() => Int)
+  @Column()
+  creatorId: number;
 
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.photos)

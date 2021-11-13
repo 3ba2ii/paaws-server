@@ -1,4 +1,3 @@
-import { createWriteStream } from 'fs';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -13,7 +12,6 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { Address } from '../entity/Address';
-import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
@@ -34,7 +32,8 @@ import {
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import { PetImages } from './../entity/MediaEntities/PetImages';
+import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 import { PetRepo } from './../repos/Pet.repo';
 
 const AdoptionPostBaseResolver = createBaseResolver(
@@ -157,26 +156,17 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     @Arg('images', () => [GraphQLUpload]) images: Upload[],
     @Ctx() { req }: MyContext
   ): Promise<AdoptionPostResponse> {
-    const user = await User.findOne(req.session.userId);
-    if (!user)
+    const userId = req.session.userId;
+    const user = await User.findOne(userId);
+    if (!userId || !user)
       return {
-        errors: [
-          {
-            field: 'user',
-            code: 404,
-            message: 'User not found',
-          },
-        ],
+        errors: [CREATE_NOT_FOUND_ERROR('user')],
       };
 
     const { petInfo, address: inputAddress } = input;
     const { breeds, thumbnailIdx } = petInfo;
 
     //0. Create an array of read streams
-
-    const resolvedStreams = await this.photoRepo.getMultipleImagesStreams(
-      images
-    );
 
     //1. create the pet
     const pet = Pet.create({
@@ -186,23 +176,15 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     });
 
     //2. create pet images
+    const resolvedPhotos: Photo[] = [];
+    images.forEach(async (image) => {
+      const { photo, errors } = await this.photoRepo.createPhoto(image, userId);
+      if (!errors?.length && photo) resolvedPhotos.push(photo);
+    });
 
-    const petImages = resolvedStreams.map(
-      ({ filename, uniqueFileName }, idx) => {
-        let isThumbnail = false;
-        if (thumbnailIdx && thumbnailIdx === idx) {
-          isThumbnail = true;
-        }
-        return PetImages.create({
-          photo: Photo.create({
-            filename,
-            path: uniqueFileName,
-            creator: user,
-            isThumbnail,
-          }),
-        });
-      }
-    );
+    const petImages = resolvedPhotos.map((photo) => {
+      return PetImages.create({ photo, petId: pet.id });
+    });
 
     //3. associate pet images to pet
     pet.images = petImages;
@@ -227,27 +209,15 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     }
 
     const success = await getConnection().transaction(async (_) => {
-      //I want to save only the adoption post and everything related to it will be saved in cascade
-      // (pet and its images will be saved automatically)
-      //first, save the post
-      await adoptionPost.save();
-
-      //then write images in parallel to disk
-      await Promise.all(
-        resolvedStreams.map((s) => {
-          const { stream, pathName } = s;
-
-          return stream.pipe(createWriteStream(pathName));
-        })
-      );
-      return true;
+      return adoptionPost
+        .save()
+        .then(() => true)
+        .catch(() => false);
     });
 
     if (!success)
       return {
-        errors: [
-          { code: 500, message: 'Internal Server Error', field: 'server' },
-        ],
+        errors: [INTERNAL_SERVER_ERROR],
       };
 
     //TODO:  create notification to nearest 20 users that there is a new pet to adopt in their area

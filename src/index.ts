@@ -88,9 +88,8 @@ const main = async () => {
       ],
     },
   });
-
   //applying static routes 'public'
-  app.use(express.static(path.join(__dirname, 'public')));
+  //app.use(express.static(path.join(__dirname, 'public')));
 
   const port = parseInt(process.env.PORT) || 4000;
   app.listen(port, () => {

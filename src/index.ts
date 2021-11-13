@@ -21,6 +21,7 @@ const main = async () => {
     url: process.env.DATABASE_URL,
     synchronize: !__prod__,
     logging: true,
+
     entities: [path.join(__dirname, '/entity/**/*.js')],
     migrations: [path.join(__dirname, '/migration/*.js')],
     migrationsTableName: 'migrations',

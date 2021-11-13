@@ -33,7 +33,10 @@ jobs:
           && echo "SENDGRID_API_KEY= ${{ secrets.SENDGRID_API_KEY }}" >> .env.production \
           && echo "APP_URL= ${{ secrets.APP_URL }}" >> .env.production \
           && echo "GOOGLE_MAPS_API_KEY= ${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env.production \
-          && echo "CORS_ORIGIN= ${{ secrets.CORS_ORIGIN }}" >> .env.production \
+          && echo "AWS_BUCKET_NAME= ${{ secrets.AWS_BUCKET_NAME }}" >> .env.production \
+          && echo "AWS_BUCKET_REGION= ${{ secrets.AWS_BUCKET_REGION }}" >> .env.production \
+          && echo "AWS_ACCESS_KEY= ${{ secrets.AWS_ACCESS_KEY }}" >> .env.production \
+          && echo "AWS_SECRET_KEY= ${{ secrets.AWS_SECRET_KEY }}" >> .env.production \
           && touch .env
       - name: Copy values to the .env file
         run: |

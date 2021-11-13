@@ -208,14 +208,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       privacy,
       user,
     });
-    console.log(
-      `🚀 ~ file: missing-post.ts ~ line 211 ~ MissingPostResolver ~ missingPost`,
-      missingPost
-    );
-
-    /* return {
-      errors: [CREATE_NOT_FOUND_ERROR('user')],
-    }; */
     //2. Create the address
     if (address) {
       const new_address = await this.addressRepo.createFormattedAddress({
@@ -234,11 +226,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
         if (!errors?.length && photo) resolvedPhotos.push(photo);
       })
     );
-
-    console.log(
-      `🚀 ~ file: missing-post.ts ~ line 233 ~ MissingPostResolver ~ postImages ~ missingPost`,
-      missingPost
-    );
     const postImages = resolvedPhotos.map((photo) => {
       return PostImages.create({ photo, postId: missingPost.id });
     });
@@ -254,7 +241,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       //save the photos
       await missingPost.save(); // save the missing post to get the address
       //await Promise.all(postImages.map((photo) => photo.save()));
-
       return true;
     });
 

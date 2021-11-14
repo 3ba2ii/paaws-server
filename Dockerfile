@@ -20,6 +20,8 @@ RUN yarn build
 
 ENV NODE_ENV production
 
+RUN npm config set unsafe - perm true
+
 EXPOSE 8080
 CMD [ "node", "dist/index.js" ]
 USER node

@@ -18,7 +18,6 @@ COPY .env.production .env
 
 RUN yarn build
 
-RUN mkdir - p node_modules / .cache && chmod - R 777 node_modules / .cache
 RUN npm config set unsafe - perm true
 
 ENV NODE_ENV production

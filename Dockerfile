@@ -18,8 +18,6 @@ COPY .env.production .env
 
 RUN yarn build
 
-#RUN npm config set unsafe - perm true
-
 ENV NODE_ENV production
 
 

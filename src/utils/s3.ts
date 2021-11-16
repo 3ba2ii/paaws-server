@@ -1,12 +1,20 @@
+import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { compressImage, validateImage } from './compressImage';
 import AWS from 'aws-sdk';
 import { randomBytes } from 'crypto';
-import { UploadImageResponse } from './../types/responseTypes';
+import { UploadImageResponse, ErrorResponse } from './../types/responseTypes';
 import { Upload } from './../types/Upload';
-
+import { file2Buffer } from './fileToBuffer';
+import * as Sentry from '@sentry/node';
 require('dotenv-safe').config();
 
 const bucketName = process.env.AWS_BUCKET_NAME;
 
+class ValidationResponse extends ErrorResponse {
+  imageBuffer?: Buffer;
+  filename?: string;
+  type?: string;
+}
 export class AWSS3 {
   private s3: AWS.S3 = new AWS.S3({
     region: process.env.AWS_BUCKET_REGION,
@@ -16,48 +24,52 @@ export class AWSS3 {
     },
   });
 
-  private formatFileName(fileName: string): string {
+  private async formatFileName(file: Upload): Promise<string> {
+    const { filename } = await file;
     const rawBytes = randomBytes(16);
     const randomFileName = rawBytes.toString('hex');
 
-    const cleanFileName = fileName.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
+    const cleanFileName = filename.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
     return `${randomFileName}-${cleanFileName}`.slice(0, 50);
   }
-  public async generateUploadUrl(): Promise<UploadImageResponse> {
-    try {
-      const generatedFileName = this.formatFileName(new Date().toISOString());
+  private async validateAndCreateMetaDate(
+    file: Upload
+  ): Promise<ValidationResponse> {
+    const imageBuffer = await file2Buffer(file);
 
-      const params = {
-        Bucket: bucketName,
-        Key: generatedFileName,
-        Expires: 600,
-      };
-
-      const url = this.s3.getSignedUrl('putObject', params);
-      return { url };
-    } catch (err) {
-      return {
-        errors: [
-          {
-            field: 's3',
-            message: err.message || 'Error while creating s3 url',
-            code: 500,
-          },
-        ],
-      };
+    //check if the buffer is valid
+    if (!imageBuffer) {
+      return { errors: [CREATE_INVALID_ERROR('file')] };
     }
+    //check if the image's extension and size are valid
+    const { valid, type, errors } = await validateImage(imageBuffer);
+
+    if (!valid && errors?.length) {
+      return { errors };
+    }
+    //compress the image
+    const miniImageBuffer = await compressImage(imageBuffer);
+
+    if (!miniImageBuffer) return { errors: [INTERNAL_SERVER_ERROR] };
+
+    const generatedFileName = await this.formatFileName(file);
+
+    return { imageBuffer: miniImageBuffer, filename: generatedFileName, type };
   }
 
   public async uploadFileToS3(file: Upload): Promise<UploadImageResponse> {
     try {
-      const { createReadStream, filename } = await file;
+      const { errors, filename, imageBuffer, type } =
+        await this.validateAndCreateMetaDate(file);
 
-      const generatedFileName = this.formatFileName(filename);
-
+      if ((errors && errors.length) || !imageBuffer || !filename) {
+        return { errors };
+      }
       const s3UploadParams: AWS.S3.PutObjectRequest = {
         Bucket: bucketName,
-        Key: generatedFileName,
-        Body: createReadStream(),
+        Key: `${filename}.${type}`,
+        Body: imageBuffer,
+        ContentType: type || 'jpg',
       };
       const response = await this.s3.upload(s3UploadParams).promise();
       return { url: response.Location, filename };
@@ -66,6 +78,7 @@ export class AWSS3 {
         `🚀 ~ file: s3.ts ~ line 76 ~ AWSS3 ~ uploadFileToS3 ~ err`,
         err
       );
+      Sentry.captureException(err);
       return {
         errors: [
           {
@@ -76,5 +89,5 @@ export class AWSS3 {
         ],
       };
     }
-  }
+  } //
 }

@@ -10,6 +10,7 @@ import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { createGoogleMapsClient } from '../utils/createGoogleMapsClient';
 import { Address } from './../entity/Address';
 import { User } from './../entity/UserEntities/User';
+import * as Sentry from '@sentry/node';
 @Service()
 @EntityRepository(Address)
 export class AddressRepo extends Repository<Address> {
@@ -44,6 +45,7 @@ export class AddressRepo extends Repository<Address> {
       }
     } catch (e) {
       console.error(e.message);
+      Sentry.captureException(e);
     }
     return null;
   }
@@ -69,6 +71,8 @@ export class AddressRepo extends Repository<Address> {
         return { lat, lng };
       }
     } catch (e) {
+      Sentry.captureException(e);
+
       console.error(e);
     }
     return null;
@@ -103,6 +107,8 @@ export class AddressRepo extends Repository<Address> {
         return address;
       }
     } catch (e) {
+      Sentry.captureException(e);
+
       console.error(e);
     }
 
@@ -120,18 +126,10 @@ export class AddressRepo extends Repository<Address> {
     if (!lat || !lng) {
       return formattedAddress;
     }
-    console.log(
-      `🚀 ~ file: AddressRepo.repo.ts ~ line 119 ~ AddressRepo ~ lat`,
-      lat,
-      lng
-    );
+
     if (!city || !country || !state) {
       //in case of any missing data, we need to get the address from google maps
       formattedAddress = await this.findAddressWithLatLng(lat, lng);
-      console.log(
-        `🚀 ~ file: AddressRepo.repo.ts ~ line 133 ~ AddressRepo ~ formattedAddress`,
-        formattedAddress
-      );
     } else {
       formattedAddress = Address.create({
         ...address,

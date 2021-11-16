@@ -158,3 +158,8 @@ export class ImageObjectResponse extends ErrorResponse {
   @Field(() => Photo)
   photo?: Photo;
 }
+@ObjectType()
+export class ValidateImageResponse extends ErrorResponse {
+  valid: boolean = false;
+  type?: string;
+}

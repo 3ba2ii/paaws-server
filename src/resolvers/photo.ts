@@ -8,7 +8,6 @@ import { MyContext } from '../types';
 import { UploadImageResponse } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
-import { AWSS3 } from './../utils/s3';
 
 @Resolver(Photo)
 class PhotoResolver {
@@ -46,11 +45,6 @@ class PhotoResolver {
         errors: [INTERNAL_SERVER_ERROR],
       };
     }
-  }
-  @Mutation(() => UploadImageResponse)
-  @UseMiddleware(isAuth)
-  async getS3URL(): Promise<UploadImageResponse> {
-    return new AWSS3().generateUploadUrl();
   }
 }
 export default PhotoResolver;

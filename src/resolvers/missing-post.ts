@@ -1,3 +1,5 @@
+import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
+import { PostFilters } from './../types/inputTypes';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -44,6 +46,7 @@ import { CommentRepo } from './../repos/CommentRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { PaginatedMissingPosts } from './../types/responseTypes';
 import {
+  DateFilters,
   MissingPostTags,
   MissingPostTypes,
   NotificationType,
@@ -147,7 +150,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
       nullable: true,
       defaultValue: MissingPostTypes.ALL,
     })
-    type: MissingPostTypes
+    type: MissingPostTypes,
+    @Arg('filters', () => PostFilters, { nullable: true }) filters: PostFilters
   ): Promise<PaginatedMissingPosts> {
     const realLimit = Math.min(20, limit ? limit : 10);
     const realLimitPlusOne = realLimit + 1;
@@ -159,6 +163,13 @@ class MissingPostResolver extends MissingPostBaseResolver {
     //filtering by type of post
     if (type && type !== MissingPostTypes.ALL)
       posts.andWhere('mp.type = :type', { type });
+
+    //filtering by filters
+
+    const rawSql = this.createFiltersRawSql(filters);
+    if (rawSql && rawSql.length > 2) {
+      posts.andWhere(rawSql);
+    }
 
     if (cursor)
       posts.andWhere('mp."createdAt" < :cursor', {
@@ -174,6 +185,31 @@ class MissingPostResolver extends MissingPostBaseResolver {
       missingPosts: results.slice(0, realLimit),
       hasMore: results.length === realLimitPlusOne,
     };
+  }
+
+  private createFiltersRawSql(filters: PostFilters) {
+    let rawSql = '(';
+    if (filters) {
+      if (filters.date) {
+        const DateFiltersOrder = Object.values(DateFilters);
+        //we sort the filters based on the order of the enum [TODAY, LAST_WEEK, LAST_MONTH, LAST_YEAR]
+        const sortedDateFilters = filters.date.sort(
+          (a, b) => DateFiltersOrder.indexOf(a) - DateFiltersOrder.indexOf(b)
+        );
+        sortedDateFilters.map((df, index) => {
+          const { startDate, endDate } = getStartAndEndDateFilters(df);
+          // we add the filters to the query builder only if the start date is not null
+          if (!startDate) return;
+          rawSql += `mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}'`;
+          if (index === sortedDateFilters.length - 1) {
+            rawSql += ')';
+          } else {
+            rawSql += ' OR ';
+          }
+        });
+      }
+    }
+    return rawSql;
   }
 
   @Mutation(() => CreateMissingPostResponse)

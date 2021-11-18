@@ -11,6 +11,7 @@ import { Field, InputType, Int } from 'type-graphql';
 import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
 import {
   Breeds,
+  DateFilters,
   MissingPostTypes,
   PetGender,
   PetSize,
@@ -282,4 +283,9 @@ export class MissingPostComments extends PaginationArgs {
 export class ParentCommentReplies extends PaginationArgs {
   @Field(() => Int, { nullable: true })
   parentId: number;
+}
+@InputType()
+export class PostFilters {
+  @Field(() => [DateFilters], { nullable: true })
+  date?: DateFilters[];
 }

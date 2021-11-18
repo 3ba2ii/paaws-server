@@ -73,7 +73,17 @@ export enum MissingPostTags {
   NearYou = 'near-you',
   Urgent = 'urgent',
 }
+export enum DateFilters {
+  TODAY = 'today',
+  LAST_WEEK = 'Last Week',
+  LAST_MONTH = 'Last Month',
+  LAST_YEAR = 'Last Year',
+}
 
+registerEnumType(DateFilters, {
+  name: 'DateFilters',
+  description: 'Date Filters',
+});
 registerEnumType(MissingPostTags, {
   name: 'MissingPostTags',
   description: 'Missing Post Tags',

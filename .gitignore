@@ -6,3 +6,4 @@ yarn.lock
 yarn-error.log
 ormconfig.json
 *.icloud
+deploy.sh

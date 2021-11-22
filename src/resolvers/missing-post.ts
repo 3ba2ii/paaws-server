@@ -1,5 +1,3 @@
-import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
-import { PostFilters } from './../types/inputTypes';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -44,13 +42,14 @@ import {
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { CommentRepo } from './../repos/CommentRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { PostFilters } from './../types/inputTypes';
 import { PaginatedMissingPosts } from './../types/responseTypes';
 import {
-  DateFilters,
   MissingPostTags,
   MissingPostTypes,
   NotificationType,
 } from './../types/types';
+import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
 
 const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 
@@ -188,25 +187,13 @@ class MissingPostResolver extends MissingPostBaseResolver {
   }
 
   private createFiltersRawSql(filters: PostFilters) {
-    let rawSql = '(';
+    let rawSql = '';
     if (filters) {
       if (filters.date) {
-        const DateFiltersOrder = Object.values(DateFilters);
-        //we sort the filters based on the order of the enum [TODAY, LAST_WEEK, LAST_MONTH, LAST_YEAR]
-        const sortedDateFilters = filters.date.sort(
-          (a, b) => DateFiltersOrder.indexOf(a) - DateFiltersOrder.indexOf(b)
-        );
-        sortedDateFilters.map((df, index) => {
-          const { startDate, endDate } = getStartAndEndDateFilters(df);
-          // we add the filters to the query builder only if the start date is not null
-          if (!startDate) return;
-          rawSql += `mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}'`;
-          if (index === sortedDateFilters.length - 1) {
-            rawSql += ')';
-          } else {
-            rawSql += ' OR ';
-          }
-        });
+        const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
+        // we add the filters to the query builder only if the start date is not null
+        if (!startDate) return;
+        rawSql += `(mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
       }
     }
     return rawSql;

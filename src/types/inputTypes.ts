@@ -286,6 +286,6 @@ export class ParentCommentReplies extends PaginationArgs {
 }
 @InputType()
 export class PostFilters {
-  @Field(() => [DateFilters], { nullable: true })
-  date?: DateFilters[];
+  @Field(() => DateFilters, { nullable: true })
+  date?: DateFilters;
 }

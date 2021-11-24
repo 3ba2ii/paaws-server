@@ -49,6 +49,7 @@ import {
   MissingPostTypes,
   NotificationType,
 } from './../types/types';
+import { getLocationFilterBoundary } from './../utils/getLocationFilterBoundary';
 import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
 
 const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
@@ -141,7 +142,54 @@ class MissingPostResolver extends MissingPostBaseResolver {
     //we have the post id, we can load the images related to it
     return photoLoader.load(thumbnailId);
   }
+  private createDateFiltersRawSql(filters: PostFilters) {
+    let rawSql = '';
+    if (filters) {
+      if (filters.date) {
+        const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
+        // we add the filters to the query builder only if the start date is not null
+        if (!startDate) return;
+        rawSql += `(mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
+      }
+    }
+    return rawSql;
+  }
+  /* private findCustomAddressLocation = async (
+    { location, custom_address }: PostFilters,
+    { req }: MyContext
+  ): Promise<{ errors?: FieldError[]; lat?: number; lng?: number }> => {
+    let lat: number;
+    let lng: number;
+    if (location !== LocationFilters.NEAR_CUSTOM_LOCATION) {
+      //in cases of NEAR_ME or NEAR_2KM or NEAR_5KM we use the user's location
+      //we then use the location of the current user
+      const userId = req.session.userId;
+      if (!userId) return { errors: [CREATE_INVALID_ERROR('location')] };
+      const user = await User.findOne(req.session.userId);
+      if (!user) return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
+      const { lat: userLat, lng: userLng } = user;
+      lat = userLat;
+      lng = userLng;
+    } else {
+      //we get the custom address porvided
+      if (!custom_address)
+        return { errors: [CREATE_INVALID_ERROR('custom_address')] };
+      const latLng = await this.addressRepo.findLatLngWithStringAddress(
+        custom_address
+      );
 
+      if (!latLng) return { errors: [CREATE_INVALID_ERROR('custom_address')] };
+      //2. we get the distance between the current user and the missing post location
+      const { lat: selectedLat, lng: selectedLng } = latLng;
+
+      lat = selectedLat;
+      lng = selectedLng;
+    }
+
+    if (!lat || !lng) return { errors: [CREATE_INVALID_ERROR('location')] };
+    return { lat, lng };
+  };
+ */
   @Query(() => PaginatedMissingPosts)
   async missingPosts(
     @Arg('input') { limit, cursor }: PaginationArgs,
@@ -163,17 +211,44 @@ class MissingPostResolver extends MissingPostBaseResolver {
     if (type && type !== MissingPostTypes.ALL)
       posts.andWhere('mp.type = :type', { type });
 
-    //filtering by filters
+    //filtering by date
+    const dateRawSQL = this.createDateFiltersRawSql(filters);
+    if (dateRawSQL && dateRawSQL.length > 2) {
+      posts.andWhere(dateRawSQL);
+    }
+    //filtering by location
+    if (filters && filters.location) {
+      const { lat, lng, locationFilter } = filters.location;
+      posts.andWhere((qb) => {
+        if (!locationFilter || !lat || !lng) return '';
 
-    const rawSql = this.createFiltersRawSql(filters);
-    if (rawSql && rawSql.length > 2) {
-      posts.andWhere(rawSql);
+        const locationRadius = getLocationFilterBoundary(locationFilter);
+
+        const subQuery = qb
+          .subQuery()
+          .select('address.id')
+          .from(Address, 'address'); // we get the address id
+
+        subQuery.where(
+          `( 6371 *
+              acos(cos(radians(${lat})) * 
+              cos(radians(lat)) * 
+              cos(radians(lng) - 
+              radians(${lng})) + 
+              sin(radians(${lat})) * 
+              sin(radians(lat)))) < ${Math.min(locationRadius, 100)}`
+        );
+
+        return `"addressId" IN (${subQuery.getQuery()})`;
+      });
     }
 
-    if (cursor)
+    //add cursor for pagination
+    if (cursor) {
       posts.andWhere('mp."createdAt" < :cursor', {
         cursor: new Date(cursor),
       });
+    }
 
     const results = await posts
       .orderBy('mp."createdAt"', 'DESC')
@@ -184,19 +259,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       missingPosts: results.slice(0, realLimit),
       hasMore: results.length === realLimitPlusOne,
     };
-  }
-
-  private createFiltersRawSql(filters: PostFilters) {
-    let rawSql = '';
-    if (filters) {
-      if (filters.date) {
-        const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
-        // we add the filters to the query builder only if the start date is not null
-        if (!startDate) return;
-        rawSql += `(mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
-      }
-    }
-    return rawSql;
   }
 
   @Mutation(() => CreateMissingPostResponse)
@@ -261,9 +323,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     //5. save the post and the images
     const success = await getConnection().transaction(async () => {
-      //save the photos
       await missingPost.save(); // save the missing post to get the address
-      //await Promise.all(postImages.map((photo) => photo.save()));
       return true;
     });
 

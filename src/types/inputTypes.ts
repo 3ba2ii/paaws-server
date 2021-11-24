@@ -286,13 +286,22 @@ export class ParentCommentReplies extends PaginationArgs {
   parentId: number;
 }
 @InputType()
+export class LocationFilterComponents {
+  @Field(() => LocationFilters, { nullable: true })
+  locationFilter?: LocationFilters;
+
+  @Field({ nullable: true })
+  lat?: number;
+
+  @Field({ nullable: true })
+  lng?: number;
+}
+
+@InputType()
 export class PostFilters {
   @Field(() => DateFilters, { nullable: true })
   date?: DateFilters;
 
-  @Field(() => LocationFilters, { nullable: true })
-  location?: LocationFilters;
-
-  @Field(() => String, { nullable: true })
-  custom_address?: string;
+  @Field(() => LocationFilterComponents, { nullable: true })
+  location?: LocationFilterComponents;
 }

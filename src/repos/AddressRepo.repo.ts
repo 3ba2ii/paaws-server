@@ -56,7 +56,9 @@ export class AddressRepo extends Repository<Address> {
    * @example
    * const {lat,lng} = this.findLatLngWithStringAddress('High Ridge Drive Gloucester')
    */
-  async findLatLngWithStringAddress(address: string): Promise<LatLng | null> {
+  async findLatLngWithStringAddress(
+    address: string
+  ): Promise<{ lat: number; lng: number } | null> {
     if (!address) return null;
 
     try {

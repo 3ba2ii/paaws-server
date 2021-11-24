@@ -80,6 +80,17 @@ export enum DateFilters {
   LAST_YEAR = 'Last Year',
 }
 
+export enum LocationFilters {
+  NEAR_ME = 'Near me',
+  WITHIN_2KM = 'Within 2KM',
+  WITHIN_5KM = 'Within 5KM',
+  NEAR_CUSTOM_LOCATION = 'Near Custom Location',
+}
+
+registerEnumType(LocationFilters, {
+  name: 'LocationFilters',
+  description: 'Location Filters',
+});
 registerEnumType(DateFilters, {
   name: 'DateFilters',
   description: 'Date Filters',

@@ -12,6 +12,7 @@ import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
 import {
   Breeds,
   DateFilters,
+  LocationFilters,
   MissingPostTypes,
   PetGender,
   PetSize,
@@ -288,4 +289,10 @@ export class ParentCommentReplies extends PaginationArgs {
 export class PostFilters {
   @Field(() => DateFilters, { nullable: true })
   date?: DateFilters;
+
+  @Field(() => LocationFilters, { nullable: true })
+  location?: LocationFilters;
+
+  @Field(() => String, { nullable: true })
+  custom_address?: string;
 }

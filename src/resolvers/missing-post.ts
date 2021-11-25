@@ -217,7 +217,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       });
     }
 
-    const order = filters.order === SortingOrder.ASC ? 'ASC' : 'DESC';
+    const order = filters.order === SortingOrder.ASCENDING ? 'ASC' : 'DESC';
 
     const results = await posts
       .orderBy('mp."createdAt"', order)

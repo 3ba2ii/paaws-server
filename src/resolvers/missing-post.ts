@@ -48,6 +48,7 @@ import {
   MissingPostTags,
   MissingPostTypes,
   NotificationType,
+  SortingOrder,
 } from './../types/types';
 import { getLocationFilterBoundary } from './../utils/getLocationFilterBoundary';
 import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
@@ -154,42 +155,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
     return rawSql;
   }
-  /* private findCustomAddressLocation = async (
-    { location, custom_address }: PostFilters,
-    { req }: MyContext
-  ): Promise<{ errors?: FieldError[]; lat?: number; lng?: number }> => {
-    let lat: number;
-    let lng: number;
-    if (location !== LocationFilters.NEAR_CUSTOM_LOCATION) {
-      //in cases of NEAR_ME or NEAR_2KM or NEAR_5KM we use the user's location
-      //we then use the location of the current user
-      const userId = req.session.userId;
-      if (!userId) return { errors: [CREATE_INVALID_ERROR('location')] };
-      const user = await User.findOne(req.session.userId);
-      if (!user) return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
-      const { lat: userLat, lng: userLng } = user;
-      lat = userLat;
-      lng = userLng;
-    } else {
-      //we get the custom address porvided
-      if (!custom_address)
-        return { errors: [CREATE_INVALID_ERROR('custom_address')] };
-      const latLng = await this.addressRepo.findLatLngWithStringAddress(
-        custom_address
-      );
 
-      if (!latLng) return { errors: [CREATE_INVALID_ERROR('custom_address')] };
-      //2. we get the distance between the current user and the missing post location
-      const { lat: selectedLat, lng: selectedLng } = latLng;
-
-      lat = selectedLat;
-      lng = selectedLng;
-    }
-
-    if (!lat || !lng) return { errors: [CREATE_INVALID_ERROR('location')] };
-    return { lat, lng };
-  };
- */
   @Query(() => PaginatedMissingPosts)
   async missingPosts(
     @Arg('input') { limit, cursor }: PaginationArgs,
@@ -251,8 +217,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
       });
     }
 
+    const order = filters.order === SortingOrder.ASC ? 'ASC' : 'DESC';
+
     const results = await posts
-      .orderBy('mp."createdAt"', 'DESC')
+      .orderBy('mp."createdAt"', order)
       .limit(realLimitPlusOne)
       .getMany();
 

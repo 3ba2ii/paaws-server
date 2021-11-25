@@ -86,6 +86,14 @@ export enum LocationFilters {
   WITHIN_10KM = 'Within 10KM',
   NEAR_CUSTOM_LOCATION = 'Near Custom Location',
 }
+export enum SortingOrder {
+  ASC = 'Ascending',
+  DESC = 'Descending',
+}
+registerEnumType(SortingOrder, {
+  name: 'SortingOrder',
+  description: 'Sorting Order Filters',
+});
 
 registerEnumType(LocationFilters, {
   name: 'LocationFilters',

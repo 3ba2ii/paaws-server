@@ -18,6 +18,7 @@ import {
   PetSize,
   PetType,
   PrivacyType,
+  SortingOrder,
 } from './types';
 
 @InputType()
@@ -304,4 +305,10 @@ export class PostFilters {
 
   @Field(() => LocationFilterComponents, { nullable: true })
   location?: LocationFilterComponents;
+
+  @Field(() => SortingOrder, {
+    nullable: true,
+    defaultValue: SortingOrder.DESC,
+  })
+  order?: SortingOrder;
 }

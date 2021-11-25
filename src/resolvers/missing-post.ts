@@ -213,15 +213,16 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     //filtering by date
     const dateRawSQL = this.createDateFiltersRawSql(filters);
+
     if (dateRawSQL && dateRawSQL.length > 2) {
       posts.andWhere(dateRawSQL);
     }
-    //filtering by location
-    if (filters && filters.location) {
-      const { lat, lng, locationFilter } = filters.location;
-      posts.andWhere((qb) => {
-        if (!locationFilter || !lat || !lng) return '';
 
+    const loc = filters.location;
+    //filtering by location
+    if (loc && loc.lat && loc.lng && loc.locationFilter) {
+      const { lat, lng, locationFilter } = loc;
+      posts.andWhere((qb) => {
         const locationRadius = getLocationFilterBoundary(locationFilter);
 
         const subQuery = qb

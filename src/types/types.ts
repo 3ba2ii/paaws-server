@@ -82,8 +82,8 @@ export enum DateFilters {
 
 export enum LocationFilters {
   NEAR_ME = 'Near me',
-  WITHIN_2KM = 'Within 2KM',
   WITHIN_5KM = 'Within 5KM',
+  WITHIN_10KM = 'Within 10KM',
   NEAR_CUSTOM_LOCATION = 'Near Custom Location',
 }
 

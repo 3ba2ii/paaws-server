@@ -87,8 +87,8 @@ export enum LocationFilters {
   NEAR_CUSTOM_LOCATION = 'Near Custom Location',
 }
 export enum SortingOrder {
-  ASC = 'Ascending',
-  DESC = 'Descending',
+  ASCENDING = 'Ascending',
+  DESCENDING = 'Descending',
 }
 registerEnumType(SortingOrder, {
   name: 'SortingOrder',

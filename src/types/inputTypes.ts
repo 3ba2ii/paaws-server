@@ -308,7 +308,7 @@ export class PostFilters {
 
   @Field(() => SortingOrder, {
     nullable: true,
-    defaultValue: SortingOrder.DESC,
+    defaultValue: SortingOrder.DESCENDING,
   })
   order?: SortingOrder;
 }

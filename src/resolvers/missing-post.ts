@@ -10,37 +10,33 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
-import { getConnection } from 'typeorm';
+import { getConnection, getRepository } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
-import { UpdootRepo } from '../repos/UpdootRepo.repo';
 import { MyContext } from '../types';
 import {
-  CreateCommentInputType,
   CreateMissingPostInput,
   PaginationArgs,
+  UpdateMissingPostInput,
 } from '../types/inputTypes';
 import {
-  CommentResponse,
   CreateMissingPostResponse,
-  VotingResponse,
+  EditMissingPostResponse,
+  MissingPostResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
-import { Comment } from './../entity/InteractionsEntities/Comment';
-import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
 import {
-  CREATE_INVALID_ERROR,
+  CREATE_NOT_AUTHORIZED_ERROR,
   CREATE_NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
-import { CommentRepo } from './../repos/CommentRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { PostFilters } from './../types/inputTypes';
 import { PaginatedMissingPosts } from './../types/responseTypes';
@@ -59,10 +55,8 @@ const MissingPostBaseResolver = createBaseResolver('MissingPost', MissingPost);
 class MissingPostResolver extends MissingPostBaseResolver {
   constructor(
     private readonly photoRepo: PhotoRepo,
-    private readonly updootRepo: UpdootRepo,
     private readonly notificationRepo: NotificationRepo,
-    private readonly addressRepo: AddressRepo,
-    private readonly commentRepo: CommentRepo
+    private readonly addressRepo: AddressRepo
   ) {
     super();
   }
@@ -150,7 +144,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
         const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
         // we add the filters to the query builder only if the start date is not null
         if (!startDate) return;
-        rawSql += `(mp."createdAt" BETWEEN '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
+        rawSql += `(mp."createdAt" BETWEEN
+         '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
       }
     }
     return rawSql;
@@ -230,6 +225,28 @@ class MissingPostResolver extends MissingPostBaseResolver {
     };
   }
 
+  @Query(() => MissingPostResponse)
+  async missingPost(
+    @Arg('id', () => Int) id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<MissingPostResponse> {
+    try {
+      const userId = req.session.userId;
+      const missingPost = await MissingPost.findOne(id);
+      if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
+
+      const isOwner = userId ? missingPost.userId === userId : false;
+
+      return { missingPost, isOwner };
+    } catch (e) {
+      return {
+        errors: [
+          INTERNAL_SERVER_ERROR,
+          { code: 500, field: 'server', message: e.message },
+        ],
+      };
+    }
+  }
   @Mutation(() => CreateMissingPostResponse)
   @UseMiddleware(isAuth)
   async createMissingPost(
@@ -323,133 +340,48 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return { post: missingPost };
   }
 
-  @Mutation(() => VotingResponse)
+  @Mutation(() => EditMissingPostResponse)
   @UseMiddleware(isAuth)
-  async vote(
-    @Arg('postId', () => Int) postId: number,
-    @Arg('value', () => Int) value: number,
+  async editMissingPost(
+    @Arg('id', () => Int) id: number,
+    @Arg('input', () => UpdateMissingPostInput)
+    input: Partial<UpdateMissingPostInput>,
     @Ctx() { req }: MyContext
-  ): Promise<VotingResponse> {
-    /** There is two cases to cover here
-     *  1. User has not voted for this post before -> Create a new vote and increase/decrease the points by one (TRANSACTION)
-     *  2. User has voted for this post
-         2.1 User has changed his vote -> Update the current vote and increase/decrease the points by two (TRANSACTION)
-         2.2 User has not changed his vote -> Do Nothing
-      */
-
-    //check if value is only 1 or -1
-    if (![-1, 1].includes(value))
-      return { errors: [CREATE_INVALID_ERROR('value')], success: false };
-    const isUpvote = value === 1;
-
-    const { userId } = req.session;
-    const post = await MissingPost.findOne(postId);
-    if (!post)
-      return { errors: [CREATE_NOT_FOUND_ERROR('post')], success: false };
-
-    const user = await User.findOne(userId);
-    if (!user)
-      return { errors: [CREATE_NOT_FOUND_ERROR('user')], success: false };
-
-    const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
-
-    let votingRes: VotingResponse;
-    if (!updoot) {
-      //1. User has not voted for this post before
-      votingRes = await this.updootRepo.createUpdoot({
-        updootTarget: PostUpdoot,
-        entity: post,
-        user,
-        value,
-        type: 'post',
-      });
-    } else if (updoot.value !== value) {
-      //2 User has voted for this post before and has changed his vote
-
-      votingRes = await this.updootRepo.updateUpdootValue({
-        updoot,
-        entity: post,
-        value,
-      });
-    } else {
-      //2. User has not changed his vote so he want to delete it
-      votingRes = await this.updootRepo.deleteUpdoot(updoot, post);
-    }
-
-    if (votingRes.success) {
-      this.notificationRepo.createNotification({
-        performer: user,
-        content: post,
-        receiverId: post.userId,
-        notificationType: isUpvote
-          ? NotificationType.UPVOTE
-          : NotificationType.DOWNVOTE,
-      });
-    }
-
-    return votingRes;
-  }
-  @Mutation(() => CommentResponse)
-  @UseMiddleware(isAuth)
-  async comment(
-    @Arg('input') commentInfo: CreateCommentInputType,
-    @Ctx() { req }: MyContext
-  ): Promise<CommentResponse> {
-    const isReply = commentInfo.parentId !== null;
-    const { userId } = req.session;
-    const user = await User.findOne(userId);
-    if (!user)
-      return {
-        errors: [CREATE_NOT_FOUND_ERROR('user')],
-      };
-    /* Two cases to cover here
-       1. User is commenting on a post
-       2. User is replying to a comment   
+  ): Promise<EditMissingPostResponse> {
+    /* User can update the following data only
+      1. description
+      2. privacy
+      3. type
+      4. title
     */
-    const post = await MissingPost.findOne(commentInfo.postId);
-    if (!post) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
+    const userId = req.session.userId;
+    const missingPost = await MissingPost.findOne(id);
+    if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
+    if (userId !== missingPost.userId)
+      return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };
 
-    let response: CommentResponse;
-    let parentComment: Comment | undefined;
-    if (isReply) {
-      //we have to find the parent comment
-      parentComment = await Comment.findOne(commentInfo.parentId);
-      if (!parentComment)
-        return { errors: [CREATE_NOT_FOUND_ERROR('comment')] };
-      response = await this.commentRepo.reply(
-        commentInfo,
-        parentComment,
-        post,
-        user.id
-      );
-    } else {
-      response = await this.commentRepo.comment(commentInfo, post, user.id);
-    }
+    const { description, privacy, type, title } = input;
 
-    /*
-    Two cases for comment:
-    1. User is commenting on a post -> send a notification to the user who posted the post
-    2. User is replying to a comment -> send a notification to the user owns the parent comment and the post owner as well
+    if (description) missingPost.description = description;
+    if (privacy) missingPost.privacy = privacy;
+    if (type) missingPost.type = type;
+    if (title) missingPost.title = title;
 
-    so either ways we will send a notification to the post owner
-    */
-    if (response?.errors?.length === 0)
-      this.notificationRepo.createNotification({
-        performer: user,
-        content: post,
-        receiverId: post.userId, //post owner
-        notificationType: NotificationType.COMMENT_NOTIFICATION,
-      });
-    //if its a reply we also need to send a notification to the user who commented on the parent comment that someone has replied to his comment
+    const success = await getConnection().transaction(async () => {
+      return getRepository(MissingPost)
+        .update(id, {
+          description: missingPost.description,
+          privacy: missingPost.privacy,
+          type: missingPost.type,
+          title: missingPost.title,
+        })
+        .then(() => true)
+        .catch(() => false); // save the missing post to get the address
+    });
 
-    parentComment &&
-      this.notificationRepo.createNotification({
-        performer: user,
-        content: post,
-        receiverId: parentComment.userId, //comment owner
-        notificationType: NotificationType.REPLY_NOTIFICATION,
-      });
-    return response;
+    return success
+      ? { missingPost: missingPost }
+      : { errors: [INTERNAL_SERVER_ERROR] };
   }
 }
 

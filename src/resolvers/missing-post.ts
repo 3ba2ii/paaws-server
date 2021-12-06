@@ -23,6 +23,7 @@ import {
 import {
   CommentResponse,
   CreateMissingPostResponse,
+  MissingPostResponse,
   VotingResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
@@ -228,6 +229,25 @@ class MissingPostResolver extends MissingPostBaseResolver {
       missingPosts: results.slice(0, realLimit),
       hasMore: results.length === realLimitPlusOne,
     };
+  }
+
+  @Query(() => MissingPostResponse)
+  async missingPost(
+    @Arg('id', () => Int) id: number
+  ): Promise<MissingPostResponse> {
+    try {
+      const missingPost = await MissingPost.findOne(id);
+
+      if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
+      return { missingPost };
+    } catch (e) {
+      return {
+        errors: [
+          INTERNAL_SERVER_ERROR,
+          { code: 500, field: 'server', message: e.message },
+        ],
+      };
+    }
   }
 
   @Mutation(() => CreateMissingPostResponse)

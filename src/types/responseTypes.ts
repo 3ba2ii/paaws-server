@@ -163,3 +163,9 @@ export class ValidateImageResponse extends ErrorResponse {
   valid: boolean = false;
   type?: string;
 }
+
+@ObjectType()
+export class MissingPostResponse extends ErrorResponse {
+  @Field(() => MissingPost, { nullable: true })
+  missingPost?: MissingPost;
+}

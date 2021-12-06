@@ -253,7 +253,6 @@ class MissingPostResolver extends MissingPostBaseResolver {
       };
     }
   }
-
   @Mutation(() => CreateMissingPostResponse)
   @UseMiddleware(isAuth)
   async createMissingPost(

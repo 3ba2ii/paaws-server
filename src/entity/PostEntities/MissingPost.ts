@@ -59,7 +59,7 @@ export class MissingPost extends EntityWithDates(
   })
   privacy: PrivacyType;
 
-  @Field(() => PrivacyType)
+  @Field(() => MissingPostTypes)
   @Column({
     nullable: true,
     type: 'enum',

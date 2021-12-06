@@ -172,3 +172,9 @@ export class MissingPostResponse extends ErrorResponse {
   @Field(() => Boolean, { defaultValue: false, nullable: true })
   isOwner?: boolean = false;
 }
+
+@ObjectType()
+export class EditMissingPostResponse extends ErrorResponse {
+  @Field(() => MissingPost, { nullable: true })
+  missingPost?: MissingPost;
+}

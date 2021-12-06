@@ -210,6 +210,24 @@ export class CreateMissingPostInput {
 }
 
 @InputType()
+export class UpdateMissingPostInput {
+  @Field({ nullable: true })
+  title?: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field(() => MissingPostTypes, { nullable: true })
+  type?: MissingPostTypes;
+
+  @Field(() => PrivacyType, { nullable: true })
+  privacy?: PrivacyType;
+
+  @Field(() => Int, { nullable: true })
+  thumbnailIdx?: number;
+}
+
+@InputType()
 export class UpdateUserInfo {
   @Field({ nullable: true })
   bio?: string;

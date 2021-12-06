@@ -10,13 +10,18 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
-import { getConnection } from 'typeorm';
+import { getConnection, getRepository } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
-import { CreateMissingPostInput, PaginationArgs } from '../types/inputTypes';
+import {
+  CreateMissingPostInput,
+  PaginationArgs,
+  UpdateMissingPostInput,
+} from '../types/inputTypes';
 import {
   CreateMissingPostResponse,
+  EditMissingPostResponse,
   MissingPostResponse,
 } from '../types/responseTypes';
 import { Upload } from '../types/Upload';
@@ -26,7 +31,11 @@ import { Photo } from './../entity/MediaEntities/Photo';
 import { PostImages } from './../entity/MediaEntities/PostImages';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
-import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import {
+  CREATE_NOT_AUTHORIZED_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
+} from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { PostFilters } from './../types/inputTypes';
@@ -329,6 +338,53 @@ class MissingPostResolver extends MissingPostBaseResolver {
     }
 
     return { post: missingPost };
+  }
+
+  @Mutation(() => EditMissingPostResponse)
+  @UseMiddleware(isAuth)
+  async editMissingPost(
+    @Arg('id', () => Int) id: number,
+    @Arg('input', () => UpdateMissingPostInput)
+    input: Partial<UpdateMissingPostInput>,
+    @Ctx() { req }: MyContext
+  ): Promise<EditMissingPostResponse> {
+    /* User can update the following data only
+      1. description
+      2. privacy
+      3. type
+      4. thumbnailIdx
+      5. title
+    */
+    const userId = req.session.userId;
+    const missingPost = await MissingPost.findOne(id, {
+      relations: ['images'],
+    });
+    if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
+    if (userId !== missingPost.userId)
+      return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };
+
+    const { description, privacy, type, title } = input;
+
+    if (description) missingPost.description = description;
+    if (privacy) missingPost.privacy = privacy;
+    if (type) missingPost.type = type;
+    if (title) missingPost.title = title;
+
+    const success = await getConnection().transaction(async () => {
+      return getRepository(MissingPost)
+        .update(id, {
+          description: missingPost.description,
+          privacy: missingPost.privacy,
+          type: missingPost.type,
+          title: missingPost.title,
+        })
+        .then(() => true)
+        .catch(() => false); // save the missing post to get the address
+    });
+
+    return success
+      ? { missingPost: missingPost }
+      : { errors: [INTERNAL_SERVER_ERROR] };
   }
 }
 

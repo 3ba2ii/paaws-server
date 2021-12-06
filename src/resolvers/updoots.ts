@@ -27,7 +27,7 @@ export class UpdootsResolver {
      *  1. User has not voted for this post before -> Create a new vote and increase/decrease the points by one (TRANSACTION)
      *  2. User has voted for this post
          2.1 User has changed his vote -> Update the current vote and increase/decrease the points by two (TRANSACTION)
-         2.2 User has not changed his vote -> Do Nothing
+         2.2 User has not changed his vote -> Means that he wants to remove his vote
       */
 
     //check if value is only 1 or -1

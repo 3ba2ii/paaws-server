@@ -222,9 +222,6 @@ export class UpdateMissingPostInput {
 
   @Field(() => PrivacyType, { nullable: true })
   privacy?: PrivacyType;
-
-  @Field(() => Int, { nullable: true })
-  thumbnailIdx?: number;
 }
 
 @InputType()

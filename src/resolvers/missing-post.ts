@@ -352,13 +352,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
       1. description
       2. privacy
       3. type
-      4. thumbnailIdx
-      5. title
+      4. title
     */
     const userId = req.session.userId;
-    const missingPost = await MissingPost.findOne(id, {
-      relations: ['images'],
-    });
+    const missingPost = await MissingPost.findOne(id);
     if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
     if (userId !== missingPost.userId)
       return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };

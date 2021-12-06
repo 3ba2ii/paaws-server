@@ -233,13 +233,17 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
   @Query(() => MissingPostResponse)
   async missingPost(
-    @Arg('id', () => Int) id: number
+    @Arg('id', () => Int) id: number,
+    @Ctx() { req }: MyContext
   ): Promise<MissingPostResponse> {
     try {
+      const userId = req.session.userId;
       const missingPost = await MissingPost.findOne(id);
-
       if (!missingPost) return { errors: [CREATE_NOT_FOUND_ERROR('post')] };
-      return { missingPost };
+
+      const isOwner = userId ? missingPost.userId === userId : false;
+
+      return { missingPost, isOwner };
     } catch (e) {
       return {
         errors: [

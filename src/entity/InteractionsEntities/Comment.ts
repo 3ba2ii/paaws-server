@@ -45,6 +45,9 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Column({ default: false })
   isEdited: boolean;
 
+  @Field(() => Boolean)
+  isReply: boolean;
+
   @Field(() => [CommentUpdoot])
   @OneToMany(() => CommentUpdoot, (updoot) => updoot.comment, { cascade: true })
   updoots: CommentUpdoot[];

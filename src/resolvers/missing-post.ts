@@ -137,6 +137,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     //we have the post id, we can load the images related to it
     return photoLoader.load(thumbnailId);
   }
+
   private createDateFiltersRawSql(filters: PostFilters) {
     let rawSql = '';
     if (filters) {

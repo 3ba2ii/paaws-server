@@ -4,10 +4,12 @@ import { MissingPost } from './../entity/PostEntities/MissingPost';
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection, In, LessThan } from 'typeorm';
@@ -42,6 +44,11 @@ export class CommentResolver {
     private readonly notificationRepo: NotificationRepo,
     private readonly commentRepo: CommentRepo
   ) {}
+
+  @FieldResolver(() => Boolean)
+  isReply(@Root() comment: Comment): boolean {
+    return comment.parentId !== null;
+  }
 
   private async getReplies(
     parentId: number | number[],

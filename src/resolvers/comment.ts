@@ -45,6 +45,14 @@ export class CommentResolver {
     private readonly commentRepo: CommentRepo
   ) {}
 
+  @FieldResolver(() => User)
+  user(
+    @Root() { userId }: Comment,
+    @Ctx() { dataLoaders: { userLoader } }: MyContext
+  ): Promise<User> {
+    return userLoader.load(userId);
+  }
+
   @FieldResolver(() => Boolean)
   isReply(@Root() comment: Comment): boolean {
     return comment.parentId !== null;

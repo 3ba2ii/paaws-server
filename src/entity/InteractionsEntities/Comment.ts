@@ -54,4 +54,7 @@ export class Comment extends EntityWithDates(EntityWithBase(BaseEntity)) {
 
   @Field(() => [Comment])
   replies: Comment[];
+
+  @Field(() => Int, { nullable: true })
+  voteStatus: number; // 1 for upvote, -1 for downvote, null for no vote
 }

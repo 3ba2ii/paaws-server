@@ -11,6 +11,7 @@ import { MyContext } from '../types';
 import { createSchema } from './createSchema';
 import {
   createAddressLoader,
+  createCommentVoteStatusLoader,
   createPetImagesLoader,
   createPetLoader,
   createPhotoLoader,
@@ -88,6 +89,7 @@ export const createApolloServer = async (redis: Redis) => {
         postImagesLoader: createPostImageLoader(),
         photoLoader: createPhotoLoader(),
         votingLoader: createVoteStatusLoader(),
+        commentVoteStatusLoader: createCommentVoteStatusLoader(),
       },
     }),
     schema: await createSchema(),

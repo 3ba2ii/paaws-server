@@ -1,3 +1,4 @@
+import { CommentUpdoot } from './../entity/InteractionsEntities/CommentUpdoots';
 import DataLoader from 'dataloader';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
@@ -47,6 +48,23 @@ export const createVoteStatusLoader = () => {
       return keys.map((key) => updootIdsToUsers[`${key.userId}|${key.postId}`]);
     }
   );
+};
+
+export const createCommentVoteStatusLoader = () => {
+  return new DataLoader<
+    { commentId: number; userId: number },
+    CommentUpdoot | null
+  >(async (keys) => {
+    const updoots = await CommentUpdoot.findByIds(keys as any);
+
+    const updootIdsToUsers: Record<string, CommentUpdoot> = {};
+    updoots.forEach((updoot) => {
+      updootIdsToUsers[`${updoot.userId}|${updoot.commentId}`] = updoot;
+    });
+    return keys.map(
+      (key) => updootIdsToUsers[`${key.userId}|${key.commentId}`]
+    );
+  });
 };
 
 /* One to Many Loaders */

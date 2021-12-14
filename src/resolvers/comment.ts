@@ -53,6 +53,21 @@ export class CommentResolver {
     return userLoader.load(userId);
   }
 
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() { id }: Comment,
+    @Ctx() { req, dataLoaders: { commentVoteStatusLoader } }: MyContext
+  ): Promise<number | null> {
+    if (!req.session.userId) return null;
+
+    const updoot = await commentVoteStatusLoader.load({
+      commentId: id,
+      userId: req.session.userId,
+    });
+
+    return updoot ? updoot.value : null;
+  }
+
   @FieldResolver(() => Boolean)
   isReply(@Root() comment: Comment): boolean {
     return comment.parentId !== null;

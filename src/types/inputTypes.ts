@@ -191,13 +191,13 @@ export class AdoptionPetsFilters {
  */
 @InputType()
 export class CreateMissingPostInput {
-  @MinLength(5)
-  @MaxLength(100)
+  @MinLength(8)
+  @MaxLength(70)
   @Field()
   title: string;
 
   @MinLength(15)
-  @MaxLength(255)
+  @MaxLength(500)
   @Field()
   description: string;
 

@@ -3,6 +3,7 @@ import {
   Arg,
   ClassType,
   Ctx,
+  Int,
   Mutation,
   Resolver,
   UseMiddleware,
@@ -21,7 +22,7 @@ export function createBaseResolver<T extends ClassType>(
     @Mutation(() => DeleteResponse, { name: `delete${suffix}` })
     @UseMiddleware(isAuth)
     async delete(
-      @Arg('id') id: number,
+      @Arg('id', () => Int) id: number,
       @Ctx() { req }: MyContext
     ): Promise<DeleteResponse> {
       const userId = req.session.userId;

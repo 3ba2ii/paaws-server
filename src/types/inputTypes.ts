@@ -6,7 +6,6 @@ import {
   Max,
   MaxLength,
   Min,
-  MinLength,
 } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
 import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
@@ -191,13 +190,13 @@ export class AdoptionPetsFilters {
  */
 @InputType()
 export class CreateMissingPostInput {
-  @MinLength(8)
-  @MaxLength(70)
+  @Length(8, 70, { message: 'Title must be between 8 and 70 characters' })
   @Field()
   title: string;
 
-  @MinLength(15)
-  @MaxLength(500)
+  @Length(15, 500, {
+    message: 'Description must be between 15 and 500 characters',
+  })
   @Field()
   description: string;
 
@@ -216,13 +215,13 @@ export class CreateMissingPostInput {
 
 @InputType()
 export class UpdateMissingPostInput {
-  @MinLength(5)
-  @MaxLength(100)
+  @Length(8, 70, { message: 'Title must be between 8 and 70 characters' })
   @Field({ nullable: true })
   title?: string;
 
-  @MinLength(15)
-  @MaxLength(255)
+  @Length(15, 500, {
+    message: 'Description must be between 15 and 500 characters',
+  })
   @Field({ nullable: true })
   description?: string;
 

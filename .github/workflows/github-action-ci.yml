@@ -39,8 +39,6 @@ jobs:
           && echo "AWS_ACCESS_KEY= ${{ secrets.AWS_ACCESS_KEY }}" >> .env.production \
           && echo "AWS_SECRET_KEY= ${{ secrets.AWS_SECRET_KEY }}" >> .env.production \
           && echo "SENTRY_DSN= ${{ secrets.SENTRY_DSN }}" >> .env.production \
-          && echo "DATABASE_URL= " >> .env.production \
-          && echo "REDIS_URL= " >> .env.production \
           && touch .env
       - name: Copy values to the .env file
         run: |

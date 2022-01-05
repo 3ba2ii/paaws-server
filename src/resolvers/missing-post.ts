@@ -356,6 +356,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       2. privacy
       3. type
       4. title
+      5. showContactInfo
     */
     const userId = req.session.userId;
     const missingPost = await MissingPost.findOne(id);
@@ -364,17 +365,12 @@ class MissingPostResolver extends MissingPostBaseResolver {
       return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };
 
     const { description, privacy, type, title, showContactInfo } = input;
-    console.log(
-      `🚀 ~ file: missing-post.ts ~ line 367 ~ MissingPostResolver ~ showContactInfo`,
-      showContactInfo
-    );
 
     if (description) missingPost.description = description;
     if (privacy) missingPost.privacy = privacy;
     if (type) missingPost.type = type;
     if (title) missingPost.title = title;
     if (typeof showContactInfo === 'boolean') {
-      console.log('🚀 changing');
       missingPost.showContactInfo = showContactInfo;
     }
 

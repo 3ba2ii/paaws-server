@@ -105,4 +105,8 @@ export class MissingPost extends EntityWithDates(
 
   @Field(() => [MissingPostTags])
   tags: [MissingPostTags];
+
+  @Field(() => Boolean, { defaultValue: true })
+  @Column({ type: 'boolean', default: true })
+  showContactInfo: boolean;
 }

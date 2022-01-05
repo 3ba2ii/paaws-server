@@ -260,6 +260,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       title,
       type,
       thumbnailIdx,
+      showContactInfo,
     }: CreateMissingPostInput,
     @Arg('images', () => [GraphQLUpload]) images: Upload[]
   ): Promise<CreateMissingPostResponse> {
@@ -279,6 +280,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       type,
       privacy,
       user,
+      showContactInfo: !!showContactInfo,
     });
     //2. Create the address
     if (address) {
@@ -361,12 +363,20 @@ class MissingPostResolver extends MissingPostBaseResolver {
     if (userId !== missingPost.userId)
       return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };
 
-    const { description, privacy, type, title } = input;
+    const { description, privacy, type, title, showContactInfo } = input;
+    console.log(
+      `🚀 ~ file: missing-post.ts ~ line 367 ~ MissingPostResolver ~ showContactInfo`,
+      showContactInfo
+    );
 
     if (description) missingPost.description = description;
     if (privacy) missingPost.privacy = privacy;
     if (type) missingPost.type = type;
     if (title) missingPost.title = title;
+    if (typeof showContactInfo === 'boolean') {
+      console.log('🚀 changing');
+      missingPost.showContactInfo = showContactInfo;
+    }
 
     const success = await getConnection().transaction(async () => {
       return getRepository(MissingPost)
@@ -375,14 +385,13 @@ class MissingPostResolver extends MissingPostBaseResolver {
           privacy: missingPost.privacy,
           type: missingPost.type,
           title: missingPost.title,
+          showContactInfo: missingPost.showContactInfo,
         })
         .then(() => true)
         .catch(() => false); // save the missing post to get the address
     });
 
-    return success
-      ? { missingPost: missingPost }
-      : { errors: [INTERNAL_SERVER_ERROR] };
+    return success ? { missingPost } : { errors: [INTERNAL_SERVER_ERROR] };
   }
 }
 

@@ -211,6 +211,9 @@ export class CreateMissingPostInput {
 
   @Field(() => Int, { defaultValue: 0 })
   thumbnailIdx: number;
+
+  @Field(() => Boolean, { defaultValue: true, nullable: true })
+  showContactInfo?: boolean;
 }
 
 @InputType()
@@ -230,6 +233,9 @@ export class UpdateMissingPostInput {
 
   @Field(() => PrivacyType, { nullable: true })
   privacy?: PrivacyType;
+
+  @Field(() => Boolean, { defaultValue: true, nullable: true })
+  showContactInfo?: boolean;
 }
 
 @InputType()

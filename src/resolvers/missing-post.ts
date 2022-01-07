@@ -260,7 +260,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
       title,
       type,
       thumbnailIdx,
-      showContactInfo,
+      showEmail,
+      showPhoneNumber,
     }: CreateMissingPostInput,
     @Arg('images', () => [GraphQLUpload]) images: Upload[]
   ): Promise<CreateMissingPostResponse> {
@@ -280,7 +281,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
       type,
       privacy,
       user,
-      showContactInfo: !!showContactInfo,
+      showEmail: !!showEmail,
+      showPhoneNumber: !!showPhoneNumber,
     });
     //2. Create the address
     if (address) {
@@ -364,14 +366,18 @@ class MissingPostResolver extends MissingPostBaseResolver {
     if (userId !== missingPost.userId)
       return { errors: [CREATE_NOT_AUTHORIZED_ERROR('user')] };
 
-    const { description, privacy, type, title, showContactInfo } = input;
+    const { description, privacy, type, title, showEmail, showPhoneNumber } =
+      input;
 
     if (description) missingPost.description = description;
     if (privacy) missingPost.privacy = privacy;
     if (type) missingPost.type = type;
     if (title) missingPost.title = title;
-    if (typeof showContactInfo === 'boolean') {
-      missingPost.showContactInfo = showContactInfo;
+    if (typeof showEmail === 'boolean') {
+      missingPost.showEmail = showEmail;
+    }
+    if (typeof showPhoneNumber === 'boolean') {
+      missingPost.showPhoneNumber = showPhoneNumber;
     }
 
     const success = await getConnection().transaction(async () => {
@@ -381,7 +387,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
           privacy: missingPost.privacy,
           type: missingPost.type,
           title: missingPost.title,
-          showContactInfo: missingPost.showContactInfo,
+          showPhoneNumber: missingPost.showPhoneNumber,
+          showEmail: missingPost.showEmail,
         })
         .then(() => true)
         .catch(() => false); // save the missing post to get the address

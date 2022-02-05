@@ -136,9 +136,7 @@ class UserResolver extends UserBaseResolver {
     };
   }
 
-  @Query(() => User, {
-    nullable: true,
-  })
+  @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
   user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
     return User.findOne(id);

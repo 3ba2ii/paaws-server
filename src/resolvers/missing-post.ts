@@ -93,8 +93,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
     //1. check if the pet is missing or found
     if (type === MissingPostTypes.Missing) {
       tags.push(MissingPostTags.Missing);
-    } else {
+    } else if (type === MissingPostTypes.Found) {
       tags.push(MissingPostTags.Found);
+    } else if (type === MissingPostTypes.Rescued) {
+      tags.push(MissingPostTags.Rescued);
     }
     //2. get the distance between the current user and the missing post location
     //this can be done on the frontend as there is no need to load the missing post

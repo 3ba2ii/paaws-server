@@ -356,7 +356,7 @@ class UserResolver extends UserBaseResolver {
 
   @Mutation(() => ChangePasswordResponse)
   async changePassword(
-    @Ctx() { redis }: MyContext,
+    @Ctx() { req, redis }: MyContext,
     @Arg('options') options: ChangePasswordInput
   ): Promise<ChangePasswordResponse> {
     const { token, password, confirmPassword } = options;
@@ -389,6 +389,13 @@ class UserResolver extends UserBaseResolver {
     await User.update({ id: userIdNum }, { password: hashedPassword });
 
     await redis.del(tokenRedisKey);
+
+    //todo: send email to user to notify that password has been changed
+    // log the user in
+    user.last_login = new Date();
+    user.save();
+
+    req.session.userId = user.id;
 
     return {
       success: true,

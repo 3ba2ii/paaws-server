@@ -10,7 +10,7 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
-import { getConnection, getRepository } from 'typeorm';
+import { getConnection, getRepository, SelectQueryBuilder } from 'typeorm';
 import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
@@ -155,6 +155,43 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return rawSql;
   }
 
+  private async createLocationFiltersRawSql(
+    filters: PostFilters,
+    posts: SelectQueryBuilder<MissingPost>
+  ): Promise<SelectQueryBuilder<MissingPost>> {
+    try {
+      if (filters && filters.location) {
+        const { lat, lng, locationFilter } = filters.location;
+        if (!lat || !lng || !locationFilter) return posts;
+        posts.andWhere((qb) => {
+          const locationRadius = getLocationFilterBoundary(locationFilter);
+
+          const subQuery = qb
+            .subQuery()
+            .select('address.id')
+            .from(Address, 'address'); // we get the address id
+
+          subQuery.where(
+            `( 6371 *
+                acos(cos(radians(${lat})) * 
+                cos(radians(lat)) * 
+                cos(radians(lng) - 
+                radians(${lng})) + 
+                sin(radians(${lat})) * 
+                sin(radians(lat)))) < ${Math.min(locationRadius, 100)}`
+          );
+
+          return `"addressId" IN (${subQuery.getQuery()})`;
+        });
+      }
+
+      return posts;
+    } catch (e) {
+      console.error(e.message);
+    } finally {
+      return posts;
+    }
+  }
   @Query(() => PaginatedMissingPosts)
   async missingPosts(
     @Arg('input') { limit, cursor }: PaginationArgs,
@@ -183,31 +220,8 @@ class MissingPostResolver extends MissingPostBaseResolver {
       posts.andWhere(dateRawSQL);
     }
 
-    const loc = filters.location;
     //filtering by location
-    if (loc && loc.lat && loc.lng && loc.locationFilter) {
-      const { lat, lng, locationFilter } = loc;
-      posts.andWhere((qb) => {
-        const locationRadius = getLocationFilterBoundary(locationFilter);
-
-        const subQuery = qb
-          .subQuery()
-          .select('address.id')
-          .from(Address, 'address'); // we get the address id
-
-        subQuery.where(
-          `( 6371 *
-              acos(cos(radians(${lat})) * 
-              cos(radians(lat)) * 
-              cos(radians(lng) - 
-              radians(${lng})) + 
-              sin(radians(${lat})) * 
-              sin(radians(lat)))) < ${Math.min(locationRadius, 100)}`
-        );
-
-        return `"addressId" IN (${subQuery.getQuery()})`;
-      });
-    }
+    posts = await this.createLocationFiltersRawSql(filters, posts);
 
     //add cursor for pagination
     if (cursor) {

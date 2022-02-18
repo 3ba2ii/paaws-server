@@ -141,21 +141,22 @@ class MissingPostResolver extends MissingPostBaseResolver {
     return photoLoader.load(thumbnailId);
   }
 
-  private createDateFiltersRawSql(filters: PostFilters) {
+  private async filterMPByDate(
+    filters: PostFilters,
+    posts: SelectQueryBuilder<MissingPost>
+  ): Promise<SelectQueryBuilder<MissingPost>> {
     let rawSql = '';
-    if (filters) {
-      if (filters.date) {
-        const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
-        // we add the filters to the query builder only if the start date is not null
-        if (!startDate) return;
-        rawSql += `(mp."createdAt" BETWEEN
+    if (filters && filters.date) {
+      const { startDate, endDate } = getStartAndEndDateFilters(filters.date);
+      // we add the filters to the query builder only if the start date is not null
+      if (!startDate) return posts;
+      rawSql += `(mp."createdAt" BETWEEN
          '${startDate.toISOString()}' and '${endDate.toISOString()}')`;
-      }
     }
-    return rawSql;
+    return rawSql === '' ? posts : posts.andWhere(rawSql);
   }
 
-  private async createLocationFiltersRawSql(
+  private async filterMPByLocation(
     filters: PostFilters,
     posts: SelectQueryBuilder<MissingPost>
   ): Promise<SelectQueryBuilder<MissingPost>> {
@@ -214,14 +215,10 @@ class MissingPostResolver extends MissingPostBaseResolver {
       posts.andWhere('mp.type = :type', { type });
 
     //filtering by date
-    const dateRawSQL = this.createDateFiltersRawSql(filters);
-
-    if (dateRawSQL && dateRawSQL.length > 2) {
-      posts.andWhere(dateRawSQL);
-    }
+    posts = await this.filterMPByDate(filters, posts);
 
     //filtering by location
-    posts = await this.createLocationFiltersRawSql(filters, posts);
+    posts = await this.filterMPByLocation(filters, posts);
 
     //add cursor for pagination
     if (cursor) {

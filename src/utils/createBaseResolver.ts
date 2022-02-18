@@ -1,4 +1,4 @@
-import { DeleteResponse } from '../types/responseTypes';
+import { DeleteResponse } from '../types/response.types';
 import {
   Arg,
   ClassType,

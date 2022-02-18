@@ -18,12 +18,12 @@ import {
   CreateMissingPostInput,
   PaginationArgs,
   UpdateMissingPostInput,
-} from '../types/inputTypes';
+} from '../types/input.types';
 import {
   CreateMissingPostResponse,
   EditMissingPostResponse,
   MissingPostResponse,
-} from '../types/responseTypes';
+} from '../types/response.types';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { Address } from './../entity/Address';
@@ -38,14 +38,14 @@ import {
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
-import { PostFilters } from './../types/inputTypes';
-import { PaginatedMissingPosts } from './../types/responseTypes';
+import { PostFilters } from '../types/input.types';
+import { PaginatedMissingPosts } from '../types/response.types';
 import {
   MissingPostTags,
   MissingPostTypes,
   NotificationType,
   SortingOrder,
-} from './../types/types';
+} from '../types/enums.types';
 import { getLocationFilterBoundary } from './../utils/getLocationFilterBoundary';
 import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
 

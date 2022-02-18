@@ -1,4 +1,4 @@
-import { FieldError } from './types/responseTypes';
+import { FieldError } from './types/response.types';
 
 /* CONSTANT ERRORS */
 export const CREATE_NOT_FOUND_ERROR = (

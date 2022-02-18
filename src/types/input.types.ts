@@ -19,7 +19,7 @@ import {
   PetType,
   PrivacyType,
   SortingOrder,
-} from './types';
+} from './enums.types';
 
 @InputType()
 export class RegisterOptions {

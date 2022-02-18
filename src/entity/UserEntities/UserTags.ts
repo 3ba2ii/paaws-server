@@ -1,5 +1,5 @@
 import { User } from './User';
-import { UserTagsType } from '../../types/types';
+import { UserTagsType } from '../../types/enums.types';
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 

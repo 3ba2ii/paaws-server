@@ -1,8 +1,8 @@
 import { Field, Int, ObjectType } from 'type-graphql';
 import { Column, Entity } from 'typeorm';
 import { INotification } from '.';
-import { NotificationType } from '../../types/types';
-import { NOTIFICATION_CONTENT_TYPES } from './../../types/types';
+import { NotificationType } from '../../types/enums.types';
+import { NOTIFICATION_CONTENT_TYPES } from '../../types/enums.types';
 
 @ObjectType()
 @Entity()

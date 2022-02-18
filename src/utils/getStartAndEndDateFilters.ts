@@ -1,4 +1,4 @@
-import { DateFilters } from './../types/types';
+import { DateFilters } from '../types/enums.types';
 export const getStartAndEndDateFilters = (
   filter: DateFilters
 ): { startDate: Date | null; endDate: Date } => {

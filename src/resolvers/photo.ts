@@ -5,7 +5,7 @@ import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
-import { UploadImageResponse } from '../types/responseTypes';
+import { UploadImageResponse } from '../types/response.types';
 import { Upload } from '../types/Upload';
 import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 

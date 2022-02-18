@@ -17,7 +17,7 @@ import {
   MissingPostTags,
   MissingPostTypes,
   PrivacyType,
-} from '../../types/types';
+} from '../../types/enums.types';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Comment } from './../InteractionsEntities/Comment';
 import { User } from './../UserEntities/User';

@@ -1,11 +1,11 @@
 import { INTERNAL_SERVER_ERROR, CREATE_NOT_FOUND_ERROR } from './../errors';
-import { PetResponse } from './../types/responseTypes';
-import { AdoptionPostUpdateInput } from './../types/inputTypes';
+import { PetResponse } from '../types/response.types';
+import { AdoptionPostUpdateInput } from '../types/input.types';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { Pet } from './../entity/PetEntities/Pet';
 import { PetBreed } from '../entity/PetEntities/PetBreed';
-import { Breeds } from '../types/types';
+import { Breeds } from '../types/enums.types';
 
 @Service()
 @EntityRepository(Pet)

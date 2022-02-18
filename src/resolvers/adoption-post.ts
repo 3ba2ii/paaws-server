@@ -25,11 +25,11 @@ import {
   AdoptionPetsFilters,
   AdoptionPostInput,
   AdoptionPostUpdateInput,
-} from '../types/inputTypes';
+} from '../types/input.types';
 import {
   AdoptionPostResponse,
   PaginatedAdoptionPosts,
-} from '../types/responseTypes';
+} from '../types/response.types';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { PetImages } from './../entity/MediaEntities/PetImages';

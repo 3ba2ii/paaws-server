@@ -1,6 +1,9 @@
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
-import { NotificationType, NOTIFICATION_CONTENT_TYPES } from '../types/types';
+import {
+  NotificationType,
+  NOTIFICATION_CONTENT_TYPES,
+} from '../types/enums.types';
 import { Notification } from './../entity/Notification/Notification';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';

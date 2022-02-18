@@ -2,7 +2,7 @@ import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 import { compressImage, validateImage } from './compressImage';
 import AWS from 'aws-sdk';
 import { randomBytes } from 'crypto';
-import { UploadImageResponse, ErrorResponse } from './../types/responseTypes';
+import { UploadImageResponse, ErrorResponse } from '../types/response.types';
 import { Upload } from './../types/Upload';
 import { file2Buffer } from './fileToBuffer';
 import * as Sentry from '@sentry/node';

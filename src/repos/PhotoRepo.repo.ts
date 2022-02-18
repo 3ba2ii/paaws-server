@@ -5,7 +5,7 @@ import { Upload } from '../types/Upload';
 import {
   ImageObjectResponse,
   UploadImageResponse,
-} from './../types/responseTypes';
+} from '../types/response.types';
 import { AWSS3 } from './../utils/s3';
 
 @Service()

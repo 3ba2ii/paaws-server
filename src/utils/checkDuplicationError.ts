@@ -1,4 +1,4 @@
-import { FieldError } from '../types/responseTypes';
+import { FieldError } from '../types/response.types';
 
 export const checkDuplicationError = (err: any): FieldError[] => {
   const errors: FieldError[] = [];

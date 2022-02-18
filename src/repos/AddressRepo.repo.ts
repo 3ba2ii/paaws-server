@@ -1,4 +1,4 @@
-import { AddressInput } from './../types/inputTypes';
+import { AddressInput } from '../types/input.types';
 import { GoogleAddressParser } from './../utils/GoogleAddressParser';
 import {
   GeocodeComponents,

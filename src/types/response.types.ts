@@ -2,9 +2,9 @@ import { Field, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
-import { Comment } from './../entity/InteractionsEntities/Comment';
-import { Photo } from './../entity/MediaEntities/Photo';
-import { MissingPost } from './../entity/PostEntities/MissingPost';
+import { Comment } from '../entity/InteractionsEntities/Comment';
+import { Photo } from '../entity/MediaEntities/Photo';
+import { MissingPost } from '../entity/PostEntities/MissingPost';
 
 @ObjectType()
 export class FieldError {

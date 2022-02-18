@@ -1,5 +1,5 @@
 import { CommentRepo } from './../repos/CommentRepo.repo';
-import { NotificationType } from './../types/types';
+import { NotificationType } from '../types/enums.types';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import {
   Arg,
@@ -29,12 +29,12 @@ import {
   CreateCommentInputType,
   MissingPostComments,
   ParentCommentReplies,
-} from './../types/inputTypes';
+} from '../types/input.types';
 import {
   CommentResponse,
   DeleteResponse,
   PaginatedComments,
-} from './../types/responseTypes';
+} from '../types/response.types';
 import { NotificationRepo } from '../repos/NotificationRepo.repo';
 
 @Resolver(Comment)

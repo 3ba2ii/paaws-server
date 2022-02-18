@@ -11,7 +11,7 @@ import { Updoot } from '../entity/InteractionsEntities/Updoot';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { User } from './../entity/UserEntities/User';
 import { INTERNAL_SERVER_ERROR } from './../errors';
-import { VotingResponse } from './../types/responseTypes';
+import { VotingResponse } from '../types/response.types';
 
 interface UpdateUpdootProps {
   updoot: Updoot;

@@ -1,4 +1,4 @@
-import { LocationFilters } from './../types/types';
+import { LocationFilters } from '../types/enums.types';
 
 export const getLocationFilterBoundary = (locationFilter: LocationFilters) => {
   switch (locationFilter) {

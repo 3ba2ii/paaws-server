@@ -8,7 +8,7 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { PetGender, PetSize, PetType } from '../../types/types';
+import { PetGender, PetSize, PetType } from '../../types/enums.types';
 import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { Photo } from '../MediaEntities/Photo';
 import { User } from '../UserEntities/User';

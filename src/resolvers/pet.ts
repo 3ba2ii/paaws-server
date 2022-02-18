@@ -16,9 +16,9 @@ import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { User } from '../entity/UserEntities/User';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { PetResponse } from '../types/responseTypes';
+import { PetResponse } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { CreatePetOptions } from './../types/inputTypes';
+import { CreatePetOptions } from '../types/input.types';
 
 const PetBaseResolver = createBaseResolver('Pet', Pet);
 @Resolver(Pet)

@@ -8,8 +8,8 @@ import {
 import { Comment } from '../entity/InteractionsEntities/Comment';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
-import { CreateCommentInputType } from './../types/inputTypes';
-import { CommentResponse } from './../types/responseTypes';
+import { CreateCommentInputType } from '../types/input.types';
+import { CommentResponse } from '../types/response.types';
 
 @Service()
 @EntityRepository(Comment)

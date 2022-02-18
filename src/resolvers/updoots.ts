@@ -5,8 +5,8 @@ import { CREATE_INVALID_ERROR, CREATE_NOT_FOUND_ERROR } from '../errors';
 import { isAuth } from '../middleware/isAuth';
 import { NotificationRepo } from '../repos/NotificationRepo.repo';
 import { MyContext } from '../types';
-import { VotingResponse } from '../types/responseTypes';
-import { NotificationType } from '../types/types';
+import { VotingResponse } from '../types/response.types';
+import { NotificationType } from '../types/enums.types';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { UpdootRepo } from './../repos/UpdootRepo.repo';
 

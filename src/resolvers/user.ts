@@ -23,15 +23,15 @@ import {
   RegisterOptions,
   UpdateUserInfo,
   WhereClause,
-} from '../types/inputTypes';
+} from '../types/input.types';
 import {
   ChangePasswordResponse,
   FieldError,
   PaginatedUsers,
   RegularResponse,
   UserResponse,
-} from '../types/responseTypes';
-import { UserTagsType } from '../types/types';
+} from '../types/response.types';
+import { UserTagsType } from '../types/enums.types';
 import { checkDuplicationError } from '../utils/checkDuplicationError';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { getDisplayName } from '../utils/getDisplayName';

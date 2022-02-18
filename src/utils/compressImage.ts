@@ -4,7 +4,7 @@ import imagemin from 'imagemin';
 import mozjpeg from 'imagemin-mozjpeg';
 import sharp from 'sharp';
 import { CREATE_INVALID_ERROR } from './../errors';
-import { ValidateImageResponse } from './../types/responseTypes';
+import { ValidateImageResponse } from '../types/response.types';
 
 export const validateImage = async (
   file: Buffer

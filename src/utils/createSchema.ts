@@ -1,3 +1,4 @@
+import { AuthResolver } from '../resolvers/auth';
 import { GraphQLSchema } from 'graphql';
 import { buildSchema } from 'type-graphql';
 import { Container } from 'typeorm-typedi-extensions';
@@ -26,6 +27,7 @@ export const createSchema = async () => {
         CommentResolver,
         NotificationResolver,
         UpdootsResolver,
+        AuthResolver,
       ],
       validate: true,
       container: Container,

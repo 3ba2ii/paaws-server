@@ -1,3 +1,5 @@
+import { ProviderTypes } from '../types/enums.types';
+
 import {
   IsDateString,
   IsEmail,
@@ -40,6 +42,12 @@ export class RegisterOptions {
 
   @Field(() => Int)
   otp!: number;
+
+  @Field(() => ProviderTypes, { defaultValue: ProviderTypes.LOCAL })
+  provider: ProviderTypes;
+
+  @Field(() => String, { nullable: true })
+  providerId: string;
 }
 
 @InputType()

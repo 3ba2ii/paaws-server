@@ -16,9 +16,8 @@ declare global {
       AWS_ACCESS_KEY: string;
       AWS_SECRET_KEY: string;
       SENTRY_DSN: string;
-      AUTH0_CLIENT_ID: string;
-      AUTH0_DOMAIN: string;
-      AUTH0_CLIENT_SECRET: string;
+      GOOGLE_AUTH_CLIENT_ID: string;
+      GOOGLE_AUTH_CLIENT_SECRET: string;
     }
   }
 }

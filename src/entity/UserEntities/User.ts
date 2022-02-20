@@ -22,14 +22,7 @@ import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
 import { UserTag } from './UserTags';
-
-export enum ProviderTypes {
-  LOCAL = 'local',
-  GOOGLE = 'google',
-  FACEBOOK = 'facebook',
-  TWITTER = 'twitter',
-  APPLE = 'apple',
-}
+import { ProviderTypes } from '../../types/enums.types';
 
 @ObjectType()
 @Entity()
@@ -55,9 +48,9 @@ export class User extends EntityWithDates(
   @Column({ default: ProviderTypes.LOCAL })
   provider: ProviderTypes;
 
-  @Field(() => Int, { nullable: true })
+  @Field(() => String, { nullable: true })
   @Column({ nullable: true })
-  provider_id: number;
+  providerId: string;
 
   @Field(() => String, { nullable: true })
   @Column('decimal', { precision: 10, scale: 6, nullable: true })

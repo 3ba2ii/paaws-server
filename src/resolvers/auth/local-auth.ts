@@ -186,10 +186,8 @@ export class LocalAuthResolver {
 
       return { user };
     } catch (err) {
-      const errors = checkDuplicationError(err);
-
       return {
-        errors,
+        errors: checkDuplicationError(err),
       };
     }
   }

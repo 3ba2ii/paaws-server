@@ -90,6 +90,18 @@ export enum SortingOrder {
   ASCENDING = 'Ascending',
   DESCENDING = 'Descending',
 }
+export enum ProviderTypes {
+  LOCAL = 'local',
+  GOOGLE = 'google',
+  FACEBOOK = 'facebook',
+  TWITTER = 'twitter',
+  APPLE = 'apple',
+}
+registerEnumType(ProviderTypes, {
+  name: 'ProviderTypes',
+  description: 'Auth Provider Types',
+});
+
 registerEnumType(SortingOrder, {
   name: 'SortingOrder',
   description: 'Sorting Order Filters',

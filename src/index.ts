@@ -72,8 +72,6 @@ const main = async () => {
   );
   app.use(graphqlUploadExpress());
 
-  /* Passport Configuration */
-
   const apolloServer = await createApolloServer(redis);
 
   await apolloServer.start();

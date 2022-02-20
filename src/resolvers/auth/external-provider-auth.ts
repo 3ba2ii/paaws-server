@@ -1,9 +1,10 @@
-import { CREATE_INVALID_ERROR } from './../../errors';
+import { getAuthClient } from 'src/provider/auth';
 import { Arg, Ctx, Field, Mutation, ObjectType, Resolver } from 'type-graphql';
 import { User } from '../../entity/UserEntities/User';
+import { CREATE_INVALID_ERROR } from '../../errors';
 import { MyContext } from '../../types';
-import { GoogleAuthProvider } from './../../provider/auth/google-auth.provider';
-import { ErrorResponse } from './../../types/response.types';
+import { ErrorResponse } from '../../types/response.types';
+import { ProviderTypes } from './../../types/enums.types';
 
 /* We need 2 mutations:
   1. a mutation to verify the id token and tells if the user is already registered or not
@@ -18,22 +19,37 @@ class FindUserByTokenIdResponse extends ErrorResponse {
   @Field(() => Boolean, { defaultValue: false })
   found: boolean = false;
 }
+
 @Resolver(User)
-export class GoogleAuthResolver {
+export class ExternalProviderAuthResolver {
+  /* we need to implement two basic mutations
+     1. a mutation to find the user by provider id or email and return true or false
+
+  */
   private async findUserByProviderIdOrEmail(
-    providerId: string
+    identifier: string
   ): Promise<User | undefined> {
-    return User.findOne({ where: { provider_id: providerId } });
+    return User.findOne({
+      where: [{ provider_id: identifier }, { email: identifier }],
+    });
   }
 
   @Mutation(() => FindUserByTokenIdResponse)
   async isUserRegistered(
     @Ctx() { req }: MyContext,
-    @Arg('idToken') idToken: string
+    @Arg('idToken') idToken: string,
+    @Arg('provider') provider: ProviderTypes
   ): Promise<FindUserByTokenIdResponse> {
     try {
       //1.verify idToken from google API
-      const AuthClient = new GoogleAuthProvider(idToken);
+      const AuthClient = getAuthClient(provider, idToken);
+
+      if (!AuthClient)
+        return {
+          found: false,
+          errors: [CREATE_INVALID_ERROR('provider', 'Invalid provider')],
+        };
+
       const extUserInfo = await AuthClient.getUser();
 
       if (!extUserInfo)
@@ -44,25 +60,25 @@ export class GoogleAuthResolver {
       );
 
       /* We have three cases here 
-      1. user is registered but google auth is not linked to the user
-      2. user is registered and google auth is linked to the user
-      3. user is not registered and google is not linked to the user
+      1. user is registered but google auth is not linked to the user -> log the user in and update his google auth
+      2. user is registered and google auth is linked to the user -> log the user in
+      3. user is not registered -> just send a found flag back to continue the registration process
     */
       //check if the user exist
       if (!user) {
-        // if not, send a request back to the server to continue user register process
         return { found: false };
       } else {
-        //3. log the user in
+        //log the user in and update his info
         req.session.userId = user.id;
+        user.last_login = new Date();
 
-        if (!user.provider) {
+        //update user info
+        if (!user.provider && !user.providerId) {
           user.provider = AuthClient.provider;
-          user.last_login = new Date();
           user.providerId = extUserInfo.providerId;
         }
-        await user.save();
 
+        await user.save();
         return { user, found: true };
       }
     } catch (err) {

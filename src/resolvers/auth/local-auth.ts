@@ -1,3 +1,4 @@
+import { AuthRepo } from './../../repos/Auth.repo';
 import argon2 from 'argon2';
 import {
   COOKIE_NAME,
@@ -34,6 +35,8 @@ import { v4 } from 'uuid';
 
 @Resolver(User)
 export class LocalAuthResolver {
+  constructor(private readonly authRepo: AuthRepo) {}
+
   //LOGIN Mutation
   @Mutation(() => UserResponse)
   async login(
@@ -153,32 +156,17 @@ export class LocalAuthResolver {
     @Arg('registerOptions') registerOptions: RegisterOptions,
     @Ctx() { req, redis }: MyContext
   ): Promise<UserResponse> {
-    const { email, full_name, otp, password, phone } = registerOptions;
+    const { errors, user } = await this.authRepo.register(
+      registerOptions,
+      redis
+    );
 
-    const redisKey = VERIFY_PHONE_NUMBER_PREFIX + phone;
-    const storedOTP = await redis.get(redisKey);
+    if (errors && errors.length > 0) return { errors };
 
-    const isValidOTP = storedOTP?.toString() === otp.toString();
-
-    if ((!isValidOTP || !storedOTP) && __prod__) {
-      //todo: remove __prod__ flag on production
-      return {
-        errors: [CREATE_INVALID_ERROR('otp')],
-      };
-    }
-
-    const hashedPassword = await argon2.hash(password);
-
-    const user = User.create({
-      full_name,
-      email: email.trim().toLowerCase(),
-      password: hashedPassword,
-      phone,
-      confirmed: true,
-      last_login: new Date(),
-    });
+    if (!user) return { errors: [INTERNAL_SERVER_ERROR] };
 
     try {
+      const redisKey = VERIFY_PHONE_NUMBER_PREFIX + registerOptions.phone;
       await user.save();
       await redis.del(redisKey);
 

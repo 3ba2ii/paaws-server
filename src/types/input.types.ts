@@ -36,9 +36,9 @@ export class RegisterOptions {
   @IsEmail()
   email!: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Length(8, 40)
-  password!: string;
+  password?: string;
 
   @Field(() => Int)
   otp!: number;

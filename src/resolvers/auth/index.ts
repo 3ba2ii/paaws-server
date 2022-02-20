@@ -1,4 +1,7 @@
-import { GoogleAuthResolver } from './google-auth';
+import { ExternalProviderAuthResolver } from './external-provider-auth';
 import { LocalAuthResolver } from './local-auth';
 
-export const AuthProviderResolvers = [LocalAuthResolver, GoogleAuthResolver];
+export const AuthProviderResolvers = [
+  LocalAuthResolver,
+  ExternalProviderAuthResolver,
+];

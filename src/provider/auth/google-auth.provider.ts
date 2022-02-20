@@ -7,7 +7,7 @@ export class GoogleAuthProvider implements IExternalAuthProvider {
     process.env.GOOGLE_AUTH_CLIENT_ID
   );
   private user: ExternalUserInfo | null = null;
-  private idToken: string | null = null;
+  private idToken: string;
   private verified: boolean = false;
   public provider: ProviderTypes = ProviderTypes.GOOGLE;
 
@@ -33,7 +33,7 @@ export class GoogleAuthProvider implements IExternalAuthProvider {
 
   async verifyAuthToken(): Promise<void> {
     try {
-      if (!this.idToken) throw new Error('idToken is undefined');
+      if (!this.idToken) return;
 
       const ticket = await this.client.verifyIdToken({
         idToken: this.idToken,

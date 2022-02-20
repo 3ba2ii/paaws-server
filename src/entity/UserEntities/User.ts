@@ -76,8 +76,8 @@ export class User extends EntityWithDates(
   @Column({ nullable: true })
   last_login: Date;
 
-  @Column()
-  password!: string;
+  @Column({ nullable: true })
+  password: string;
 
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)

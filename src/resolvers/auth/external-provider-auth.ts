@@ -1,4 +1,4 @@
-import { getAuthClient } from 'src/provider/auth';
+import { getAuthClient } from '../../provider/auth';
 import { Arg, Ctx, Field, Mutation, ObjectType, Resolver } from 'type-graphql';
 import { User } from '../../entity/UserEntities/User';
 import { CREATE_INVALID_ERROR } from '../../errors';

@@ -1,3 +1,4 @@
+import { AuthRepo } from './../../repos/Auth.repo';
 import { getAuthClient } from '../../provider/auth';
 import { Arg, Ctx, Field, Mutation, ObjectType, Resolver } from 'type-graphql';
 import { User } from '../../entity/UserEntities/User';
@@ -26,14 +27,7 @@ export class ExternalProviderAuthResolver {
      1. a mutation to find the user by provider id or email and return true or false
 
   */
-  private async findUserByProviderIdOrEmail(
-    providerId: string,
-    email: string
-  ): Promise<User | undefined> {
-    return User.findOne({
-      where: [{ providerId }, { email }],
-    });
-  }
+  constructor(private readonly authRepo: AuthRepo) {}
 
   @Mutation(() => FindUserByTokenIdResponse)
   async isUserRegistered(
@@ -56,7 +50,8 @@ export class ExternalProviderAuthResolver {
       if (!extUserInfo)
         return { found: false, errors: [CREATE_INVALID_ERROR('idToken')] };
 
-      const user = await this.findUserByProviderIdOrEmail(
+      //check if the user already exists
+      const user = await this.authRepo.findUserByProviderIdOrEmail(
         extUserInfo.providerId,
         extUserInfo.email
       );
@@ -66,8 +61,8 @@ export class ExternalProviderAuthResolver {
       2. user is registered and google auth is linked to the user -> log the user in
       3. user is not registered -> just send a found flag back to continue the registration process
     */
-      //check if the user exist
       if (!user) {
+        //user not found - > complete the registration process
         return { found: false };
       } else {
         //log the user in and update his info
@@ -76,6 +71,7 @@ export class ExternalProviderAuthResolver {
 
         //update user info
         if (!user.provider && !user.providerId) {
+          /* Link the provider to this account */
           user.provider = AuthClient.provider;
           user.providerId = extUserInfo.providerId;
         }

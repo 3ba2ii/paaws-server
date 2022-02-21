@@ -72,6 +72,15 @@ export class AuthRepo extends Repository<User> {
     return user;
   }
 
+  async findUserByProviderIdOrEmail(
+    providerId: string,
+    email: string
+  ): Promise<User | undefined> {
+    return User.findOne({
+      where: [{ providerId }, { email }],
+    });
+  }
+
   async register(
     userInfo: RegisterOptions,
     redis: IORedis.Redis

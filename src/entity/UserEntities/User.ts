@@ -34,8 +34,8 @@ export class User extends EntityWithDates(
   email!: string;
 
   @Field()
-  @Column({ unique: true })
-  phone!: string;
+  @Column({ unique: true, nullable: true })
+  phone: string;
 
   @Field()
   @Column()
@@ -67,6 +67,10 @@ export class User extends EntityWithDates(
   @Field()
   @Column({ default: false })
   confirmed: Boolean;
+
+  @Field()
+  @Column({ default: false })
+  phoneVerified: Boolean;
 
   @Field()
   @Column({ default: false })

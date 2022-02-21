@@ -18,6 +18,14 @@ export const checkDuplicationError = (err: any): FieldError[] => {
         code: 409, //Conflict
       });
     }
+
+    if (err.detail.includes('providerId')) {
+      errors.push({
+        field: 'providerId',
+        message: 'This email is already linked with another account',
+        code: 409, //Conflict
+      });
+    }
   }
   return errors;
 };

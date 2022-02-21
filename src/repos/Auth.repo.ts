@@ -1,3 +1,4 @@
+import { ProviderTypes } from './../types/enums.types';
 import { Request } from 'express';
 import argon2 from 'argon2';
 import IORedis from 'ioredis';
@@ -8,7 +9,11 @@ import { EntityRepository, Repository } from 'typeorm';
 import { User } from '../entity/UserEntities/User';
 import { VERIFY_PHONE_NUMBER_PREFIX, __prod__ } from './../constants';
 import { CREATE_INVALID_ERROR, CREATE_NOT_AUTHORIZED_ERROR } from './../errors';
-import { LoginInput, RegisterOptions } from './../types/input.types';
+import {
+  LoginInput,
+  RegisterOptions,
+  RegisterWithAuthProviderInput,
+} from './../types/input.types';
 import { UserResponse } from './../types/response.types';
 
 /* We need to separate the logic outside the resolvers
@@ -32,7 +37,7 @@ export class AuthRepo extends Repository<User> {
   }
 
   private async registerUsingAuthProvider(
-    userInfo: RegisterOptions
+    userInfo: RegisterWithAuthProviderInput
   ): Promise<User | null> {
     const { email, full_name, phone, provider, providerId } = userInfo;
     // we have to make this as generic as possible, so we will use the general AuthProvider interface and then we will use the provider type to get the user's info
@@ -70,6 +75,7 @@ export class AuthRepo extends Repository<User> {
       phone,
       confirmed: true,
       last_login: new Date(),
+      provider: ProviderTypes.LOCAL,
     });
     return user;
   }
@@ -85,9 +91,11 @@ export class AuthRepo extends Repository<User> {
 
   async register(
     userInfo: RegisterOptions,
-    redis: IORedis.Redis
+    redis: IORedis.Redis,
+    provider?: ProviderTypes,
+    providerId?: string
   ): Promise<UserResponse> {
-    const { otp, password, phone, provider, providerId } = userInfo;
+    const { otp, phone } = userInfo;
 
     if (!this.isValidOTP(otp, phone, redis) && !__prod__) {
       //todo: remove __prod__ flag on production
@@ -104,12 +112,13 @@ export class AuthRepo extends Repository<User> {
         6. return the user
     */
     let user: User | null = null;
-
     if (provider && providerId) {
-      //continue with the registration using the provider
-      user = await this.registerUsingAuthProvider(userInfo);
-    } else if (password) {
-      //continue with the registration using the password
+      user = await this.registerUsingAuthProvider({
+        ...userInfo,
+        provider,
+        providerId,
+      });
+    } else {
       user = await this.registerUsingPassword(userInfo);
     }
 

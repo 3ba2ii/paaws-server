@@ -42,12 +42,15 @@ export class RegisterOptions {
 
   @Field(() => Int)
   otp!: number;
+}
 
-  @Field(() => ProviderTypes, { defaultValue: ProviderTypes.LOCAL })
-  provider: ProviderTypes;
+@InputType()
+export class RegisterWithAuthProviderInput extends RegisterOptions {
+  @Field()
+  provider!: ProviderTypes;
 
-  @Field(() => String, { nullable: true })
-  providerId: string;
+  @Field()
+  providerId!: string;
 }
 
 @InputType()

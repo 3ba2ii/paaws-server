@@ -1,17 +1,17 @@
-import { AuthRepo } from './../../repos/Auth.repo';
+import { ProviderTypes } from './../../types/enums.types';
 import argon2 from 'argon2';
+import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { v4 } from 'uuid';
 import {
   COOKIE_NAME,
   FORGET_PASSWORD_PREFIX,
   PHONE_NUMBER_REG_EXP,
   VERIFY_PHONE_NUMBER_PREFIX,
-  __prod__,
 } from '../../constants';
 import { User } from '../../entity/UserEntities/User';
 import {
   CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
-  CREATE_NOT_AUTHORIZED_ERROR,
   CREATE_NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
 } from '../../errors';
@@ -30,8 +30,7 @@ import {
 import { checkDuplicationError } from '../../utils/checkDuplicationError';
 import { sendEmail } from '../../utils/sendEmail';
 import { sendSMS } from '../../utils/sendSMS';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { v4 } from 'uuid';
+import { AuthRepo } from './../../repos/Auth.repo';
 
 @Resolver(User)
 export class LocalAuthResolver {
@@ -108,24 +107,28 @@ export class LocalAuthResolver {
 
     await redis.set(VERIFY_PHONE_NUMBER_PREFIX + phone, otp, 'ex', 60 * 10);
     const { sent } = await sendSMS(`Your OTP is ${otp}`, phone);
-    if (!sent) {
-      return {
-        success: false,
-        errors: [INTERNAL_SERVER_ERROR],
-      };
-    }
 
-    return { success: true };
+    return sent
+      ? { success: true }
+      : {
+          success: false,
+          errors: [INTERNAL_SERVER_ERROR],
+        };
   }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg('registerOptions') registerOptions: RegisterOptions,
+    @Arg('provider', () => ProviderTypes, { nullable: true })
+    provider: ProviderTypes,
+    @Arg('providerId', { nullable: true }) providerId: string,
     @Ctx() { req, redis }: MyContext
   ): Promise<UserResponse> {
     const { errors, user } = await this.authRepo.register(
       registerOptions,
-      redis
+      redis,
+      provider,
+      providerId
     );
 
     if (errors && errors.length > 0) return { errors };

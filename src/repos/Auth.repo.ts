@@ -1,8 +1,16 @@
+import { Request } from 'express';
 import argon2 from 'argon2';
 import IORedis from 'ioredis';
 import { getAuthClient } from '../provider/auth';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
+
+import { User } from '../entity/UserEntities/User';
+import { VERIFY_PHONE_NUMBER_PREFIX, __prod__ } from './../constants';
+import { CREATE_INVALID_ERROR, CREATE_NOT_AUTHORIZED_ERROR } from './../errors';
+import { LoginInput, RegisterOptions } from './../types/input.types';
+import { UserResponse } from './../types/response.types';
+
 /* We need to separate the logic outside the resolvers
     1. Register the user
     2. Login the user
@@ -10,12 +18,6 @@ import { EntityRepository, Repository } from 'typeorm';
     4. Update the user info
     5. Link the user to his provider
 */
-import { User } from '../entity/UserEntities/User';
-import { VERIFY_PHONE_NUMBER_PREFIX, __prod__ } from './../constants';
-import { CREATE_INVALID_ERROR } from './../errors';
-import { RegisterOptions } from './../types/input.types';
-import { UserResponse } from './../types/response.types';
-
 @Service()
 @EntityRepository(User)
 export class AuthRepo extends Repository<User> {
@@ -123,6 +125,45 @@ export class AuthRepo extends Repository<User> {
         ],
       };
     }
+
+    return { user };
+  }
+  async loginWithIdentifierAndPassword(
+    options: LoginInput,
+    req: Request
+  ): Promise<UserResponse> {
+    const { identifier, password } = options;
+    const processedIdentifier = identifier.trim().toLowerCase();
+    const user = await User.findOne(
+      identifier.includes('@')
+        ? { where: { email: processedIdentifier } }
+        : { where: { phone: processedIdentifier } }
+    );
+    /* user not found */
+    if (!user) {
+      return {
+        errors: [
+          CREATE_NOT_AUTHORIZED_ERROR(
+            'identifier',
+            'Incorrect Phone Number or Email'
+          ),
+        ],
+      };
+    }
+
+    /* validate password */
+    const valid = await argon2.verify(user.password, password);
+
+    if (!valid) {
+      return {
+        errors: [CREATE_NOT_AUTHORIZED_ERROR('password', 'Incorrect password')],
+      };
+    }
+
+    user.last_login = new Date();
+    await user.save();
+
+    req.session.userId = user.id;
 
     return { user };
   }

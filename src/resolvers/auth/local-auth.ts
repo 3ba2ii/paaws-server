@@ -43,40 +43,7 @@ export class LocalAuthResolver {
     @Arg('options') options: LoginInput,
     @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const { identifier, password } = options;
-
-    let processedIdentifier = identifier.trim().toLowerCase();
-
-    const user = await User.findOne(
-      identifier.includes('@')
-        ? { where: { email: processedIdentifier } }
-        : { where: { phone: processedIdentifier } }
-    );
-
-    if (!user) {
-      return {
-        errors: [
-          CREATE_NOT_AUTHORIZED_ERROR(
-            'identifier',
-            'Incorrect Phone Number or Email'
-          ),
-        ],
-      };
-    }
-    const valid = await argon2.verify(user.password, password);
-
-    if (!valid) {
-      return {
-        errors: [CREATE_NOT_AUTHORIZED_ERROR('password', 'Incorrect password')],
-      };
-    }
-
-    user.last_login = new Date();
-    user.save();
-
-    req.session.userId = user.id;
-
-    return { user };
+    return this.authRepo.loginWithIdentifierAndPassword(options, req);
   }
 
   //LOGOUT Mutation

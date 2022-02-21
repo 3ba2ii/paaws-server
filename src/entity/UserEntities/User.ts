@@ -49,7 +49,7 @@ export class User extends EntityWithDates(
   provider: ProviderTypes;
 
   @Field(() => String, { nullable: true })
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   providerId: string;
 
   @Field(() => String, { nullable: true })

@@ -27,10 +27,11 @@ export class ExternalProviderAuthResolver {
 
   */
   private async findUserByProviderIdOrEmail(
-    identifier: string
+    providerId: string,
+    email: string
   ): Promise<User | undefined> {
     return User.findOne({
-      where: [{ provider_id: identifier }, { email: identifier }],
+      where: [{ providerId }, { email }],
     });
   }
 
@@ -56,7 +57,8 @@ export class ExternalProviderAuthResolver {
         return { found: false, errors: [CREATE_INVALID_ERROR('idToken')] };
 
       const user = await this.findUserByProviderIdOrEmail(
-        extUserInfo.providerId
+        extUserInfo.providerId,
+        extUserInfo.email
       );
 
       /* We have three cases here 

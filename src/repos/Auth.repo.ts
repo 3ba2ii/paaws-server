@@ -110,50 +110,54 @@ export class AuthRepo extends Repository<User> {
     redis: IORedis.Redis
   ): Promise<RegularResponse> {
     /* create a better otp */
-    const otp = Math.floor(1000 + Math.random() * 9000);
 
-    const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
+    try {
+      const otp = Math.floor(1000 + Math.random() * 9000);
 
-    if (!phoneNumberRegExp.test(phone)) {
-      return {
-        success: false,
-        errors: [CREATE_INVALID_ERROR('phone')],
-      };
+      const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
+
+      if (!phoneNumberRegExp.test(phone)) {
+        return {
+          success: false,
+          errors: [CREATE_INVALID_ERROR('phone')],
+        };
+      }
+
+      //find a user associated with this phone number or email
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+        //no user was found, so we send an error to the user
+        return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+      }
+
+      /* then we find a user,  */
+      /* we have to check if the user already has a verified phone number */
+      if (user.phone && user.phoneVerified) {
+        /* then the user already has a verified phone number */
+        return {
+          success: false,
+          errors: [
+            CREATE_ALREADY_EXISTS_ERROR(
+              'phone',
+              'A phone number is already associated with this user'
+            ),
+          ],
+        };
+      }
+
+      /* 1. Store the OTP with the user's phone in redis */
+      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${email}`;
+      await redis.set(redisKey, otp, 'ex', 60 * 5);
+
+      /* 2. Send SMS to this user containing the OTP*/
+      const { sent } = await sendSMS(`Your OTP for Paaws is ${otp}`, phone);
+
+      return sent
+        ? { success: true }
+        : { success: false, errors: [INTERNAL_SERVER_ERROR] };
+    } catch (err) {
+      return { success: false, errors: [INTERNAL_SERVER_ERROR, err] };
     }
-
-    //find a user associated with this phone number or email
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      //no user was found, so we send an error to the user
-      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
-    }
-
-    /* then we find a user,  */
-    /* we have to check if the user already has a verified phone number */
-    if (user.phone && user.phoneVerified) {
-      /* then the user already has a verified phone number */
-      return {
-        success: false,
-        errors: [
-          CREATE_ALREADY_EXISTS_ERROR(
-            'phone',
-            'A phone number is already associated with this phone number'
-          ),
-        ],
-      };
-    }
-
-    /* 1. Store the OTP with the user's phone in redis */
-    const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${email}`;
-    await redis.set(redisKey, otp, 'ex', 60 * 5);
-
-    /* 2. Send SMS to this user containing the OTP*/
-
-    const { sent } = await sendSMS(`Your OTP for Paaws is ${otp}`, phone);
-
-    return sent
-      ? { success: true }
-      : { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 
   async findUserByProviderIdOrEmail(

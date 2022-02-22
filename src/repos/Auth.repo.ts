@@ -5,14 +5,21 @@ import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { User } from '../entity/UserEntities/User';
 import { getAuthClient } from '../provider/auth';
+import { sendSMS } from '../utils/sendSMS';
 import {
   PHONE_NUMBER_REG_EXP,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
-import { CREATE_INVALID_ERROR, CREATE_NOT_AUTHORIZED_ERROR } from './../errors';
+import {
+  CREATE_ALREADY_EXISTS_ERROR,
+  CREATE_INVALID_ERROR,
+  CREATE_NOT_AUTHORIZED_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
+} from './../errors';
 import { ProviderTypes } from './../types/enums.types';
 import { BaseRegisterInput, LoginInput } from './../types/input.types';
-import { UserResponse } from './../types/response.types';
+import { RegularResponse, UserResponse } from './../types/response.types';
 
 /* We need to separate the logic outside the resolvers
     1. Register the user
@@ -50,7 +57,7 @@ export class AuthRepo extends Repository<User> {
 
     if (!extUserInfo) return null;
 
-    /* Check if the user is already registered */
+    /* Check if the user is already registered using his mail*/
     const foundUser = await this.findUserByEmail(extUserInfo.email);
 
     if (foundUser) {
@@ -79,21 +86,30 @@ export class AuthRepo extends Repository<User> {
     userInfo: BaseRegisterInput
   ): Promise<User | null> {
     const { email, full_name, password } = userInfo;
-    if (!password) return null;
+
+    const existingUser = await User.findOne({
+      where: { email: email.toLowerCase().trim() },
+    });
+
+    if (existingUser) return null;
 
     const hashedPassword = await argon2.hash(password);
 
-    const user = User.create({
+    return User.create({
       full_name,
       email: email.trim().toLowerCase(),
       password: hashedPassword,
       last_login: new Date(),
       provider: ProviderTypes.LOCAL,
     });
-    return user;
   }
 
-  async sendOTP(phone: string, email: string, redis: IORedis.Redis) {
+  async sendOTP(
+    phone: string,
+    email: string,
+    redis: IORedis.Redis
+  ): Promise<RegularResponse> {
+    /* create a better otp */
     const otp = Math.floor(1000 + Math.random() * 9000);
 
     const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
@@ -106,10 +122,38 @@ export class AuthRepo extends Repository<User> {
     }
 
     //find a user associated with this phone number or email
-    const user = await User.findOne({ where: [{ phone }, { email }] });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       //no user was found, so we send an error to the user
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
     }
+
+    /* then we find a user,  */
+    /* we have to check if the user already has a verified phone number */
+    if (user.phone && user.phoneVerified) {
+      /* then the user already has a verified phone number */
+      return {
+        success: false,
+        errors: [
+          CREATE_ALREADY_EXISTS_ERROR(
+            'phone',
+            'A phone number is already associated with this phone number'
+          ),
+        ],
+      };
+    }
+
+    /* 1. Store the OTP with the user's phone in redis */
+    const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${email}`;
+    await redis.set(redisKey, otp, 'ex', 60 * 5);
+
+    /* 2. Send SMS to this user containing the OTP*/
+
+    const { sent } = await sendSMS(`Your OTP for Paaws is ${otp}`, phone);
+
+    return sent
+      ? { success: true }
+      : { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 
   async findUserByProviderIdOrEmail(
@@ -131,10 +175,6 @@ export class AuthRepo extends Repository<User> {
     provider?: ProviderTypes,
     idToken?: string
   ): Promise<UserResponse> {
-    console.log(
-      `🚀 ~ file: auth.repo.ts ~ line 117 ~ AuthRepo ~ provider`,
-      idToken
-    );
     /* STEPS to be implemented 
         1. validate the provider id and get the user's info (only if provider and provider id are given) 
         2. get the user back from the GoogleAuthProvider

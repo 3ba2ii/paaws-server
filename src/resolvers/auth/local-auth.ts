@@ -80,53 +80,7 @@ export class LocalAuthResolver {
     //DONE 1. verify that this is a valid phone number
     //DONE 2. verify the phone number that is not already registered
     //DONE 3. send the otp to the phone number
-
-    const otp = Math.floor(1000 + Math.random() * 9000);
-
-    const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
-
-    if (!phoneNumberRegExp.test(phone)) {
-      return {
-        success: false,
-        errors: [CREATE_INVALID_ERROR('phone')],
-      };
-    }
-
-    const user = await User.findOne({ where: [{ phone }, { email }] });
-
-    if (user) {
-      const errors: FieldError[] = [];
-      if (user.email === email) {
-        errors.push(
-          CREATE_ALREADY_EXISTS_ERROR(
-            'email',
-            'Email is already associated with an account'
-          )
-        );
-      }
-      if (user.phone === phone) {
-        errors.push(
-          CREATE_ALREADY_EXISTS_ERROR(
-            'phone',
-            'Phone number is already registered'
-          )
-        );
-      }
-      return {
-        success: false,
-        errors,
-      };
-    }
-
-    await redis.set(VERIFY_PHONE_NUMBER_PREFIX + phone, otp, 'ex', 60 * 10);
-    const { sent } = await sendSMS(`Your OTP is ${otp}`, phone);
-
-    return sent
-      ? { success: true }
-      : {
-          success: false,
-          errors: [INTERNAL_SERVER_ERROR],
-        };
+    return this.authRepo.sendOTP(phone, email, redis);
   }
 
   @Mutation(() => UserResponse)

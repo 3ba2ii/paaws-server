@@ -33,13 +33,13 @@ export class BaseRegisterInput {
   @IsEmail()
   email!: string;
 
-  @Field({ nullable: true })
+  @Field()
   @Length(8, 40)
-  password?: string;
+  password: string;
 
-  @Field({ nullable: true })
+  @Field()
   @Length(8, 40)
-  confirmPassword?: string;
+  confirmPassword: string;
 }
 
 @InputType()

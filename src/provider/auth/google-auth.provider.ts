@@ -13,7 +13,6 @@ export class GoogleAuthProvider implements IExternalAuthProvider {
 
   constructor(idToken: string) {
     this.setIdToken(idToken);
-    this.verifyAuthToken();
   }
 
   private setIdToken = (idToken: string) => {
@@ -22,6 +21,7 @@ export class GoogleAuthProvider implements IExternalAuthProvider {
   private setUser(payload: TokenPayload, providerId: string) {
     const { email, name, picture } = payload;
     if (!email || !name) throw new Error('email or name is undefined');
+
     this.user = {
       email,
       providerId,
@@ -62,6 +62,7 @@ export class GoogleAuthProvider implements IExternalAuthProvider {
     return this.idToken;
   }
   async getUser(): Promise<ExternalUserInfo | null> {
+    console.log(this.user);
     return this.user;
   }
   async getClient(): Promise<OAuth2Client> {

@@ -2,7 +2,7 @@ import faker from 'faker';
 import { Connection } from 'typeorm';
 import { graphqlCall } from '../test-utils/graphqlCall';
 import { createTestConnection } from '../test-utils/testConn';
-import { LoginInput, RegisterOptions } from '../types/input.types';
+import { LoginInput, BaseRegisterInput } from '../types/input.types';
 
 let conn: Connection;
 beforeAll(async () => {
@@ -27,7 +27,7 @@ mutation LoginMutation($loginOptions: LoginInput!) {
     }
   }`;
 
-const registerMutation = `mutation RegisterMutation($registerOptions: RegisterOptions!) {
+const registerMutation = `mutation RegisterMutation($registerOptions: BaseRegisterInput!) {
     register(registerOptions: $registerOptions) {
       user {
         id
@@ -60,12 +60,10 @@ describe('login unit-test', () => {
   });
 
   it('fake-register', async () => {
-    const fakeNewUser: RegisterOptions = {
+    const fakeNewUser: BaseRegisterInput = {
       email: 'lfalkinghamd@japanpost.jp',
       full_name: 'Testing',
-      otp: 1234,
       password: 'Testtest123',
-      phone: '+201029111777',
     };
     const { data } = await graphqlCall({
       source: registerMutation,
@@ -80,7 +78,6 @@ describe('login unit-test', () => {
     expect(data?.register.user).toBeDefined();
     expect(data?.register.user.email).toEqual(fakeNewUser.email.toLowerCase());
     expect(data?.register.user.full_name).toEqual(fakeNewUser.full_name);
-    expect(data?.register.user.phone).toEqual(fakeNewUser.phone);
   });
 
   it('valid-login', async () => {

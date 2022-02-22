@@ -5,11 +5,11 @@ type ExternalAuthProviderTypes = GoogleAuthProvider | null;
 
 export function getAuthClient(
   provider: ProviderTypes,
-  providerId: string
+  idToken: string
 ): ExternalAuthProviderTypes {
   switch (provider) {
     case ProviderTypes.GOOGLE:
-      return new GoogleAuthProvider(providerId);
+      return new GoogleAuthProvider(idToken);
     default:
       return null;
   }

@@ -33,7 +33,7 @@ export class User extends EntityWithDates(
   @Column({ unique: true })
   email!: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ unique: true, nullable: true })
   phone: string;
 

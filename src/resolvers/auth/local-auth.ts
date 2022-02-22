@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import { ProviderTypes } from './../../types/enums.types';
 import argon2 from 'argon2';
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
@@ -19,7 +20,7 @@ import { MyContext } from '../../types';
 import {
   ChangePasswordInput,
   LoginInput,
-  RegisterOptions,
+  BaseRegisterInput,
 } from '../../types/input.types';
 import {
   ChangePasswordResponse,
@@ -36,6 +37,18 @@ import { AuthRepo } from './../../repos/Auth.repo';
 export class LocalAuthResolver {
   constructor(private readonly authRepo: AuthRepo) {}
 
+  private async saveUserToDB(user: User, req: Request) {
+    try {
+      await user.save();
+      req.session.userId = user.id;
+
+      return { user };
+    } catch (err) {
+      return {
+        errors: checkDuplicationError(err),
+      };
+    }
+  }
   //LOGIN Mutation
   @Mutation(() => UserResponse)
   async login(
@@ -68,7 +81,7 @@ export class LocalAuthResolver {
     //DONE 2. verify the phone number that is not already registered
     //DONE 3. send the otp to the phone number
 
-    var otp = Math.floor(1000 + Math.random() * 9000);
+    const otp = Math.floor(1000 + Math.random() * 9000);
 
     const phoneNumberRegExp = new RegExp(PHONE_NUMBER_REG_EXP);
 
@@ -117,16 +130,14 @@ export class LocalAuthResolver {
   }
 
   @Mutation(() => UserResponse)
-  async register(
-    @Arg('registerOptions') registerOptions: RegisterOptions,
-    @Arg('provider', () => ProviderTypes, { nullable: true })
+  async registerWithAuthProvider(
+    @Arg('provider', () => ProviderTypes)
     provider: ProviderTypes,
-    @Arg('providerId', { nullable: true }) providerId: string,
-    @Ctx() { req, redis }: MyContext
-  ): Promise<UserResponse> {
+    @Arg('providerId') providerId: string,
+    @Ctx() { req }: MyContext
+  ) {
     const { errors, user } = await this.authRepo.register(
-      registerOptions,
-      redis,
+      null,
       provider,
       providerId
     );
@@ -135,19 +146,21 @@ export class LocalAuthResolver {
 
     if (!user) return { errors: [INTERNAL_SERVER_ERROR] };
 
-    try {
-      const redisKey = VERIFY_PHONE_NUMBER_PREFIX + registerOptions.phone;
-      await user.save();
-      await redis.del(redisKey);
+    return this.saveUserToDB(user, req);
+  }
 
-      req.session.userId = user.id;
+  @Mutation(() => UserResponse)
+  async register(
+    @Arg('registerOptions') registerOptions: BaseRegisterInput,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
+    const { errors, user } = await this.authRepo.register(registerOptions);
 
-      return { user };
-    } catch (err) {
-      return {
-        errors: checkDuplicationError(err),
-      };
-    }
+    if (errors && errors.length > 0) return { errors };
+
+    if (!user) return { errors: [INTERNAL_SERVER_ERROR] };
+
+    return this.saveUserToDB(user, req);
   }
 
   //Change Password Mutation

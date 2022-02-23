@@ -72,10 +72,7 @@ export class LocalAuthResolver {
     if (errors) return { errors };
     if (!user) return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
 
-    await user.save();
-    req.session.userId = user.id;
-
-    return { user };
+    return this.saveUserToDB(user, req);
   }
 
   //LOGOUT Mutation
@@ -228,8 +225,7 @@ export class LocalAuthResolver {
         errors: [CREATE_NOT_FOUND_ERROR('token')],
       };
     }
-    const userIdNum = parseInt(userId);
-    const user = await User.findOne({ id: userIdNum });
+    const user = await User.findOne({ id: parseInt(userId) });
     if (!user) {
       return {
         success: false,
@@ -237,7 +233,7 @@ export class LocalAuthResolver {
       };
     }
     const hashedPassword = await argon2.hash(password);
-    await User.update({ id: userIdNum }, { password: hashedPassword });
+    await User.update({ id: parseInt(userId) }, { password: hashedPassword });
 
     await redis.del(tokenRedisKey);
 

@@ -31,9 +31,12 @@ import { RegularResponse, UserResponse } from './../types/response.types';
 @Service()
 @EntityRepository(User)
 export class AuthRepo extends Repository<User> {
-  private async isValidOTP(otp: number, phone: string, redis: IORedis.Redis) {
+  private async isValidOTP(
+    otp: string,
+    redisKey: string,
+    redis: IORedis.Redis
+  ) {
     try {
-      const redisKey = VERIFY_PHONE_NUMBER_PREFIX + phone;
       const storedOTP = await redis.get(redisKey);
       return storedOTP?.toString() === otp.toString();
     } catch (e) {
@@ -181,13 +184,12 @@ export class AuthRepo extends Repository<User> {
     redis: IORedis.Redis
   ): Promise<RegularResponse> {
     try {
-      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}:${user.email}`;
-      const storedOTP = await redis.get(redisKey);
+      const redisKey = VERIFY_PHONE_NUMBER_PREFIX + phone;
 
-      const isValid = storedOTP?.toString() === otp.toString();
-      if (!storedOTP || !isValid) {
+      if (!this.isValidOTP(otp, redisKey, redis)) {
         return { success: false, errors: [CREATE_NOT_AUTHORIZED_ERROR('otp')] };
       }
+
       /* then the otp is valid */
       /* we have to update the user's phone number */
       user.phone = phone;

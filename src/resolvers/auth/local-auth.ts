@@ -58,6 +58,25 @@ export class LocalAuthResolver {
   ): Promise<UserResponse> {
     return this.authRepo.loginWithIdentifierAndPassword(options, req);
   }
+  @Mutation(() => UserResponse)
+  async loginWithAuthProvider(
+    @Arg('provider', () => ProviderTypes)
+    provider: ProviderTypes,
+    @Arg('providerId') providerId: string,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
+    const { user, errors } = await this.authRepo.loginWithProvider(
+      provider,
+      providerId
+    );
+    if (errors) return { errors };
+    if (!user) return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
+
+    await user.save();
+    req.session.userId = user.id;
+
+    return { user };
+  }
 
   //LOGOUT Mutation
   @Mutation(() => Boolean)

@@ -38,7 +38,7 @@ import { ProviderTypes } from './../../types/enums.types';
 export class LocalAuthResolver {
   constructor(private readonly authRepo: AuthRepo) {}
 
-  private async saveUserToDB(user: User, req: Request) {
+  private async saveUserToDB(user: User, req: Request): Promise<UserResponse> {
     try {
       await user.save();
       req.session.userId = user.id;

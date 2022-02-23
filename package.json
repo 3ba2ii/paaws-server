@@ -12,7 +12,7 @@
     "create-migration": "typeorm migration:create -n NewMigration",
     "generate-migration": "typeorm migration:generate -n NewGenMigration",
     "db:setup": "ts-node ./src/test-utils/setup.ts",
-    "test": "npm run db:setup && jest",
+    "test": "jest",
     "test2": "nodemon --watch src --ext ts --exec 'clear && yarn jest --no-cache || true'"
   },
   "repository": {

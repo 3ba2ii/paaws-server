@@ -1,11 +1,11 @@
-import { createSchema } from './../utils/createSchema';
 import faker from 'faker';
+import { graphql } from 'graphql';
 import { Connection } from 'typeorm';
 import { graphqlCall } from '../test-utils/graphqlCall';
 import { createTestConnection } from '../test-utils/testConn';
 import { LoginInput } from '../types/input.types';
-import { User } from './../entity/UserEntities/User';
 import { BaseRegisterInput } from './../types/input.types';
+import { createSchema } from './../utils/createSchema';
 
 let conn: Connection;
 beforeAll(async () => {
@@ -60,14 +60,11 @@ describe('login unit-test', () => {
         loginOptions: fakeUser,
       },
     });
-
     expect(data?.login.errors).toBeDefined();
     expect(data?.login.user).toBeNull();
   });
 
   it('register-with-email-password', async () => {
-    const testServer = await createSchema();
-
     const full_name = faker.name.findName();
     const email = faker.internet.email();
     const password = faker.internet.password();
@@ -77,20 +74,15 @@ describe('login unit-test', () => {
       password,
       confirmPassword: password,
     };
-    const { data } = await graphqlCall({
-      source: registerMutation,
-      variableValues: { registerOptions: fakeUser },
-    });
-    console.log(`🚀 ~ file: auth.test.ts ~ line 79 ~ it ~ data`, data);
+    const schema = await createSchema();
 
-    expect(data?.login.errors).toBeNull();
-    expect(data?.login.user).toBeDefined();
-
-    const user = data?.login.user as User;
-
-    expect(user.full_name).toEqual(full_name);
-    expect(user.email).toEqual(email);
-    expect(user.providerId).toBeNull();
+    await graphql(
+      schema,
+      registerMutation,
+      null,
+      {},
+      { registerOptions: fakeUser }
+    );
   });
 
   /* it('valid-login', async () => {

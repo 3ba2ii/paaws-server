@@ -1,37 +1,38 @@
-import { Request } from 'express';
-import { ProviderTypes } from './../../types/enums.types';
 import argon2 from 'argon2';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { v4 } from 'uuid';
+import { Request } from 'express';
 import {
-  COOKIE_NAME,
-  FORGET_PASSWORD_PREFIX,
-  PHONE_NUMBER_REG_EXP,
-  VERIFY_PHONE_NUMBER_PREFIX,
-} from '../../constants';
+  Arg,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from 'type-graphql';
+import { v4 } from 'uuid';
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../../constants';
 import { User } from '../../entity/UserEntities/User';
 import {
-  CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
   CREATE_NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
 } from '../../errors';
 import { MyContext } from '../../types';
 import {
+  BaseRegisterInput,
   ChangePasswordInput,
   LoginInput,
-  BaseRegisterInput,
 } from '../../types/input.types';
 import {
   ChangePasswordResponse,
-  FieldError,
   RegularResponse,
   UserResponse,
 } from '../../types/response.types';
 import { checkDuplicationError } from '../../utils/checkDuplicationError';
 import { sendEmail } from '../../utils/sendEmail';
 import { sendSMS } from '../../utils/sendSMS';
+import { isAuth } from './../../middleware/isAuth';
 import { AuthRepo } from './../../repos/Auth.repo';
+import { ProviderTypes } from './../../types/enums.types';
 
 @Resolver(User)
 export class LocalAuthResolver {
@@ -81,6 +82,21 @@ export class LocalAuthResolver {
     //DONE 2. verify the phone number that is not already registered
     //DONE 3. send the otp to the phone number
     return this.authRepo.sendOTP(phone, email, redis);
+  }
+
+  @Mutation(() => RegularResponse)
+  @UseMiddleware(isAuth)
+  async verifyPhoneNumber(
+    @Arg('phone') phone: string,
+    @Arg('otp') otp: string,
+    @Ctx() { req, redis }: MyContext
+  ): Promise<RegularResponse> {
+    const user = await User.findOne(req.session.userId);
+
+    if (!user)
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+
+    return this.authRepo.verifyUserPhoneNumber(user, phone, otp, redis);
   }
 
   @Mutation(() => UserResponse)

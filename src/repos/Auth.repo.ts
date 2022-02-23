@@ -103,6 +103,19 @@ export class AuthRepo extends Repository<User> {
       provider: ProviderTypes.LOCAL,
     });
   }
+  async findUserByProviderIdOrEmail(
+    providerId: string,
+    email: string
+  ): Promise<User | undefined> {
+    return User.findOne({
+      where: [{ providerId }, { email }],
+    });
+  }
+  async findUserByEmail(email: string): Promise<User | undefined> {
+    return User.findOne({
+      where: { email },
+    });
+  }
 
   async sendOTP(
     phone: string,
@@ -124,15 +137,16 @@ export class AuthRepo extends Repository<User> {
       }
 
       //find a user associated with this phone number or email
-      const user = await User.findOne({ where: { email } });
+      const user = await User.findOne({ where: [{ email }, { phone }] });
       if (!user) {
         //no user was found, so we send an error to the user
         return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
       }
 
-      /* then we find a user,  */
+      /* then we find a user*/
+
       /* we have to check if the user already has a verified phone number */
-      if (user.phone && user.phoneVerified) {
+      if ((user.phone && user.phoneVerified) || user.phone === phone) {
         /* then the user already has a verified phone number */
         return {
           success: false,
@@ -160,18 +174,33 @@ export class AuthRepo extends Repository<User> {
     }
   }
 
-  async findUserByProviderIdOrEmail(
-    providerId: string,
-    email: string
-  ): Promise<User | undefined> {
-    return User.findOne({
-      where: [{ providerId }, { email }],
-    });
-  }
-  async findUserByEmail(email: string): Promise<User | undefined> {
-    return User.findOne({
-      where: { email },
-    });
+  async verifyUserPhoneNumber(
+    user: User,
+    phone: string,
+    otp: string,
+    redis: IORedis.Redis
+  ): Promise<RegularResponse> {
+    try {
+      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${user.email}`;
+      const storedOTP = await redis.get(redisKey);
+
+      const isValid = storedOTP?.toString() === otp.toString();
+      if (!storedOTP || !isValid) {
+        return { success: false, errors: [CREATE_NOT_AUTHORIZED_ERROR('otp')] };
+      }
+      /* then the otp is valid */
+      /* we have to update the user's phone number */
+      user.phone = phone;
+      user.phoneVerified = true;
+      await user.save();
+
+      /* then we have to delete the otp from redis */
+      await redis.del(redisKey);
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, errors: [INTERNAL_SERVER_ERROR, err] };
+    }
   }
 
   async register(

@@ -41,7 +41,7 @@ export class AuthRepo extends Repository<User> {
     }
   }
 
-  private async registerUsingAuthProvider(
+  private async authenticateUsingProvider(
     provider: ProviderTypes,
     idToken: string
   ): Promise<User | null> {
@@ -181,7 +181,7 @@ export class AuthRepo extends Repository<User> {
     redis: IORedis.Redis
   ): Promise<RegularResponse> {
     try {
-      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${user.email}`;
+      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}:${user.email}`;
       const storedOTP = await redis.get(redisKey);
 
       const isValid = storedOTP?.toString() === otp.toString();
@@ -218,7 +218,7 @@ export class AuthRepo extends Repository<User> {
     */
     let user: User | null = null;
     if (provider && idToken) {
-      user = await this.registerUsingAuthProvider(provider, idToken);
+      user = await this.authenticateUsingProvider(provider, idToken);
     } else if (userInfo && userInfo.password && userInfo.confirmPassword) {
       user = await this.registerUsingPassword(userInfo);
     }
@@ -276,5 +276,15 @@ export class AuthRepo extends Repository<User> {
     req.session.userId = user.id;
 
     return { user };
+  }
+
+  async loginWithProvider(
+    provider: ProviderTypes,
+    idToken: string
+  ): Promise<UserResponse> {
+    /* run the register mutation as it includes the both options of login and register */
+    const user = await this.authenticateUsingProvider(provider, idToken);
+
+    return user ? { user } : { errors: [INTERNAL_SERVER_ERROR] };
   }
 }

@@ -156,7 +156,7 @@ export class AuthRepo extends Repository<User> {
           errors: [
             CREATE_ALREADY_EXISTS_ERROR(
               'phone',
-              'A phone number is already associated with this user'
+              'This phone is already used by another user'
             ),
           ],
         };

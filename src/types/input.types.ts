@@ -1,3 +1,5 @@
+import { ProviderTypes } from '../types/enums.types';
+
 import {
   IsDateString,
   IsEmail,
@@ -22,13 +24,10 @@ import {
 } from './enums.types';
 
 @InputType()
-export class RegisterOptions {
+export class BaseRegisterInput {
   @Field()
   @MaxLength(100)
   full_name!: string;
-
-  @Field()
-  phone!: string;
 
   @Field()
   @IsEmail()
@@ -36,10 +35,20 @@ export class RegisterOptions {
 
   @Field()
   @Length(8, 40)
-  password!: string;
+  password: string;
 
-  @Field(() => Int)
-  otp!: number;
+  @Field()
+  @Length(8, 40)
+  confirmPassword: string;
+}
+
+@InputType()
+export class RegisterWithAuthProviderInput extends BaseRegisterInput {
+  @Field()
+  provider!: ProviderTypes;
+
+  @Field()
+  providerId!: string;
 }
 
 @InputType()

@@ -7,9 +7,9 @@ import Redis from 'ioredis';
 import path from 'path';
 import 'reflect-metadata';
 import { createConnection, useContainer } from 'typeorm';
+import { Container } from 'typeorm-typedi-extensions';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { createApolloServer } from './utils/createApolloServer';
-import { Container } from 'typeorm-typedi-extensions';
 
 require('dotenv-safe').config();
 
@@ -31,7 +31,7 @@ const main = async () => {
   });
   //
   const app = express();
-  __prod__ && (await conn.runMigrations()); //
+  __prod__ && (await conn.runMigrations());
 
   // Redis session store
   const RedisStore = connectRedis(session);
@@ -65,7 +65,7 @@ const main = async () => {
         secure: __prod__, // cookie only works in https on production
         domain: __prod__ ? '.3ba2i.software' : undefined,
       },
-      saveUninitialized: false,
+      saveUninitialized: false, //force a new session but not modified to be saved to the store
       secret: process.env.SESSION_REDIS_SECRET_KEY,
       resave: false, // don't save session if unmodified
     })
@@ -88,10 +88,9 @@ const main = async () => {
       ],
     },
   });
-  //applying static routes 'public'
-  //app.use(express.static(path.join(__dirname, 'public')));
 
   const port = parseInt(process.env.PORT) || 4000;
+
   app.listen(port, () => {
     console.log(`🚀 Now listening on port http://localhost:${port}/graphql`);
   });

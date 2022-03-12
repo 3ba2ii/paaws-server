@@ -12,7 +12,7 @@ export const sendSMS = async (body: string, to: string) => {
   try {
     const response = await client.messages.create({
       body,
-      from: '+17722911815',
+      from: '+18647564481',
       to,
     });
     console.log(
@@ -24,6 +24,7 @@ export const sendSMS = async (body: string, to: string) => {
       response,
     };
   } catch (err) {
+    console.log(`🚀 ~ file: sendSMS.ts ~ line 27 ~ sendSMS ~ err`, err);
     return {
       sent: false,
       err,

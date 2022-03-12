@@ -22,14 +22,7 @@ import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
 import { UserPet } from './UserPet';
 import { UserTag } from './UserTags';
-
-export enum ProviderTypes {
-  LOCAL = 'local',
-  GOOGLE = 'google',
-  FACEBOOK = 'facebook',
-  TWITTER = 'twitter',
-  APPLE = 'apple',
-}
+import { ProviderTypes } from '../../types/enums.types';
 
 @ObjectType()
 @Entity()
@@ -40,9 +33,9 @@ export class User extends EntityWithDates(
   @Column({ unique: true })
   email!: string;
 
-  @Field()
-  @Column({ unique: true })
-  phone!: string;
+  @Field({ nullable: true })
+  @Column({ unique: true, nullable: true })
+  phone: string;
 
   @Field()
   @Column()
@@ -55,9 +48,9 @@ export class User extends EntityWithDates(
   @Column({ default: ProviderTypes.LOCAL })
   provider: ProviderTypes;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
-  provider_id: number;
+  @Field(() => String, { nullable: true })
+  @Column({ nullable: true, unique: true })
+  providerId: string;
 
   @Field(() => String, { nullable: true })
   @Column('decimal', { precision: 10, scale: 6, nullable: true })
@@ -77,14 +70,18 @@ export class User extends EntityWithDates(
 
   @Field()
   @Column({ default: false })
+  phoneVerified: Boolean;
+
+  @Field()
+  @Column({ default: false })
   blocked: Boolean;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
   last_login: Date;
 
-  @Column()
-  password!: string;
+  @Column({ nullable: true })
+  password: string;
 
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)

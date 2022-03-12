@@ -251,13 +251,24 @@ export class AuthRepo extends Repository<User> {
         ? { where: { email: processedIdentifier } }
         : { where: { phone: processedIdentifier } }
     );
-    /* user not found */
+    /* user not found or user is found but there is no password (registered with auth provider) */
     if (!user) {
       return {
         errors: [
           CREATE_NOT_AUTHORIZED_ERROR(
             'identifier',
             'Incorrect Phone Number or Email'
+          ),
+        ],
+      };
+    }
+
+    if (user && !user.password && user.providerId) {
+      return {
+        errors: [
+          CREATE_NOT_AUTHORIZED_ERROR(
+            'identifier',
+            'User is registered with an auth provider, Please try to login with that provider'
           ),
         ],
       };

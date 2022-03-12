@@ -5,7 +5,7 @@ export async function sendEmail(
   html: string,
   subject: string,
   _template?: string
-) {
+): Promise<boolean> {
   // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
 
@@ -23,4 +23,5 @@ export async function sendEmail(
     `🚀 ~ file: sendEmail.ts ~ line 16 ~ sendEmail ~ response`,
     response
   );
+  return !!response;
 }

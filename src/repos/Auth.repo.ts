@@ -1,6 +1,7 @@
 import argon2 from 'argon2';
 import { Request } from 'express';
 import IORedis from 'ioredis';
+import { sendEmail } from '../utils/sendEmail';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { User } from '../entity/UserEntities/User';
@@ -8,6 +9,7 @@ import { getAuthClient } from '../provider/auth';
 import { sendSMS } from '../utils/sendSMS';
 import {
   PHONE_NUMBER_REG_EXP,
+  VERIFY_EMAIL_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
 import {
@@ -114,6 +116,7 @@ export class AuthRepo extends Repository<User> {
       provider: ProviderTypes.LOCAL,
     });
 
+    //send email to user
     return { user };
   }
   async findUserByProviderIdOrEmail(
@@ -215,6 +218,24 @@ export class AuthRepo extends Repository<User> {
     }
   }
 
+  async sendEmailVerification(email: string, redis: IORedis.Redis) {
+    const code = Math.floor(Math.random() * 1000000);
+    const redisKey = `${VERIFY_EMAIL_PREFIX}:${email}`;
+
+    //1. send email to the user with the verification code
+    const sent = await sendEmail(
+      email,
+      `your verification code is: ${code}`,
+      'verify email'
+    );
+    if (!sent) return false;
+
+    //2. save the code in redis
+    await redis.set(redisKey, code, 'ex', 60 * 60 * 5);
+
+    return true;
+  }
+
   async register(
     userInfo?: BaseRegisterInput | null,
     provider?: ProviderTypes,
@@ -232,10 +253,11 @@ export class AuthRepo extends Repository<User> {
     if (provider && idToken) {
       user = await this.authenticateUsingProvider(provider, idToken);
     } else if (userInfo && userInfo.password && userInfo.confirmPassword) {
-      const res = await this.registerUsingPassword(userInfo);
-      if ((res.errors && res.errors.length) || !res.user)
-        return { errors: res.errors };
-      user = res.user;
+      const { user: createdUser, errors } = await this.registerUsingPassword(
+        userInfo
+      );
+      if ((errors && errors.length) || !createdUser) return { errors };
+      user = createdUser;
     }
 
     if (!user) {

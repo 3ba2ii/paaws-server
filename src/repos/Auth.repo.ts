@@ -87,24 +87,34 @@ export class AuthRepo extends Repository<User> {
 
   private async registerUsingPassword(
     userInfo: BaseRegisterInput
-  ): Promise<User | null> {
+  ): Promise<UserResponse> {
     const { email, full_name, password } = userInfo;
 
     const existingUser = await User.findOne({
       where: { email: email.toLowerCase().trim() },
     });
 
-    if (existingUser) return null;
+    if (existingUser)
+      return {
+        errors: [
+          CREATE_ALREADY_EXISTS_ERROR(
+            'email',
+            'This email is already associated with another account.'
+          ),
+        ],
+      };
 
     const hashedPassword = await argon2.hash(password);
 
-    return User.create({
+    const user = User.create({
       full_name,
       email: email.trim().toLowerCase(),
       password: hashedPassword,
       last_login: new Date(),
       provider: ProviderTypes.LOCAL,
     });
+
+    return { user };
   }
   async findUserByProviderIdOrEmail(
     providerId: string,
@@ -222,7 +232,10 @@ export class AuthRepo extends Repository<User> {
     if (provider && idToken) {
       user = await this.authenticateUsingProvider(provider, idToken);
     } else if (userInfo && userInfo.password && userInfo.confirmPassword) {
-      user = await this.registerUsingPassword(userInfo);
+      const res = await this.registerUsingPassword(userInfo);
+      if ((res.errors && res.errors.length) || !res.user)
+        return { errors: res.errors };
+      user = res.user;
     }
 
     if (!user) {

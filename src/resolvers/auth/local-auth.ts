@@ -1,3 +1,4 @@
+import { CREATE_ALREADY_EXISTS_ERROR } from './../../errors';
 import argon2 from 'argon2';
 import { Request } from 'express';
 import {
@@ -113,6 +114,25 @@ export class LocalAuthResolver {
       return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
 
     return this.authRepo.verifyUserPhoneNumber(user, phone, otp, redis);
+  }
+
+  @Mutation(() => RegularResponse)
+  async sendEmailVerification(
+    @Arg('email') email: string,
+    @Ctx() { redis }: MyContext
+  ): Promise<RegularResponse> {
+    /* check whether a user has this email or not*/
+    const user = await User.findOne({
+      where: { email: email.toLowerCase().trim() },
+    });
+    if (user)
+      return { success: false, errors: [CREATE_ALREADY_EXISTS_ERROR('user')] };
+
+    //otherwise send a verification email
+    const res = await this.authRepo.sendEmailVerification(email, redis);
+    return res
+      ? { success: true }
+      : { success: false, errors: [CREATE_INVALID_ERROR('email')] };
   }
 
   @Mutation(() => UserResponse)

@@ -20,7 +20,7 @@ import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Comment } from './../InteractionsEntities/Comment';
 import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
-import { UserPet } from './UserPet';
+import { UserPet } from '../PetEntities/UserPet';
 import { UserTag } from './UserTags';
 import { ProviderTypes } from '../../types/enums.types';
 
@@ -100,6 +100,10 @@ export class User extends EntityWithDates(
   @Field(() => [Pet], { nullable: true })
   @OneToMany(() => Pet, (pet) => pet.user)
   pets: Pet[];
+
+  @Field(() => [UserPet], { nullable: true })
+  @OneToMany(() => UserPet, (pet) => pet.user)
+  ownedPets: UserPet[];
 
   @Field(() => [UserTag], { nullable: true })
   @OneToMany(() => UserTag, (tag) => tag.user)

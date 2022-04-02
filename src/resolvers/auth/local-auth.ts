@@ -164,9 +164,9 @@ export class LocalAuthResolver {
 
     if (errors && errors.length > 0) return { errors };
 
-    if (!user) return { errors: [INTERNAL_SERVER_ERROR] };
-
-    return this.saveUserToDB(user, req);
+    return user
+      ? this.saveUserToDB(user, req)
+      : { errors: [INTERNAL_SERVER_ERROR] };
   }
 
   //Change Password Mutation

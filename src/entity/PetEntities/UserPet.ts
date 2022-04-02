@@ -7,32 +7,28 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
+import { PetImages } from '../MediaEntities/PetImages';
 import { Photo } from '../MediaEntities/Photo';
 import { User } from '../UserEntities/User';
-import { PetImages } from './../MediaEntities/PetImages';
 import { AbstractPet } from './AbstractPet';
 
 @ObjectType()
 @Entity()
-export class Pet extends AbstractPet {
+export class UserPet extends AbstractPet {
   @Field()
   @Column()
   about!: string;
 
-  @Field(() => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  vaccinated: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  spayedOrNeutered: Boolean;
+  /*   @Field(() => [PetSkill])
+  @OneToMany(() => PetSkill, (ps) => ps.pet, { cascade: true, eager: true })
+  skills: PetSkill[]; */
 
   @Field(() => Int)
   @Column()
   userId!: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.pets, {
+  @ManyToOne(() => User, (user) => user.ownedPets, {
     cascade: true,
     onDelete: 'CASCADE',
   })

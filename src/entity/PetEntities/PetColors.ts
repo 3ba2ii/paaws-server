@@ -1,6 +1,6 @@
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Breeds, PetColors } from '../../types/enums.types';
+import { PetColors } from '../../types/enums.types';
 import { Pet } from './Pet';
 
 @ObjectType()
@@ -11,13 +11,13 @@ export class PetColor extends BaseEntity {
   petId: number;
 
   @Field(() => Pet)
-  @ManyToOne(() => Pet, (user) => user.breeds, {
+  @ManyToOne(() => Pet, (p) => p.breeds, {
     onDelete: 'CASCADE',
     orphanedRowAction: 'delete',
   })
   pet!: Pet;
 
-  @Field(() => Breeds)
+  @Field(() => PetColors)
   @PrimaryColumn({ type: 'enum', enum: PetColors, enumName: 'Pet_Colors' })
   color!: PetColors;
 }

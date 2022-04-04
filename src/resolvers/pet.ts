@@ -1,10 +1,4 @@
-import { PetRepo } from './../repos/Pet.repo';
-import { CREATE_NOT_FOUND_ERROR } from './../errors';
-import { User } from './../entity/UserEntities/User';
-import { Upload } from './../types/Upload';
-import { CreatePetInput } from './../types/input.types';
-import { isAuth } from 'src/middleware/isAuth';
-import { CreateUserOwnedPetResponse } from 'src/types/response.types';
+import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
@@ -18,15 +12,18 @@ import {
 } from 'type-graphql';
 import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Pet } from '../entity/PetEntities/Pet';
+import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { createBaseResolver } from '../utils/createBaseResolver';
+import { CreateUserOwnedPetResponse } from '../types/response.types';
+import { User } from './../entity/UserEntities/User';
+import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import { PetRepo } from './../repos/Pet.repo';
+import { CreatePetInput } from './../types/input.types';
+import { Upload } from './../types/Upload';
 
-const PetBaseResolver = createBaseResolver('Pet', Pet);
 @Resolver(Pet)
-class PetResolver extends PetBaseResolver {
-  constructor(private readonly petRepo: PetRepo) {
-    super();
-  }
+class PetResolver {
+  constructor(private readonly petRepo: PetRepo) {}
 
   /*  @FieldResolver({ nullable: true })
   async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
@@ -95,7 +92,7 @@ class PetResolver extends PetBaseResolver {
   @UseMiddleware(isAuth)
   async createUserOwnedPet(
     @Arg('petInfo') petInfo: CreatePetInput,
-    @Arg('images') images: Upload[],
+    @Arg('images', () => [GraphQLUpload]) images: Upload[],
     @Ctx() { req }: MyContext
   ): Promise<CreateUserOwnedPetResponse> {
     const user = await User.findOne(req.session.userId);

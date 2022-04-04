@@ -1,3 +1,4 @@
+import { UserPet } from './../entity/PetEntities/UserPet';
 import { PetImages } from './../entity/MediaEntities/PetImages';
 import { Photo } from './../entity/MediaEntities/Photo';
 import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
@@ -6,12 +7,20 @@ import { Breeds, PetColors } from './../types/enums.types';
 import { PetBreed } from './../entity/PetEntities/PetBreed';
 import { Pet } from '../entity/PetEntities/Pet';
 import { Service } from 'typedi';
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { User } from './../entity/UserEntities/User';
 import { CreatePetInput } from './../types/input.types';
 import { Upload } from './../types/Upload';
-import { FieldError } from './../types/response.types';
+import {
+  CreateUserOwnedPetResponse,
+  FieldError,
+} from './../types/response.types';
 import { PhotoRepo } from './PhotoRepo.repo';
+
+interface ICreatePet {
+  pet?: Pet | null;
+  errors?: FieldError[];
+}
 
 @Service()
 @EntityRepository(Pet)
@@ -89,7 +98,7 @@ export class PetRepo extends Repository<Pet> {
     user: User,
     { thumbnailIdx, breeds, colors, ...petInfo }: CreatePetInput,
     images: Upload[]
-  ): Promise<{ pet?: Pet | null; errors?: FieldError[] }> {
+  ): Promise<ICreatePet> {
     try {
       const pet = Pet.create({ ...petInfo });
 
@@ -137,7 +146,40 @@ export class PetRepo extends Repository<Pet> {
     user: User,
     petInfo: CreatePetInput,
     images: Upload[]
-  ) {
-    //
+  ): Promise<CreateUserOwnedPetResponse> {
+    try {
+      const { pet, errors } = await this.createPet(user, petInfo, images);
+      if (errors && errors.length) return { errors };
+      if (!pet)
+        return {
+          errors: [
+            CREATE_INVALID_ERROR(
+              'pet',
+              'Could not create the pet at the mean time'
+            ),
+          ],
+        };
+
+      const userOwnedPet = UserPet.create({ pet, about: petInfo.about, user });
+
+      user.petsCount += 1;
+      const success = await getConnection().transaction(async () => {
+        await userOwnedPet.save().catch(() => false);
+        await user.save().catch(() => false);
+        return true;
+      });
+      return success
+        ? { ownedPet: userOwnedPet }
+        : {
+            errors: [
+              CREATE_INVALID_ERROR(
+                'pet',
+                'Could not create the pet at the mean time'
+              ),
+            ],
+          };
+    } catch (e) {
+      return { errors: [INTERNAL_SERVER_ERROR, e] };
+    }
   }
 }

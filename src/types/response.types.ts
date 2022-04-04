@@ -1,3 +1,4 @@
+import { UserPet } from './../entity/PetEntities/UserPet';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
@@ -177,4 +178,10 @@ export class MissingPostResponse extends ErrorResponse {
 export class EditMissingPostResponse extends ErrorResponse {
   @Field(() => MissingPost, { nullable: true })
   missingPost?: MissingPost;
+}
+
+@ObjectType()
+export class CreateUserOwnedPetResponse extends ErrorResponse {
+  @Field(() => UserPet, { nullable: true })
+  ownedPet?: UserPet;
 }

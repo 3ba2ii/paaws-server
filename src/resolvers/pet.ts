@@ -3,31 +3,23 @@ import {
   Ctx,
   FieldResolver,
   Int,
-  Mutation,
   Query,
   Resolver,
   Root,
-  UseMiddleware,
 } from 'type-graphql';
 import { PetImages } from '../entity/MediaEntities/PetImages';
-import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
-import { PetBreed } from '../entity/PetEntities/PetBreed';
-import { User } from '../entity/UserEntities/User';
-import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { PetResponse } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { CreatePetOptions } from '../types/input.types';
 
 const PetBaseResolver = createBaseResolver('Pet', Pet);
 @Resolver(Pet)
 class PetResolver extends PetBaseResolver {
-  @FieldResolver({ nullable: true })
+  /*  @FieldResolver({ nullable: true })
   async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
     if (!thumbnailId) return undefined;
     return Photo.findOne(thumbnailId);
-  }
+  } */
 
   @FieldResolver({ nullable: true })
   images(
@@ -37,13 +29,13 @@ class PetResolver extends PetBaseResolver {
     return petImagesLoader.load(pet.id);
   }
 
-  @FieldResolver()
+  /*  @FieldResolver()
   user(
     @Root() pet: Pet,
     @Ctx() { dataLoaders: { userLoader } }: MyContext
   ): Promise<User | undefined> {
     return userLoader.load(pet.userId);
-  }
+  } */
 
   @Query(() => [Pet])
   async pets(): Promise<Pet[]> {
@@ -54,7 +46,7 @@ class PetResolver extends PetBaseResolver {
     return Pet.findOne(petId);
   }
 
-  @Mutation(() => PetResponse)
+  /*  @Mutation(() => PetResponse)
   @UseMiddleware(isAuth)
   public async createPet(
     @Arg('createPetOptions') createPetOptions: CreatePetOptions,
@@ -84,7 +76,7 @@ class PetResolver extends PetBaseResolver {
     await pet.save();
 
     return { pet };
-  }
+  } */
 }
 
 export default PetResolver;

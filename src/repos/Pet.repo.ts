@@ -1,16 +1,14 @@
-import { INTERNAL_SERVER_ERROR, CREATE_NOT_FOUND_ERROR } from './../errors';
-import { PetResponse } from '../types/response.types';
-import { AdoptionPostUpdateInput } from '../types/input.types';
+import { Pet } from '../entity/PetEntities/Pet';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
-import { Pet } from './../entity/PetEntities/Pet';
-import { PetBreed } from '../entity/PetEntities/PetBreed';
-import { Breeds } from '../types/enums.types';
+import { User } from './../entity/UserEntities/User';
+import { CreatePetInput } from './../types/input.types';
+import { Upload } from './../types/Upload';
 
 @Service()
 @EntityRepository(Pet)
 export class PetRepo extends Repository<Pet> {
-  private updatePetBreeds(breeds: Breeds[], pet: Pet) {
+  /*  private updatePetBreeds(breeds: Breeds[], pet: Pet) {
     const newBreeds: PetBreed[] = [];
     breeds.forEach((breed) => {
       const existingBreed = pet.breeds.find((pBreed) => pBreed.breed === breed);
@@ -66,5 +64,13 @@ export class PetRepo extends Repository<Pet> {
         errors: [INTERNAL_SERVER_ERROR],
       };
     }
+  } */
+  //create user's owned pet method
+  async createUserOwnedPet(
+    user: User,
+    petInfo: CreatePetInput,
+    images: Upload[]
+  ) {
+    //
   }
 }

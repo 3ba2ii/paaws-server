@@ -15,7 +15,6 @@ import {
 } from '../../utils/class-mixins';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Photo } from '../MediaEntities/Photo';
-import { Pet } from '../PetEntities/Pet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Comment } from './../InteractionsEntities/Comment';
 import { MissingPost } from './../PostEntities/MissingPost';
@@ -97,9 +96,9 @@ export class User extends EntityWithDates(
   @JoinColumn()
   avatar: Photo;
 
-  @Field(() => [Pet], { nullable: true })
-  @OneToMany(() => Pet, (pet) => pet.user)
-  pets: Pet[];
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ default: 0 })
+  petsCount: number;
 
   @Field(() => [UserPet], { nullable: true })
   @OneToMany(() => UserPet, (pet) => pet.user)

@@ -1,51 +1,36 @@
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
+  BaseEntity,
   Column,
   Entity,
-  JoinColumn,
   ManyToOne,
-  OneToMany,
   OneToOne,
+  PrimaryColumn,
 } from 'typeorm';
-import { PetImages } from '../MediaEntities/PetImages';
-import { Photo } from '../MediaEntities/Photo';
+import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { User } from '../UserEntities/User';
-import { AbstractPet } from './AbstractPet';
+import { Pet } from './Pet';
 
 @ObjectType()
 @Entity()
-export class UserPet extends AbstractPet {
+export class UserPet extends EntityWithDates(EntityWithBase(BaseEntity)) {
+  @Field(() => Int)
+  @PrimaryColumn()
+  petId: number;
+
+  @Field(() => Pet, { nullable: true })
+  @OneToOne(() => Pet, { nullable: true })
+  pet!: Pet;
+
+  @Field()
+  @PrimaryColumn()
+  userId: number;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.ownedPets, { onDelete: 'CASCADE' })
+  user: User;
+
   @Field()
   @Column()
   about!: string;
-
-  /*   @Field(() => [PetSkill])
-  @OneToMany(() => PetSkill, (ps) => ps.pet, { cascade: true, eager: true })
-  skills: PetSkill[]; */
-
-  @Field(() => Int)
-  @Column()
-  userId!: number;
-
-  @Field(() => User)
-  @ManyToOne(() => User, (user) => user.ownedPets, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
-  user!: User;
-
-  @Field(() => [PetImages], { nullable: true })
-  @OneToMany(() => PetImages, (petImages) => petImages.pet, {
-    cascade: true,
-    eager: true,
-  })
-  images: PetImages[];
-
-  @Column({ nullable: true })
-  thumbnailId: number;
-
-  @Field(() => Photo, { nullable: true })
-  @OneToOne(() => Photo, { cascade: true })
-  @JoinColumn()
-  thumbnail: Photo;
 }

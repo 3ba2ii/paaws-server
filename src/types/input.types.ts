@@ -1,5 +1,3 @@
-import { ProviderTypes } from '../types/enums.types';
-
 import {
   IsDateString,
   IsEmail,
@@ -10,6 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
+import { PetColors, ProviderTypes } from '../types/enums.types';
 import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
 import {
   Breeds,
@@ -93,6 +92,37 @@ export class CreatePetOptions {
 
   @Field(() => [Breeds])
   breeds!: Breeds[];
+
+  @Field(() => Int)
+  thumbnailIdx!: number;
+}
+
+@InputType()
+export class CreatePetInput {
+  @Field()
+  @MaxLength(255)
+  name!: string;
+
+  @Field(() => PetType)
+  type!: PetType;
+
+  @Field(() => PetGender)
+  gender!: PetGender;
+
+  @Field(() => PetSize)
+  size!: PetSize;
+
+  @Field(() => Date)
+  birthDate!: Date;
+
+  @Field()
+  about!: string;
+
+  @Field(() => [Breeds])
+  breeds!: Breeds[];
+
+  @Field(() => [PetColors])
+  colors!: PetColors[];
 
   @Field(() => Int)
   thumbnailIdx!: number;

@@ -1,13 +1,24 @@
+import { PetImages } from './../entity/MediaEntities/PetImages';
+import { Photo } from './../entity/MediaEntities/Photo';
+import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { PetColor } from './../entity/PetEntities/PetColors';
+import { Breeds, PetColors } from './../types/enums.types';
+import { PetBreed } from './../entity/PetEntities/PetBreed';
 import { Pet } from '../entity/PetEntities/Pet';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { User } from './../entity/UserEntities/User';
 import { CreatePetInput } from './../types/input.types';
 import { Upload } from './../types/Upload';
+import { FieldError } from './../types/response.types';
+import { PhotoRepo } from './PhotoRepo.repo';
 
 @Service()
 @EntityRepository(Pet)
 export class PetRepo extends Repository<Pet> {
+  constructor(private readonly photoRepo: PhotoRepo) {
+    super();
+  }
   /*  private updatePetBreeds(breeds: Breeds[], pet: Pet) {
     const newBreeds: PetBreed[] = [];
     breeds.forEach((breed) => {
@@ -65,6 +76,62 @@ export class PetRepo extends Repository<Pet> {
       };
     }
   } */
+
+  createBreeds(breeds: Breeds[], pet: Pet): PetBreed[] {
+    return breeds.map((breed) => PetBreed.create({ breed, pet }));
+  }
+
+  createColors(colors: PetColors[], pet: Pet): PetColor[] {
+    return colors.map((color) => PetColor.create({ color, pet }));
+  }
+
+  async createPet(
+    user: User,
+    { thumbnailIdx, breeds, colors, ...petInfo }: CreatePetInput,
+    images: Upload[]
+  ): Promise<{ pet?: Pet | null; errors?: FieldError[] }> {
+    try {
+      const pet = Pet.create({ ...petInfo });
+
+      //attach the breeds
+      pet.breeds = this.createBreeds(breeds, pet);
+
+      //attach the breeds
+      pet.colors = this.createColors(colors, pet);
+
+      //attach images
+      if (images && images.length > 5) {
+        return {
+          errors: [
+            CREATE_INVALID_ERROR('images', 'You can only upload 5 images'),
+          ],
+        };
+      }
+      let resolvedPhotos: Photo[] = [];
+      await Promise.all(
+        images.map(async (image) => {
+          const { photo, errors } = await this.photoRepo.createPhoto(
+            image,
+            user.id
+          );
+          if (!errors?.length && photo) resolvedPhotos.push(photo);
+        })
+      );
+      const petImages = resolvedPhotos.map((photo) => {
+        return PetImages.create({ photo, pet });
+      });
+      pet.images = petImages;
+
+      if (typeof thumbnailIdx === 'number' && resolvedPhotos.length) {
+        pet.thumbnail =
+          resolvedPhotos[Math.max(thumbnailIdx, resolvedPhotos.length - 1)];
+      }
+
+      return { pet };
+    } catch (e) {
+      return { errors: [INTERNAL_SERVER_ERROR, e] };
+    }
+  }
   //create user's owned pet method
   async createUserOwnedPet(
     user: User,

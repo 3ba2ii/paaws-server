@@ -1,11 +1,20 @@
+import { PetRepo } from './../repos/Pet.repo';
+import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import { User } from './../entity/UserEntities/User';
+import { Upload } from './../types/Upload';
+import { CreatePetInput } from './../types/input.types';
+import { isAuth } from 'src/middleware/isAuth';
+import { CreateUserOwnedPetResponse } from 'src/types/response.types';
 import {
   Arg,
   Ctx,
   FieldResolver,
   Int,
+  Mutation,
   Query,
   Resolver,
   Root,
+  UseMiddleware,
 } from 'type-graphql';
 import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Pet } from '../entity/PetEntities/Pet';
@@ -15,6 +24,10 @@ import { createBaseResolver } from '../utils/createBaseResolver';
 const PetBaseResolver = createBaseResolver('Pet', Pet);
 @Resolver(Pet)
 class PetResolver extends PetBaseResolver {
+  constructor(private readonly petRepo: PetRepo) {
+    super();
+  }
+
   /*  @FieldResolver({ nullable: true })
   async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
     if (!thumbnailId) return undefined;
@@ -77,6 +90,19 @@ class PetResolver extends PetBaseResolver {
 
     return { pet };
   } */
+
+  @Mutation(() => CreateUserOwnedPetResponse)
+  @UseMiddleware(isAuth)
+  async createUserOwnedPet(
+    @Arg('petInfo') petInfo: CreatePetInput,
+    @Arg('images') images: Upload[],
+    @Ctx() { req }: MyContext
+  ): Promise<CreateUserOwnedPetResponse> {
+    const user = await User.findOne(req.session.userId);
+    if (!user) return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
+
+    return this.petRepo.createUserOwnedPet(user, petInfo, images);
+  }
 }
 
 export default PetResolver;

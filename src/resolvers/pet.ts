@@ -1,3 +1,5 @@
+import { OwnedPet } from './../entity/PetEntities/OwnedPet';
+import { PaginatedUserOwnedPetsResponse } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -18,8 +20,9 @@ import { CreateUserOwnedPetResponse } from '../types/response.types';
 import { User } from './../entity/UserEntities/User';
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { PetRepo } from './../repos/Pet.repo';
-import { CreatePetInput } from './../types/input.types';
+import { CreatePetInput, PaginationArgs } from './../types/input.types';
 import { Upload } from './../types/Upload';
+import { getConnection } from 'typeorm';
 
 @Resolver(Pet)
 class PetResolver {
@@ -87,6 +90,37 @@ class PetResolver {
 
     return { pet };
   } */
+
+  @Query(() => PaginatedUserOwnedPetsResponse)
+  async userOwnedPets(
+    @Arg('userId') userId: number,
+    @Arg('paginationArgs') { limit, cursor }: PaginationArgs
+  ): Promise<PaginatedUserOwnedPetsResponse> {
+    const realLimit = Math.min(limit || 5, 20);
+    const realLimitPlusOne = realLimit + 1;
+
+    const qb = getConnection().getRepository(OwnedPet).createQueryBuilder('op');
+
+    //add where condition to find the pets that belongs to the user
+    qb.andWhere(`op."userId" = :userId`, { userId });
+
+    //add where condition for cursor
+    if (cursor) {
+      qb.andWhere(`op."createdAt" < :cursor`, {
+        cursor: new Date(cursor) || null,
+      });
+    }
+
+    const ownedPets = await qb
+      .orderBy('op."createdAt"', 'DESC')
+      .limit(realLimitPlusOne)
+      .getMany();
+
+    return {
+      ownedPets: ownedPets.slice(0, realLimit),
+      hasMore: ownedPets.length === realLimitPlusOne,
+    };
+  }
 
   @Mutation(() => CreateUserOwnedPetResponse)
   @UseMiddleware(isAuth)

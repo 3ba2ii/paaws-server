@@ -190,4 +190,23 @@ export class PetRepo extends Repository<Pet> {
       return { errors: [INTERNAL_SERVER_ERROR, e] };
     }
   }
+
+  //delete user's owned pet method
+  async deleteUserOwnedPet(user: User, petId: number): Promise<boolean> {
+    //1. find the pet
+    const pet = await Pet.findOne(petId);
+    if (!pet) return false;
+    //2. find the user's owned pet
+    const userOwnedPet = await OwnedPet.findOne({ petId, userId: user.id });
+    if (!userOwnedPet) return false;
+    //update pet count
+    user.petsCount -= 1;
+    const success = await getConnection().transaction(async () => {
+      //remove and persist
+      await pet.remove().catch(() => false);
+      await user.save().catch(() => false);
+      return true;
+    });
+    return success;
+  }
 }

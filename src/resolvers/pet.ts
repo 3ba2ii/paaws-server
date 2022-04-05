@@ -100,6 +100,18 @@ class PetResolver {
 
     return this.petRepo.createUserOwnedPet(user, petInfo, images);
   }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteUserOwnedPet(
+    @Arg('petId') petId: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const user = await User.findOne(req.session.userId);
+    if (!user) return false;
+
+    return this.petRepo.deleteUserOwnedPet(user, petId);
+  }
 }
 
 export default PetResolver;

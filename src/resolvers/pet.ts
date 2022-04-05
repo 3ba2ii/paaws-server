@@ -27,12 +27,6 @@ import { Upload } from './../types/Upload';
 class PetResolver {
   constructor(private readonly petRepo: PetRepo) {}
 
-  /*  @FieldResolver({ nullable: true })
-  async thumbnail(@Root() { thumbnailId }: Pet): Promise<Photo | undefined> {
-    if (!thumbnailId) return undefined;
-    return Photo.findOne(thumbnailId);
-  } */
-
   @FieldResolver(() => [PetImages], { nullable: true })
   images(
     @Root() pet: Pet,

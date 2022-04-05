@@ -1,30 +1,29 @@
-import { OwnedPet } from './../entity/PetEntities/OwnedPet';
-import { PaginatedUserOwnedPetsResponse } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
   FieldResolver,
-  Int,
   Mutation,
   Query,
   Resolver,
   Root,
   UseMiddleware,
 } from 'type-graphql';
+import { getConnection } from 'typeorm';
 import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Pet } from '../entity/PetEntities/Pet';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
 import { CreateUserOwnedPetResponse } from '../types/response.types';
+import { OwnedPet } from './../entity/PetEntities/OwnedPet';
 import { User } from './../entity/UserEntities/User';
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { PetRepo } from './../repos/Pet.repo';
 import { CreatePetInput, PaginationArgs } from './../types/input.types';
+import { PaginatedUserOwnedPetsResponse } from './../types/response.types';
 import { Upload } from './../types/Upload';
-import { getConnection } from 'typeorm';
 
-@Resolver(Pet)
+@Resolver(OwnedPet)
 class PetResolver {
   constructor(private readonly petRepo: PetRepo) {}
 
@@ -34,7 +33,7 @@ class PetResolver {
     return Photo.findOne(thumbnailId);
   } */
 
-  @FieldResolver({ nullable: true })
+  @FieldResolver(() => [PetImages], { nullable: true })
   images(
     @Root() pet: Pet,
     @Ctx() { dataLoaders: { petImagesLoader } }: MyContext
@@ -42,21 +41,20 @@ class PetResolver {
     return petImagesLoader.load(pet.id);
   }
 
-  /*  @FieldResolver()
+  @FieldResolver(() => User)
   user(
-    @Root() pet: Pet,
+    @Root() pet: OwnedPet,
     @Ctx() { dataLoaders: { userLoader } }: MyContext
   ): Promise<User | undefined> {
     return userLoader.load(pet.userId);
-  } */
-
-  @Query(() => [Pet])
-  async pets(): Promise<Pet[]> {
-    return Pet.find();
   }
-  @Query(() => Pet, { nullable: true })
-  async pet(@Arg('petId', () => Int) petId: number): Promise<Pet | undefined> {
-    return Pet.findOne(petId);
+
+  @FieldResolver(() => Pet)
+  pet(
+    @Root() pet: OwnedPet,
+    @Ctx() { dataLoaders: { petLoader } }: MyContext
+  ): Promise<Pet | undefined> {
+    return petLoader.load(pet.petId);
   }
 
   /*  @Mutation(() => PetResponse)

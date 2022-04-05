@@ -57,7 +57,7 @@ export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   thumbnailId: number;
 
   @Field(() => Photo, { nullable: true })
-  @OneToOne(() => Photo, { cascade: true })
+  @OneToOne(() => Photo, { cascade: true, eager: true })
   @JoinColumn()
   thumbnail: Photo;
 }

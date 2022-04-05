@@ -1,40 +1,21 @@
-import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
   FieldResolver,
   Int,
-  Mutation,
   Query,
   Resolver,
   Root,
-  UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { Address } from '../entity/Address';
-import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
-import { PetBreed } from '../entity/PetEntities/PetBreed';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
-import { CREATE_NOT_AUTHORIZED_ERROR } from '../errors';
-import { isAuth } from '../middleware/isAuth';
-import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
-import {
-  AdoptionPetsFilters,
-  AdoptionPostInput,
-  AdoptionPostUpdateInput,
-} from '../types/input.types';
-import {
-  AdoptionPostResponse,
-  PaginatedAdoptionPosts,
-} from '../types/response.types';
-import { Upload } from '../types/Upload';
+import { AdoptionPetsFilters } from '../types/input.types';
+import { PaginatedAdoptionPosts } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
-import { PetImages } from './../entity/MediaEntities/PetImages';
-import { CREATE_NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
-import { PetRepo } from './../repos/Pet.repo';
 
 const AdoptionPostBaseResolver = createBaseResolver(
   'AdoptionPost',
@@ -43,10 +24,7 @@ const AdoptionPostBaseResolver = createBaseResolver(
 
 @Resolver(AdoptionPost)
 class AdoptionPostResolver extends AdoptionPostBaseResolver {
-  constructor(
-    private readonly photoRepo: PhotoRepo,
-    private readonly petRepo: PetRepo
-  ) {
+  constructor() {
     super();
   }
 
@@ -149,7 +127,7 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
   ): Promise<AdoptionPost | undefined> {
     return AdoptionPost.findOne(id);
   }
-  @Mutation(() => AdoptionPostResponse)
+  /* @Mutation(() => AdoptionPostResponse)
   @UseMiddleware(isAuth)
   async createAdoptionPost(
     @Arg('input') input: AdoptionPostInput,
@@ -253,7 +231,7 @@ class AdoptionPostResolver extends AdoptionPostBaseResolver {
     return {
       adoptionPost: post,
     };
-  }
+  } */
 }
 
 export default AdoptionPostResolver;

@@ -15,12 +15,11 @@ import {
 } from '../../utils/class-mixins';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Photo } from '../MediaEntities/Photo';
-import { Pet } from '../PetEntities/Pet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Comment } from './../InteractionsEntities/Comment';
 import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
-import { UserPet } from './UserPet';
+import { OwnedPet } from '../PetEntities/OwnedPet';
 import { UserTag } from './UserTags';
 import { ProviderTypes } from '../../types/enums.types';
 
@@ -97,9 +96,13 @@ export class User extends EntityWithDates(
   @JoinColumn()
   avatar: Photo;
 
-  @Field(() => [Pet], { nullable: true })
-  @OneToMany(() => Pet, (pet) => pet.user)
-  pets: Pet[];
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ default: 0 })
+  petsCount: number;
+
+  @Field(() => [OwnedPet], { nullable: true })
+  @OneToMany(() => OwnedPet, (pet) => pet.user)
+  ownedPets: OwnedPet[];
 
   @Field(() => [UserTag], { nullable: true })
   @OneToMany(() => UserTag, (tag) => tag.user)
@@ -109,9 +112,9 @@ export class User extends EntityWithDates(
   @OneToMany(() => UserFavorites, (fav) => fav.user)
   favorites: UserFavorites[];
 
-  @Field(() => [UserPet], { nullable: true })
-  @OneToMany(() => UserPet, (userPet) => userPet.user)
-  userPets: UserPet[];
+  @Field(() => [OwnedPet], { nullable: true })
+  @OneToMany(() => OwnedPet, (userPet) => userPet.user)
+  userPets: OwnedPet[];
 
   @Field(() => [AdoptionPost], { nullable: true })
   @OneToMany(() => AdoptionPost, (post) => post.user)

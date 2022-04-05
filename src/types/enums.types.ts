@@ -26,6 +26,10 @@ export enum Breeds {
   BULLDOG = 'bulldog',
   HUSKEY = 'huskey',
 }
+export enum Skills {
+  LOVELY = 'Lovely',
+  CHEERFUL = 'Cheerful',
+}
 export enum PetColors {
   RED = 'red',
   BLUE = 'blue',
@@ -97,9 +101,14 @@ export enum ProviderTypes {
   TWITTER = 'twitter',
   APPLE = 'apple',
 }
+
 registerEnumType(ProviderTypes, {
   name: 'ProviderTypes',
   description: 'Auth Provider Types',
+});
+registerEnumType(Skills, {
+  name: 'PetSkills',
+  description: 'Skills the pet could have',
 });
 
 registerEnumType(SortingOrder, {

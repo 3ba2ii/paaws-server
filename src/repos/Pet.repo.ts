@@ -1,16 +1,33 @@
-import { INTERNAL_SERVER_ERROR, CREATE_NOT_FOUND_ERROR } from './../errors';
-import { PetResponse } from '../types/response.types';
-import { AdoptionPostUpdateInput } from '../types/input.types';
 import { Service } from 'typedi';
-import { EntityRepository, Repository } from 'typeorm';
-import { Pet } from './../entity/PetEntities/Pet';
-import { PetBreed } from '../entity/PetEntities/PetBreed';
-import { Breeds } from '../types/enums.types';
+import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { Pet } from '../entity/PetEntities/Pet';
+import { PetImages } from './../entity/MediaEntities/PetImages';
+import { Photo } from './../entity/MediaEntities/Photo';
+import { OwnedPet } from './../entity/PetEntities/OwnedPet';
+import { PetBreed } from './../entity/PetEntities/PetBreed';
+import { PetColor } from './../entity/PetEntities/PetColors';
+import { User } from './../entity/UserEntities/User';
+import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { Breeds, PetColors } from './../types/enums.types';
+import { CreatePetInput } from './../types/input.types';
+import {
+  CreateUserOwnedPetResponse,
+  FieldError,
+} from './../types/response.types';
+import { Upload } from './../types/Upload';
+import { PhotoRepo } from './PhotoRepo.repo';
 
+interface ICreatePet {
+  pet?: Pet | null;
+  errors?: FieldError[];
+}
 @Service()
 @EntityRepository(Pet)
 export class PetRepo extends Repository<Pet> {
-  private updatePetBreeds(breeds: Breeds[], pet: Pet) {
+  constructor(private readonly photoRepo: PhotoRepo) {
+    super();
+  }
+  updatePetBreeds(breeds: Breeds[], pet: Pet): PetBreed[] {
     const newBreeds: PetBreed[] = [];
     breeds.forEach((breed) => {
       const existingBreed = pet.breeds.find((pBreed) => pBreed.breed === breed);
@@ -25,6 +42,7 @@ export class PetRepo extends Repository<Pet> {
     });
     return newBreeds;
   }
+  /*  
   async updatePetInfo(
     {
       name,
@@ -66,5 +84,129 @@ export class PetRepo extends Repository<Pet> {
         errors: [INTERNAL_SERVER_ERROR],
       };
     }
+  } */
+
+  createBreeds(breeds: Breeds[], pet: Pet): PetBreed[] {
+    return [...new Set(breeds)].map((breed) =>
+      PetBreed.create({ breed, petId: pet.id })
+    );
+  }
+
+  createColors(colors: PetColors[], pet: Pet): PetColor[] {
+    return [...new Set(colors)].map((color) =>
+      PetColor.create({ color, petId: pet.id })
+    );
+  }
+
+  async createPet(
+    user: User,
+    { thumbnailIdx, breeds, colors, ...petInfo }: CreatePetInput,
+    images: Upload[]
+  ): Promise<ICreatePet> {
+    try {
+      const pet = Pet.create({ ...petInfo });
+
+      //attach the breeds
+      pet.breeds = this.createBreeds(breeds, pet);
+
+      //attach the breeds
+      pet.colors = this.createColors(colors, pet);
+
+      //attach images
+      if (images && images.length > 5) {
+        return {
+          errors: [
+            CREATE_INVALID_ERROR('images', 'You can only upload 5 images'),
+          ],
+        };
+      }
+      let resolvedPhotos: Photo[] = [];
+      await Promise.all(
+        images.map(async (image) => {
+          const { photo, errors } = await this.photoRepo.createPhoto(
+            image,
+            user.id
+          );
+          if (!errors?.length && photo) resolvedPhotos.push(photo);
+        })
+      );
+      const petImages = resolvedPhotos.map((photo) =>
+        PetImages.create({ photo, petId: pet.id })
+      );
+      pet.images = petImages;
+
+      if (typeof thumbnailIdx === 'number' && resolvedPhotos.length) {
+        pet.thumbnail =
+          resolvedPhotos[Math.max(thumbnailIdx, resolvedPhotos.length - 1)];
+      }
+
+      return { pet };
+    } catch (e) {
+      return { errors: [INTERNAL_SERVER_ERROR, e] };
+    }
+  }
+  //create user's owned pet method
+  async createUserOwnedPet(
+    user: User,
+    petInfo: CreatePetInput,
+    images: Upload[]
+  ): Promise<CreateUserOwnedPetResponse> {
+    try {
+      const { pet, errors } = await this.createPet(user, petInfo, images);
+      if (errors && errors.length) return { errors };
+      if (!pet)
+        return {
+          errors: [
+            CREATE_INVALID_ERROR(
+              'pet',
+              'Could not create the pet at the mean time'
+            ),
+          ],
+        };
+
+      const userOwnedPet = OwnedPet.create({
+        user,
+        pet,
+        about: petInfo.about,
+      });
+
+      user.petsCount += 1;
+      const success = await getConnection().transaction(async () => {
+        await userOwnedPet.save().catch(() => false);
+        await user.save().catch(() => false);
+        return true;
+      });
+      return success
+        ? { ownedPet: userOwnedPet }
+        : {
+            errors: [
+              CREATE_INVALID_ERROR(
+                'pet',
+                'Could not create the pet at the mean time'
+              ),
+            ],
+          };
+    } catch (e) {
+      return { errors: [INTERNAL_SERVER_ERROR, e] };
+    }
+  }
+
+  //delete user's owned pet method
+  async deleteUserOwnedPet(user: User, petId: number): Promise<boolean> {
+    //1. find the pet
+    const pet = await Pet.findOne(petId);
+    if (!pet) return false;
+    //2. find the user's owned pet
+    const userOwnedPet = await OwnedPet.findOne({ petId, userId: user.id });
+    if (!userOwnedPet) return false;
+    //update pet count
+    user.petsCount -= 1;
+    const success = await getConnection().transaction(async () => {
+      //remove and persist
+      await pet.remove().catch(() => false);
+      await user.save().catch(() => false);
+      return true;
+    });
+    return success;
   }
 }

@@ -1,4 +1,4 @@
-import { MyContext } from 'src/types';
+import { MyContext } from '../types';
 import { Ctx, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Address } from './../entity/Address';
 import { User } from './../entity/UserEntities/User';

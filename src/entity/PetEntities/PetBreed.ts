@@ -11,7 +11,7 @@ export class PetBreed extends BaseEntity {
   petId: number;
 
   @Field(() => Pet)
-  @ManyToOne(() => Pet, (user) => user.breeds, {
+  @ManyToOne(() => Pet, (p) => p.breeds, {
     onDelete: 'CASCADE',
     orphanedRowAction: 'delete',
   })

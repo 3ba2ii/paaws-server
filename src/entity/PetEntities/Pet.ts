@@ -1,18 +1,16 @@
-import { Field, Int, ObjectType } from 'type-graphql';
+import { Field, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToMany,
   OneToOne,
 } from 'typeorm';
 import { PetGender, PetSize, PetType } from '../../types/enums.types';
 import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
+import { PetImages } from '../MediaEntities/PetImages';
 import { Photo } from '../MediaEntities/Photo';
-import { User } from '../UserEntities/User';
-import { PetImages } from './../MediaEntities/PetImages';
 import { PetBreed } from './PetBreed';
 import { PetColor } from './PetColors';
 
@@ -39,36 +37,13 @@ export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Column()
   birthDate!: Date;
 
-  @Field(() => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  vaccinated: Boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  spayedOrNeutered: Boolean;
-
-  @Field()
-  @Column()
-  about!: string;
-
   //Relations
-  @Field(() => Int)
-  @Column()
-  userId!: number;
-
-  @Field(() => User)
-  @ManyToOne(() => User, (user) => user.pets, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
-  user!: User;
-
   @Field(() => [PetBreed])
   @OneToMany(() => PetBreed, (pb) => pb.pet, { cascade: true, eager: true })
   breeds: PetBreed[];
 
   @Field(() => [PetColor])
-  @OneToMany(() => PetColor, (pb) => pb.pet, { cascade: true, eager: true })
+  @OneToMany(() => PetColor, (pc) => pc.pet, { cascade: true, eager: true })
   colors: PetColor[];
 
   @Field(() => [PetImages], { nullable: true })
@@ -82,7 +57,7 @@ export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   thumbnailId: number;
 
   @Field(() => Photo, { nullable: true })
-  @OneToOne(() => Photo, { cascade: true })
+  @OneToOne(() => Photo, { cascade: true, eager: true })
   @JoinColumn()
   thumbnail: Photo;
 }

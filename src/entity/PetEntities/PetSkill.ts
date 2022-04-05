@@ -1,7 +1,7 @@
 /* import { Skills } from './../../types/enums.types';
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-import { UserPet } from './UserPet';
+import { OwnedPet } from './OwnedPet';
 
 @ObjectType()
 @Entity()
@@ -10,9 +10,9 @@ export class PetSkill extends BaseEntity {
   @PrimaryColumn()
   petId: number;
 
-  @Field(() => UserPet)
-  @ManyToOne(() => UserPet, (p) => p.skills)
-  pet!: UserPet;
+  @Field(() => OwnedPet)
+  @ManyToOne(() => OwnedPet, (p) => p.skills)
+  pet!: OwnedPet;
 
   @Field(() => Skills)
   @PrimaryColumn({ type: 'enum', enum: Skills, enumName: 'PetSkills' })

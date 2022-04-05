@@ -19,7 +19,7 @@ import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Comment } from './../InteractionsEntities/Comment';
 import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
-import { UserPet } from '../PetEntities/UserPet';
+import { OwnedPet } from '../PetEntities/OwnedPet';
 import { UserTag } from './UserTags';
 import { ProviderTypes } from '../../types/enums.types';
 
@@ -100,9 +100,9 @@ export class User extends EntityWithDates(
   @Column({ default: 0 })
   petsCount: number;
 
-  @Field(() => [UserPet], { nullable: true })
-  @OneToMany(() => UserPet, (pet) => pet.user)
-  ownedPets: UserPet[];
+  @Field(() => [OwnedPet], { nullable: true })
+  @OneToMany(() => OwnedPet, (pet) => pet.user)
+  ownedPets: OwnedPet[];
 
   @Field(() => [UserTag], { nullable: true })
   @OneToMany(() => UserTag, (tag) => tag.user)
@@ -112,9 +112,9 @@ export class User extends EntityWithDates(
   @OneToMany(() => UserFavorites, (fav) => fav.user)
   favorites: UserFavorites[];
 
-  @Field(() => [UserPet], { nullable: true })
-  @OneToMany(() => UserPet, (userPet) => userPet.user)
-  userPets: UserPet[];
+  @Field(() => [OwnedPet], { nullable: true })
+  @OneToMany(() => OwnedPet, (userPet) => userPet.user)
+  userPets: OwnedPet[];
 
   @Field(() => [AdoptionPost], { nullable: true })
   @OneToMany(() => AdoptionPost, (post) => post.user)

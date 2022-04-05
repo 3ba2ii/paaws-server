@@ -14,7 +14,7 @@ import { createApolloServer } from './utils/createApolloServer';
 require('dotenv-safe').config();
 
 useContainer(Container);
-//
+
 const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
@@ -29,7 +29,7 @@ const main = async () => {
       migrationsDir: path.join(__dirname, '/migration'),
     },
   });
-  //
+
   const app = express();
   __prod__ && (await conn.runMigrations());
 

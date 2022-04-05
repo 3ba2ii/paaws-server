@@ -3,23 +3,34 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
+import { EntityWithDates } from '../../utils/class-mixins';
 import { User } from '../UserEntities/User';
 import { Pet } from './Pet';
 
 @ObjectType()
 @Entity()
-export class UserPet extends EntityWithDates(EntityWithBase(BaseEntity)) {
+export class OwnedPet extends EntityWithDates(BaseEntity) {
+  @Field(() => String)
+  @Column({ type: 'text' })
+  about!: string;
+
   @Field(() => Int)
   @PrimaryColumn()
   petId: number;
-
-  @Field(() => Pet, { nullable: true })
-  @OneToOne(() => Pet, { nullable: true })
+  //
+  @Field(() => Pet)
+  @OneToOne(() => Pet, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
+  @JoinColumn()
   pet!: Pet;
 
   @Field()
@@ -29,8 +40,4 @@ export class UserPet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.ownedPets, { onDelete: 'CASCADE' })
   user: User;
-
-  @Field()
-  @Column()
-  about!: string;
 }

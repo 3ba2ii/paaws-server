@@ -43,7 +43,7 @@ export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   breeds: PetBreed[];
 
   @Field(() => [PetColor])
-  @OneToMany(() => PetColor, (pb) => pb.pet, { cascade: true, eager: true })
+  @OneToMany(() => PetColor, (pc) => pc.pet, { cascade: true, eager: true })
   colors: PetColor[];
 
   @Field(() => [PetImages], { nullable: true })

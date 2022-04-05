@@ -1,20 +1,20 @@
-import { OwnedPet } from './../entity/PetEntities/OwnedPet';
-import { PetImages } from './../entity/MediaEntities/PetImages';
-import { Photo } from './../entity/MediaEntities/Photo';
-import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
-import { PetColor } from './../entity/PetEntities/PetColors';
-import { Breeds, PetColors } from './../types/enums.types';
-import { PetBreed } from './../entity/PetEntities/PetBreed';
-import { Pet } from '../entity/PetEntities/Pet';
 import { Service } from 'typedi';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { Pet } from '../entity/PetEntities/Pet';
+import { PetImages } from './../entity/MediaEntities/PetImages';
+import { Photo } from './../entity/MediaEntities/Photo';
+import { OwnedPet } from './../entity/PetEntities/OwnedPet';
+import { PetBreed } from './../entity/PetEntities/PetBreed';
+import { PetColor } from './../entity/PetEntities/PetColors';
 import { User } from './../entity/UserEntities/User';
+import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { Breeds, PetColors } from './../types/enums.types';
 import { CreatePetInput } from './../types/input.types';
-import { Upload } from './../types/Upload';
 import {
   CreateUserOwnedPetResponse,
   FieldError,
 } from './../types/response.types';
+import { Upload } from './../types/Upload';
 import { PhotoRepo } from './PhotoRepo.repo';
 
 interface ICreatePet {
@@ -27,7 +27,7 @@ export class PetRepo extends Repository<Pet> {
   constructor(private readonly photoRepo: PhotoRepo) {
     super();
   }
-  /*  private updatePetBreeds(breeds: Breeds[], pet: Pet) {
+  updatePetBreeds(breeds: Breeds[], pet: Pet): PetBreed[] {
     const newBreeds: PetBreed[] = [];
     breeds.forEach((breed) => {
       const existingBreed = pet.breeds.find((pBreed) => pBreed.breed === breed);
@@ -42,6 +42,7 @@ export class PetRepo extends Repository<Pet> {
     });
     return newBreeds;
   }
+  /*  
   async updatePetInfo(
     {
       name,
@@ -86,11 +87,15 @@ export class PetRepo extends Repository<Pet> {
   } */
 
   createBreeds(breeds: Breeds[], pet: Pet): PetBreed[] {
-    return breeds.map((breed) => PetBreed.create({ breed, petId: pet.id }));
+    return [...new Set(breeds)].map((breed) =>
+      PetBreed.create({ breed, petId: pet.id })
+    );
   }
 
   createColors(colors: PetColors[], pet: Pet): PetColor[] {
-    return colors.map((color) => PetColor.create({ color, petId: pet.id }));
+    return [...new Set(colors)].map((color) =>
+      PetColor.create({ color, petId: pet.id })
+    );
   }
 
   async createPet(

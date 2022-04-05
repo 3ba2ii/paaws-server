@@ -57,38 +57,6 @@ class PetResolver {
     return petLoader.load(pet.petId);
   }
 
-  /*  @Mutation(() => PetResponse)
-  @UseMiddleware(isAuth)
-  public async createPet(
-    @Arg('createPetOptions') createPetOptions: CreatePetOptions,
-    @Ctx() { req }: MyContext
-  ): Promise<PetResponse> {
-    const { breeds } = createPetOptions;
-
-    const userId = req.session.userId;
-    const user = await User.findOne(userId);
-
-    if (!user)
-      return {
-        errors: [
-          {
-            field: 'user',
-            code: 404,
-            message: 'User not found',
-          },
-        ],
-      };
-
-    const pet = Pet.create({
-      ...createPetOptions,
-      breeds: breeds.map((breed) => PetBreed.create({ breed })),
-      user,
-    });
-    await pet.save();
-
-    return { pet };
-  } */
-
   @Query(() => PaginatedUserOwnedPetsResponse)
   async userOwnedPets(
     @Arg('userId') userId: number,

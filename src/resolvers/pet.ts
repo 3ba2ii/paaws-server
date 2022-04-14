@@ -3,6 +3,7 @@ import {
   Arg,
   Ctx,
   FieldResolver,
+  Int,
   Mutation,
   Query,
   Resolver,
@@ -10,7 +11,6 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { PetImages } from '../entity/MediaEntities/PetImages';
 import { Pet } from '../entity/PetEntities/Pet';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
@@ -27,13 +27,13 @@ import { Upload } from './../types/Upload';
 class PetResolver {
   constructor(private readonly petRepo: PetRepo) {}
 
-  @FieldResolver(() => [PetImages], { nullable: true })
+  /*  @FieldResolver(() => [PetImages], { nullable: true })
   images(
     @Root() pet: Pet,
     @Ctx() { dataLoaders: { petImagesLoader } }: MyContext
   ): Promise<PetImages[] | undefined> {
     return petImagesLoader.load(pet.id);
-  }
+  } */
 
   @FieldResolver(() => User)
   user(
@@ -51,6 +51,13 @@ class PetResolver {
     return petLoader.load(pet.petId);
   }
 
+  @Query(() => OwnedPet, { nullable: true })
+  async userOwnedPet(
+    @Arg('petId', () => Int) petId: number,
+    @Arg('userId', () => Int) userId: number
+  ): Promise<OwnedPet | undefined> {
+    return OwnedPet.findOne({ where: { petId, userId } });
+  }
   @Query(() => PaginatedUserOwnedPetsResponse)
   async userOwnedPets(
     @Arg('userId') userId: number,

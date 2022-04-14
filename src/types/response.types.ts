@@ -188,6 +188,6 @@ export class CreateUserOwnedPetResponse extends ErrorResponse {
 
 @ObjectType()
 export class PaginatedUserOwnedPetsResponse extends PaginatedResponse {
-  @Field(() => [OwnedPet], { nullable: true })
+  @Field(() => [OwnedPet])
   ownedPets?: OwnedPet[];
 }

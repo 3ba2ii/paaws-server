@@ -13,6 +13,7 @@ import { PetImages } from '../MediaEntities/PetImages';
 import { Photo } from '../MediaEntities/Photo';
 import { PetBreed } from './PetBreed';
 import { PetColor } from './PetColors';
+import { PetSkill } from './PetSkill';
 
 @ObjectType()
 @Entity()
@@ -60,4 +61,11 @@ export class Pet extends EntityWithDates(EntityWithBase(BaseEntity)) {
   @OneToOne(() => Photo, { cascade: true, eager: true })
   @JoinColumn()
   thumbnail: Photo;
+
+  @Field(() => [PetSkill], { nullable: true })
+  @OneToMany(() => PetSkill, (ps) => ps.pet, {
+    cascade: true,
+    eager: true,
+  })
+  skills: PetSkill[];
 }

@@ -124,6 +124,9 @@ export class CreatePetInput {
   @Field(() => [PetColors])
   colors!: PetColors[];
 
+  @Field(() => [String], { nullable: true })
+  skills!: string[];
+
   @Field(() => Int)
   thumbnailIdx!: number;
 }

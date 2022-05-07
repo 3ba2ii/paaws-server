@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
-import { OwnedPet } from './OwnedPet';
+import { Pet } from './Pet';
 
 @ObjectType()
 @Entity()
@@ -15,9 +15,9 @@ export class PetSkill extends BaseEntity {
   @PrimaryColumn()
   petId: number;
 
-  @Field(() => OwnedPet)
-  @ManyToOne(() => OwnedPet, (p) => p.skills)
-  pet!: OwnedPet;
+  @Field(() => Pet)
+  @ManyToOne(() => Pet, (p) => p.skills)
+  pet!: Pet;
 
   @Field()
   @PrimaryColumn()

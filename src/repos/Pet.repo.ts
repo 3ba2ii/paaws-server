@@ -6,6 +6,7 @@ import { Photo } from './../entity/MediaEntities/Photo';
 import { OwnedPet } from './../entity/PetEntities/OwnedPet';
 import { PetBreed } from './../entity/PetEntities/PetBreed';
 import { PetColor } from './../entity/PetEntities/PetColors';
+import { PetSkill } from './../entity/PetEntities/PetSkill';
 import { User } from './../entity/UserEntities/User';
 import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
 import { Breeds, PetColors } from './../types/enums.types';
@@ -98,9 +99,15 @@ export class PetRepo extends Repository<Pet> {
     );
   }
 
+  createSkills(skills: string[], pet: Pet): PetSkill[] {
+    return [...new Set(skills)].map((skill) =>
+      PetSkill.create({ skill, petId: pet.id })
+    );
+  }
+
   async createPet(
     user: User,
-    { thumbnailIdx, breeds, colors, ...petInfo }: CreatePetInput,
+    { thumbnailIdx, breeds, colors, skills, ...petInfo }: CreatePetInput,
     images: Upload[]
   ): Promise<ICreatePet> {
     try {
@@ -111,6 +118,9 @@ export class PetRepo extends Repository<Pet> {
 
       //attach the breeds
       pet.colors = this.createColors(colors, pet);
+
+      //attach the skills
+      pet.skills = this.createSkills(skills, pet);
 
       //attach images
       if (images && images.length > 5) {
@@ -133,6 +143,7 @@ export class PetRepo extends Repository<Pet> {
       const petImages = resolvedPhotos.map((photo) =>
         PetImages.create({ photo, petId: pet.id })
       );
+
       pet.images = petImages;
 
       if (typeof thumbnailIdx === 'number' && resolvedPhotos.length) {
@@ -170,7 +181,9 @@ export class PetRepo extends Repository<Pet> {
         about: petInfo.about,
       });
 
+      //update user's pets count
       user.petsCount += 1;
+
       const success = await getConnection().transaction(async () => {
         await userOwnedPet.save().catch(() => false);
         await user.save().catch(() => false);

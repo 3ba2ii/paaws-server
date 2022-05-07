@@ -53,10 +53,9 @@ class PetResolver {
 
   @Query(() => OwnedPet, { nullable: true })
   async userOwnedPet(
-    @Arg('petId', () => Int) petId: number,
-    @Arg('userId', () => Int) userId: number
+    @Arg('id', () => Int) id: number
   ): Promise<OwnedPet | undefined> {
-    return OwnedPet.findOne({ where: { petId, userId } });
+    return OwnedPet.findOne(id);
   }
   @Query(() => PaginatedUserOwnedPetsResponse)
   async userOwnedPets(

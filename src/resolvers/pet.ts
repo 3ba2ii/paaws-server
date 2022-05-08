@@ -1,3 +1,4 @@
+import { PetSkill } from './../entity/PetEntities/PetSkill';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -49,6 +50,14 @@ class PetResolver {
     @Ctx() { dataLoaders: { petLoader } }: MyContext
   ): Promise<Pet | undefined> {
     return petLoader.load(pet.petId);
+  }
+
+  @FieldResolver(() => [PetSkill])
+  skills(
+    @Root() pet: OwnedPet,
+    @Ctx() { dataLoaders: { petSkillsLoader } }: MyContext
+  ): Promise<PetSkill[]> {
+    return petSkillsLoader.load(pet.petId);
   }
 
   @Query(() => OwnedPet, { nullable: true })

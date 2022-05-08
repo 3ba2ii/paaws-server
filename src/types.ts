@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import { Redis } from 'ioredis';
 import {
-  createUserLoader,
-  createPetLoader,
   createAddressLoader,
-  createPetImagesLoader,
-  createPostImageLoader,
-  createPhotoLoader,
-  createVoteStatusLoader,
   createCommentVoteStatusLoader,
+  createPetImagesLoader,
+  createPetLoader,
+  createPetSkillsLoader,
+  createPhotoLoader,
+  createPostImageLoader,
+  createUserLoader,
+  createVoteStatusLoader,
 } from './utils/dataLoaders';
 
 export type MyContext = {
@@ -20,6 +21,7 @@ export type MyContext = {
     userLoader: ReturnType<typeof createUserLoader>;
     addressLoader: ReturnType<typeof createAddressLoader>;
     petImagesLoader: ReturnType<typeof createPetImagesLoader>;
+    petSkillsLoader: ReturnType<typeof createPetSkillsLoader>;
     postImagesLoader: ReturnType<typeof createPostImageLoader>;
     photoLoader: ReturnType<typeof createPhotoLoader>;
     votingLoader: ReturnType<typeof createVoteStatusLoader>;

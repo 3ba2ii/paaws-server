@@ -1,3 +1,4 @@
+import { PetSkill } from './../entity/PetEntities/PetSkill';
 import { CommentUpdoot } from './../entity/InteractionsEntities/CommentUpdoots';
 import DataLoader from 'dataloader';
 import { Pet } from '../entity/PetEntities/Pet';
@@ -69,22 +70,19 @@ export const createCommentVoteStatusLoader = () => {
 
 /* One to Many Loaders */
 export const createPetImagesLoader = () => {
-  return new DataLoader<number, PetImages[]>(async (petIds) => {
-    const data = await createOneToManyLoader(
-      PetImages,
-      petIds as number[],
-      'petId'
-    );
-    return data;
+  return new DataLoader<number, PetImages[]>((petIds) => {
+    return createOneToManyLoader(PetImages, petIds as number[], 'petId');
   });
 };
+
+export const createPetSkillsLoader = () => {
+  return new DataLoader<number, PetSkill[]>((petIds) => {
+    return createOneToManyLoader(PetSkill, petIds as number[], 'petId');
+  });
+};
+
 export const createPostImageLoader = () => {
-  return new DataLoader<number, PostImages[]>(async (postIds) => {
-    const data = await createOneToManyLoader(
-      PostImages,
-      postIds as number[],
-      'postId'
-    );
-    return data;
+  return new DataLoader<number, PostImages[]>((postIds) => {
+    return createOneToManyLoader(PostImages, postIds as number[], 'postId');
   });
 };

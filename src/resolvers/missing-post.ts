@@ -1,3 +1,4 @@
+import { PaginatedMissingPosts } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -39,7 +40,6 @@ import {
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { PostFilters } from '../types/input.types';
-import { PaginatedMissingPosts } from '../types/response.types';
 import {
   MissingPostTags,
   MissingPostTypes,
@@ -231,6 +231,36 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     const results = await posts
       .orderBy('mp."createdAt"', order)
+      .limit(realLimitPlusOne)
+      .getMany();
+
+    return {
+      missingPosts: results.slice(0, realLimit),
+      hasMore: results.length === realLimitPlusOne,
+    };
+  }
+
+  @Query(() => PaginatedMissingPosts)
+  async missingPostsByUser(
+    @Arg('input') { limit, cursor }: PaginationArgs,
+    @Arg('userId', () => Int) userId: number
+  ): Promise<PaginatedMissingPosts> {
+    const realLimit = Math.min(20, limit ? limit : 10);
+    const realLimitPlusOne = realLimit + 1;
+
+    let posts = getConnection()
+      .getRepository(MissingPost)
+      .createQueryBuilder('mp')
+      .where('mp.userId = :userId', { userId });
+
+    if (cursor) {
+      posts.andWhere('mp."createdAt" < :cursor', {
+        cursor: new Date(cursor),
+      });
+    }
+
+    const results = await posts
+      .orderBy('mp."createdAt"', 'DESC')
       .limit(realLimitPlusOne)
       .getMany();
 

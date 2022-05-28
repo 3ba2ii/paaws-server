@@ -40,6 +40,7 @@ export class AuthRepo extends Repository<User> {
   ) {
     try {
       const storedOTP = await redis.get(redisKey);
+
       return storedOTP?.toString() === otp.toString();
     } catch (e) {
       return false;
@@ -159,7 +160,7 @@ export class AuthRepo extends Repository<User> {
         return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
       }
 
-      /* then we find a user*/
+      /* then we found a user*/
 
       /* we have to check if the user already has a verified phone number */
       if ((user.phone && user.phoneVerified) || user.phone === phone) {
@@ -176,7 +177,7 @@ export class AuthRepo extends Repository<User> {
       }
 
       /* 1. Store the OTP with the user's phone in redis */
-      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}${phone}:${email}`;
+      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}`;
       await redis.set(redisKey, otp, 'ex', 60 * 5);
 
       /* 2. Send SMS to this user containing the OTP*/
@@ -184,7 +185,18 @@ export class AuthRepo extends Repository<User> {
 
       return sent
         ? { success: true }
-        : { success: false, errors: [INTERNAL_SERVER_ERROR] };
+        : {
+            success: false,
+            errors: [
+              INTERNAL_SERVER_ERROR,
+              {
+                code: 500,
+                field: 'phone',
+                message:
+                  'An error occurred sending SMS to this phone number, Please try again later.',
+              },
+            ],
+          };
     } catch (err) {
       return { success: false, errors: [INTERNAL_SERVER_ERROR, err] };
     }
@@ -197,10 +209,19 @@ export class AuthRepo extends Repository<User> {
     redis: IORedis.Redis
   ): Promise<RegularResponse> {
     try {
-      const redisKey = VERIFY_PHONE_NUMBER_PREFIX + phone;
+      const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}`;
+      console.log(
+        `🚀 ~ file: Auth.repo.ts ~ line 212 ~ AuthRepo ~ redisKey`,
+        redisKey
+      );
 
-      if (!this.isValidOTP(otp, redisKey, redis)) {
-        return { success: false, errors: [CREATE_NOT_AUTHORIZED_ERROR('otp')] };
+      const isValid = await this.isValidOTP(otp, redisKey, redis);
+
+      if (!isValid) {
+        return {
+          success: false,
+          errors: [CREATE_INVALID_ERROR('otp', 'Incorrect OTP')],
+        };
       }
 
       /* then the otp is valid */

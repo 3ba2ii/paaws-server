@@ -12,7 +12,7 @@ export const sendSMS = async (body: string, to: string) => {
   try {
     const response = await client.messages.create({
       body,
-      from: '+18647564481',
+      from: '+19403533053',
       to,
     });
     console.log(

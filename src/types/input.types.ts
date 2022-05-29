@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
-import { PetColors, ProviderTypes } from '../types/enums.types';
+import { PetColors, ProviderTypes, UserGender } from '../types/enums.types';
 import { IsNotBlank } from '../utils/CustomClassValidators/IsNotBlank';
 import {
   Breeds,
@@ -303,6 +303,9 @@ export class UpdateUserInfo {
   @Min(-90)
   @Field({ nullable: true })
   lat?: number;
+
+  @Field({ nullable: true })
+  gender?: UserGender;
 }
 
 @InputType()

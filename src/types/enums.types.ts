@@ -101,7 +101,15 @@ export enum ProviderTypes {
   TWITTER = 'twitter',
   APPLE = 'apple',
 }
+export enum UserGender {
+  MALE = 'Male',
+  Female = 'Female',
+}
 
+registerEnumType(UserGender, {
+  name: 'UserGender',
+  description: 'The gender of the user',
+});
 registerEnumType(ProviderTypes, {
   name: 'ProviderTypes',
   description: 'Auth Provider Types',

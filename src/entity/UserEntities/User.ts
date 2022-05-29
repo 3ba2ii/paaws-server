@@ -21,7 +21,7 @@ import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
 import { OwnedPet } from '../PetEntities/OwnedPet';
 import { UserTag } from './UserTags';
-import { ProviderTypes } from '../../types/enums.types';
+import { ProviderTypes, UserGender } from '../../types/enums.types';
 
 @ObjectType()
 @Entity()
@@ -82,11 +82,15 @@ export class User extends EntityWithDates(
   @Column({ nullable: true })
   password: string;
 
+  @Field()
+  @Column({ nullable: true })
+  gender: UserGender;
+
+  //Relationships
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)
   photos!: Photo[];
 
-  //Relationships
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
   avatarId: number;

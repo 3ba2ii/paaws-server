@@ -139,21 +139,21 @@ class UserResolver extends UserBaseResolver {
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const { bio, lat, lng } = updateOptions;
+    const { bio, lat, lng, gender } = updateOptions;
 
     const userId = req.session.userId;
     const user = await User.findOne({ id: userId });
     if (!user) return false;
 
-    if (bio) {
-      user.bio = bio;
-    }
+    if (bio && bio !== '') user.bio = bio;
 
     //update location
     if (lat && lng) {
       user.lat = lat;
       user.lng = lng;
     }
+
+    if (gender) user.gender = gender;
 
     await user.save().catch((err) => {
       console.log(`🚀 ~ file: user.ts ~ line 428 ~ UserResolver ~ err`, err);

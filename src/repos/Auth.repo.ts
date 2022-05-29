@@ -210,10 +210,6 @@ export class AuthRepo extends Repository<User> {
   ): Promise<RegularResponse> {
     try {
       const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}`;
-      console.log(
-        `🚀 ~ file: Auth.repo.ts ~ line 212 ~ AuthRepo ~ redisKey`,
-        redisKey
-      );
 
       const isValid = await this.isValidOTP(otp, redisKey, redis);
 

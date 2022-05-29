@@ -82,7 +82,7 @@ export class User extends EntityWithDates(
   @Column({ nullable: true })
   password: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ nullable: true })
   gender: UserGender;
 

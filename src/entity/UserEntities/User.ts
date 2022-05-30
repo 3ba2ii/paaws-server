@@ -82,9 +82,13 @@ export class User extends EntityWithDates(
   @Column({ nullable: true })
   password: string;
 
-  @Field({ nullable: true })
+  @Field(() => UserGender, { nullable: true })
   @Column({ nullable: true })
   gender: UserGender;
+
+  @Field(() => Date, { nullable: true })
+  @Column({ nullable: true })
+  birthDate: Date;
 
   //Relationships
   @Field(() => [Photo], { nullable: true })

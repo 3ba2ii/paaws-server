@@ -1,3 +1,6 @@
+import { UserRepo } from './../repos/User.repo';
+import { Upload } from './../types/Upload';
+import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
   Ctx,
@@ -37,7 +40,8 @@ const UserBaseResolver = createBaseResolver('User', User);
 class UserResolver extends UserBaseResolver {
   constructor(
     private readonly notificationRepo: NotificationRepo,
-    private readonly addressRepo: AddressRepo
+    private readonly addressRepo: AddressRepo,
+    private readonly userRepo: UserRepo
   ) {
     super();
   }
@@ -76,10 +80,6 @@ class UserResolver extends UserBaseResolver {
     return this.notificationRepo.getNotificationsByUserId(userId as number);
   }
 
-  @Query(() => Int)
-  usersCount(): Promise<number> {
-    return User.count();
-  }
   @Query(() => PaginatedUsers)
   async users(
     @Arg('where', () => WhereClause)
@@ -95,10 +95,10 @@ class UserResolver extends UserBaseResolver {
 
     const users = await getConnection().query(
       `
-          select * from public."user"
-          ${cursor ? 'where "createdAt" < $2' : ''}
-          order by "createdAt" DESC
-          limit $1;
+        select * from public."user"
+        ${cursor ? 'where "createdAt" < $2' : ''}
+        order by "createdAt" DESC
+        limit $1;
     `,
       replacements
     );
@@ -139,7 +139,7 @@ class UserResolver extends UserBaseResolver {
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const { bio, lat, lng, gender } = updateOptions;
+    const { bio, lat, lng, gender, birthDate } = updateOptions;
 
     const userId = req.session.userId;
     const user = await User.findOne({ id: userId });
@@ -154,6 +154,7 @@ class UserResolver extends UserBaseResolver {
     }
 
     if (gender) user.gender = gender;
+    if (birthDate) user.birthDate = birthDate;
 
     await user.save().catch((err) => {
       console.log(`🚀 ~ file: user.ts ~ line 428 ~ UserResolver ~ err`, err);
@@ -161,6 +162,20 @@ class UserResolver extends UserBaseResolver {
     });
 
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async addUserAvatar(
+    @Arg('avatar', () => GraphQLUpload) avatar: Upload,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    const userId = req.session.userId;
+    if (!userId) return false;
+    const user = await User.findOne(userId);
+
+    if (!user) return false;
+    return this.userRepo.setUserAvatar(user, avatar);
   }
 
   @Query(() => [User], { nullable: true })

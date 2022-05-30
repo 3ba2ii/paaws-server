@@ -291,9 +291,6 @@ export class UpdateUserInfo {
   @Field({ nullable: true })
   bio?: string;
 
-  @Field({ nullable: true })
-  avatar?: string;
-
   @Max(80)
   @Min(-180)
   @Field({ nullable: true })
@@ -304,8 +301,11 @@ export class UpdateUserInfo {
   @Field({ nullable: true })
   lat?: number;
 
-  @Field({ nullable: true })
+  @Field(() => UserGender, { nullable: true })
   gender?: UserGender;
+
+  @Field(() => Date, { nullable: true })
+  birthDate?: Date;
 }
 
 @InputType()

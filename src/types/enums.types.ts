@@ -103,7 +103,7 @@ export enum ProviderTypes {
 }
 export enum UserGender {
   MALE = 'Male',
-  Female = 'Female',
+  FEMALE = 'Female',
 }
 
 registerEnumType(UserGender, {

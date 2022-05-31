@@ -363,7 +363,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
     const success = await getConnection()
       .transaction(async () => {
         await missingPost.save(); // save the missing post to get the address
-        await user.save;
+        await user.save();
         return true;
       })
       .catch(() => false);

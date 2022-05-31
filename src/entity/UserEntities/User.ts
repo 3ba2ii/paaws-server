@@ -1,4 +1,3 @@
-import { Notification } from './../Notification/Notification';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -8,6 +7,7 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
+import { ProviderTypes, UserGender } from '../../types/enums.types';
 import {
   EntityWithBase,
   EntityWithDates,
@@ -15,13 +15,13 @@ import {
 } from '../../utils/class-mixins';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Photo } from '../MediaEntities/Photo';
+import { OwnedPet } from '../PetEntities/OwnedPet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { Comment } from './../InteractionsEntities/Comment';
+import { Notification } from './../Notification/Notification';
 import { MissingPost } from './../PostEntities/MissingPost';
 import { UserFavorites } from './UserFavorites';
-import { OwnedPet } from '../PetEntities/OwnedPet';
 import { UserTag } from './UserTags';
-import { ProviderTypes, UserGender } from '../../types/enums.types';
 
 @ObjectType()
 @Entity()

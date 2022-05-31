@@ -1,8 +1,3 @@
-import {
-  EntityWithBase,
-  EntityWithDates,
-  EntityWithLocation,
-} from '../../utils/class-mixins';
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -18,11 +13,16 @@ import {
   MissingPostTypes,
   PrivacyType,
 } from '../../types/enums.types';
+import {
+  EntityWithBase,
+  EntityWithDates,
+  EntityWithLocation,
+} from '../../utils/class-mixins';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
+import { Photo } from '../MediaEntities/Photo';
+import { PostImages } from '../MediaEntities/PostImages';
 import { Comment } from './../InteractionsEntities/Comment';
 import { User } from './../UserEntities/User';
-import { PostImages } from '../MediaEntities/PostImages';
-import { Photo } from '../MediaEntities/Photo';
 
 @ObjectType()
 @Entity()

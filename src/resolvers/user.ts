@@ -1,5 +1,3 @@
-import { UserRepo } from './../repos/User.repo';
-import { Upload } from './../types/Upload';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -26,11 +24,16 @@ import {
 import { PaginatedUsers } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { getDisplayName } from '../utils/getDisplayName';
+import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Notification } from './../entity/Notification/Notification';
+import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
+import { MissingPost } from './../entity/PostEntities/MissingPost';
 import { isAuth } from './../middleware/isAuth';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { UserRepo } from './../repos/User.repo';
 import { MyContext } from './../types';
+import { Upload } from './../types/Upload';
 
 require('dotenv-safe').config();
 
@@ -65,10 +68,20 @@ class UserResolver extends UserBaseResolver {
   pets(@Root() user: User): Promise<Pet[] | undefined> {
     return Pet.find({ where: { user } });
   }
+  @FieldResolver(() => [PostUpdoot])
+  async updoots(@Root() user: User): Promise<PostUpdoot[]> {
+    return PostUpdoot.find({ where: { user }, relations: ['post'] });
+  }
 
   @FieldResolver(() => Int)
-  totalPostsCount(@Root() user: User): number {
-    return user.adoptionPostsCount + user.missingPostsCount || 0;
+  async totalPostsCount(@Root() user: User): Promise<number> {
+    const missingCount = await MissingPost.count({
+      where: { userId: user.id },
+    });
+    const adoptionCount = await AdoptionPost.count({
+      where: { userId: user.id },
+    });
+    return missingCount + adoptionCount;
   }
 
   @Query(() => User, { nullable: true })
@@ -114,7 +127,7 @@ class UserResolver extends UserBaseResolver {
   }
 
   @Query(() => User, { nullable: true })
-  @UseMiddleware(isAuth)
+  //@UseMiddleware(isAuth)
   user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
     return User.findOne(id);
   }

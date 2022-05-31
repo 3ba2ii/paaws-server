@@ -139,29 +139,10 @@ class UserResolver extends UserBaseResolver {
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const { bio, lat, lng, gender, birthDate } = updateOptions;
-
-    const userId = req.session.userId;
-    const user = await User.findOne({ id: userId });
+    const user = await User.findOne(req.session.userId);
     if (!user) return false;
 
-    if (bio && bio !== '') user.bio = bio;
-
-    //update location
-    if (lat && lng) {
-      user.lat = lat;
-      user.lng = lng;
-    }
-
-    if (gender) user.gender = gender;
-    if (birthDate) user.birthDate = birthDate;
-
-    await user.save().catch((err) => {
-      console.log(`🚀 ~ file: user.ts ~ line 428 ~ UserResolver ~ err`, err);
-      return false;
-    });
-
-    return true;
+    return this.userRepo.updateUser(updateOptions, user);
   }
 
   @Mutation(() => Boolean)

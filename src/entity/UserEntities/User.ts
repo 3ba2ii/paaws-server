@@ -90,6 +90,18 @@ export class User extends EntityWithDates(
   @Column({ nullable: true })
   birthDate: Date;
 
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ default: 0 })
+  petsCount: number;
+
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ default: 0 })
+  missingPostsCount: number;
+
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ default: 0 })
+  adoptionPostsCount: number;
+
   //Relationships
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)
@@ -103,10 +115,6 @@ export class User extends EntityWithDates(
   @OneToOne(() => Photo, { cascade: true })
   @JoinColumn()
   avatar: Photo;
-
-  @Field(() => Int, { defaultValue: 0 })
-  @Column({ default: 0 })
-  petsCount: number;
 
   @Field(() => [OwnedPet], { nullable: true })
   @OneToMany(() => OwnedPet, (pet) => pet.user)

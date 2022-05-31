@@ -356,11 +356,17 @@ class MissingPostResolver extends MissingPostBaseResolver {
 
     missingPost.images = postImages;
 
+    //Update missingPosts count for the user
+    user.missingPostsCount += 1;
+
     //5. save the post and the images
-    const success = await getConnection().transaction(async () => {
-      await missingPost.save(); // save the missing post to get the address
-      return true;
-    });
+    const success = await getConnection()
+      .transaction(async () => {
+        await missingPost.save(); // save the missing post to get the address
+        await user.save;
+        return true;
+      })
+      .catch(() => false);
 
     if (!success)
       return {

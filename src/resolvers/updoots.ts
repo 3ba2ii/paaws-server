@@ -37,12 +37,14 @@ export class UpdootsResolver {
 
     const { userId } = req.session;
     const post = await MissingPost.findOne(postId);
-    if (!post)
+    if (!post) {
       return { errors: [CREATE_NOT_FOUND_ERROR('post')], success: false };
+    }
 
     const user = await User.findOne(userId);
-    if (!user)
+    if (!user) {
       return { errors: [CREATE_NOT_FOUND_ERROR('user')], success: false };
+    }
 
     const updoot = await PostUpdoot.findOne({ where: { postId, userId } });
 

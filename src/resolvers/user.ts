@@ -66,6 +66,11 @@ class UserResolver extends UserBaseResolver {
     return Pet.find({ where: { user } });
   }
 
+  @FieldResolver(() => Int)
+  totalPostsCount(@Root() user: User): number {
+    return user.adoptionPostsCount + user.missingPostsCount || 0;
+  }
+
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
   me(@Ctx() { req }: MyContext): Promise<User | undefined> {
@@ -120,8 +125,7 @@ class UserResolver extends UserBaseResolver {
     @Arg('tag', () => UserTagsType) tag: UserTagsType,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const user = await User.findOne({ id: req.session.userId });
-
+    const user = await User.findOne(req.session.userId);
     const newTag = UserTag.create({ user, tagName: tag });
 
     try {

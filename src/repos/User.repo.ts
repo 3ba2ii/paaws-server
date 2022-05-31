@@ -28,7 +28,6 @@ export class UserRepo extends Repository<User> {
     }
   }
 
-  //update user method
   public async updateUser(
     updateOptions: UpdateUserInfo,
     user: User

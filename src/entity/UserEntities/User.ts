@@ -102,6 +102,9 @@ export class User extends EntityWithDates(
   @Column({ default: 0 })
   adoptionPostsCount: number;
 
+  @Field(() => Int)
+  totalPostsCount: number;
+
   //Relationships
   @Field(() => [Photo], { nullable: true })
   @OneToMany(() => Photo, (photo) => photo.creator)

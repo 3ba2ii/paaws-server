@@ -10,7 +10,7 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql';
-import { getConnection } from 'typeorm';
+import { getConnection, LessThan } from 'typeorm';
 import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
@@ -18,10 +18,11 @@ import { UserTag } from '../entity/UserEntities/UserTags';
 import { UserTagsType } from '../types/enums.types';
 import {
   FindNearestUsersInput,
+  PaginationArgs,
   UpdateUserInfo,
   WhereClause,
 } from '../types/input.types';
-import { PaginatedUsers } from '../types/response.types';
+import { PaginatedMissingPosts, PaginatedUsers } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { getDisplayName } from '../utils/getDisplayName';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
@@ -130,6 +131,33 @@ class UserResolver extends UserBaseResolver {
   //@UseMiddleware(isAuth)
   user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
     return User.findOne(id);
+  }
+
+  @Query(() => PaginatedMissingPosts)
+  //@UseMiddleware(isAuth)
+  async votes(
+    @Arg('userId', () => Int) userId: number,
+    @Arg('paginationArgs', { nullable: true }) { limit, cursor }: PaginationArgs
+  ): Promise<PaginatedMissingPosts> {
+    const raelLimit = Math.min(20, limit || 5);
+    const realLimitPlusOne = raelLimit + 1;
+
+    let votes = getConnection().getRepository(PostUpdoot);
+
+    const updoots = await votes.find({
+      where: {
+        userId,
+        createdAt: LessThan(cursor ? new Date(cursor) : new Date()),
+      },
+      relations: ['post'],
+      take: realLimitPlusOne,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      missingPosts: updoots.map((v) => v.post).slice(0, raelLimit),
+      hasMore: updoots.length === realLimitPlusOne,
+    };
   }
 
   @Mutation(() => Boolean)

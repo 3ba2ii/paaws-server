@@ -142,9 +142,9 @@ class UserResolver extends UserBaseResolver {
     const raelLimit = Math.min(20, limit || 5);
     const realLimitPlusOne = raelLimit + 1;
 
-    let votes = getConnection().getRepository(PostUpdoot);
+    const votesRepo = getConnection().getRepository(PostUpdoot);
 
-    const updoots = await votes.find({
+    const updoots = await votesRepo.find({
       where: {
         userId,
         createdAt: LessThan(cursor ? new Date(cursor) : new Date()),

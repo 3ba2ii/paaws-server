@@ -134,7 +134,7 @@ class UserResolver extends UserBaseResolver {
   }
 
   @Query(() => PaginatedMissingPosts)
-  //@UseMiddleware(isAuth)
+  @UseMiddleware(isAuth)
   async votes(
     @Arg('userId', () => Int) userId: number,
     @Arg('paginationArgs', { nullable: true }) { limit, cursor }: PaginationArgs

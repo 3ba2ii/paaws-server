@@ -25,7 +25,6 @@ class FindUserByTokenIdResponse extends ErrorResponse {
 export class ExternalProviderAuthResolver {
   /* we need to implement two basic mutations
      1. a mutation to find the user by provider id or email and return true or false
-
   */
   constructor(private readonly authRepo: AuthRepo) {}
 

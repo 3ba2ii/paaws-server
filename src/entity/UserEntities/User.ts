@@ -17,6 +17,7 @@ import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Photo } from '../MediaEntities/Photo';
 import { OwnedPet } from '../PetEntities/OwnedPet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
+import { UserSetting } from '../Settings/UserSettings';
 import { Comment } from './../InteractionsEntities/Comment';
 import { Notification } from './../Notification/Notification';
 import { MissingPost } from './../PostEntities/MissingPost';
@@ -154,4 +155,8 @@ export class User extends EntityWithDates(
   @Field(() => [Notification])
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
+
+  @Field(() => [UserSetting])
+  @OneToMany(() => UserSetting, (us) => us.user)
+  settings: UserSetting[];
 }

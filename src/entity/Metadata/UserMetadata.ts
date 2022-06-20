@@ -2,7 +2,7 @@ import { Field, ObjectType, registerEnumType } from 'type-graphql';
 import { Column, Entity } from 'typeorm';
 import { Metadata } from '.';
 
-enum UserMetadataDescription {
+export enum UserMetadataDescription {
   USER_ID = 'user_id',
   UPDATE_EMAIL = 'update_email',
   UPDATE_FULL_NAME = 'update_full_name',

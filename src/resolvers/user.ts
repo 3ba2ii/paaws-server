@@ -1,3 +1,5 @@
+import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import { RegularResponse } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -158,6 +160,19 @@ class UserResolver extends UserBaseResolver {
       missingPosts: updoots.map((v) => v.post).slice(0, raelLimit),
       hasMore: updoots.length === realLimitPlusOne,
     };
+  }
+
+  @Mutation(() => RegularResponse)
+  @UseMiddleware(isAuth)
+  async updateUserFullName(
+    @Arg('fullName') fullName: string,
+    @Ctx() { req }: MyContext
+  ): Promise<RegularResponse> {
+    const user = await User.findOne(req.session.userId);
+    if (!user) {
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
+    return this.userRepo.updateUserFullName(user, fullName);
   }
 
   @Mutation(() => Boolean)

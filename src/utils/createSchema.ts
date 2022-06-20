@@ -12,6 +12,7 @@ import PhotoResolver from '../resolvers/photo';
 import UserResolver from '../resolvers/user';
 import { NotificationResolver } from './../resolvers/notification';
 import { UpdootsResolver } from './../resolvers/updoots';
+import SettingsResolver from '../resolvers/settings';
 
 let schema: GraphQLSchema;
 
@@ -28,6 +29,7 @@ export const createSchema = async () => {
         CommentResolver,
         NotificationResolver,
         UpdootsResolver,
+        SettingsResolver,
         ...AuthProviderResolvers,
       ],
       validate: true,

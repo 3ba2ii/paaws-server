@@ -177,7 +177,7 @@ export class User extends EntityWithDates(
         this.full_name,
         0
       ),
-    }); //
+    });
 
     this.settingsId = this.settings.id;
 

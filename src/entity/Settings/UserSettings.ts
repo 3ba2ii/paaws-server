@@ -30,6 +30,15 @@ export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
   @Column()
   language: string;
 
+  public async verifyUniqueURL(accountURL: string): Promise<boolean> {
+    const trimmedURL = accountURL.trim().toLocaleLowerCase().replace(' ', '');
+    const user = await UserSetting.findOne({ accountURL: trimmedURL });
+    if (user) {
+      return false;
+    }
+    return user ? false : true;
+  }
+
   public async createUniqueAccountURL(
     full_name: string,
     tries: number

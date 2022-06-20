@@ -156,7 +156,8 @@ export class User extends EntityWithDates(
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @Field(() => [UserSetting])
-  @OneToMany(() => UserSetting, (us) => us.user)
-  settings: UserSetting[];
+  @Field(() => UserSetting)
+  @OneToOne(() => UserSetting)
+  @JoinColumn()
+  settings: UserSetting;
 }

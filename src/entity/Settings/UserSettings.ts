@@ -1,16 +1,7 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { EntityWithBase } from '../../utils/class-mixins';
 import { User } from '../UserEntities/User';
-import { AllowedSettingValue } from './AllowedSettingValue';
-import { Setting } from './Settings';
 
 @ObjectType()
 @Entity()
@@ -20,28 +11,23 @@ export class UserSetting extends EntityWithBase(BaseEntity) {
   userId: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.settings)
+  @OneToOne(() => User)
+  @JoinColumn()
   user: User;
 
-  @Field(() => Int)
+  @Field(() => Boolean)
+  @Column({ default: true })
+  showEmail: boolean;
+
+  @Field(() => Boolean)
+  @Column({ default: true })
+  showPhone: boolean;
+
+  @Field(() => String)
+  @Column({ unique: true })
+  accountURL: string;
+
+  @Field(() => String)
   @Column()
-  settingId: number;
-
-  @Field(() => Setting)
-  @OneToOne(() => Setting)
-  @JoinColumn()
-  setting: Setting;
-
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
-  allowedSettingValueId: number;
-
-  @Field(() => AllowedSettingValue)
-  @OneToOne(() => AllowedSettingValue)
-  @JoinColumn()
-  allowedSettingValue: AllowedSettingValue;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  unconstrainedValue: string;
+  language: string;
 }

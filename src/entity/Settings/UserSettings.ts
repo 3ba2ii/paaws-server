@@ -1,18 +1,17 @@
+import { EntityWithBase, EntityWithDates } from '../../utils/class-mixins';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { EntityWithBase } from '../../utils/class-mixins';
+import { BaseEntity, Column, Entity, OneToOne } from 'typeorm';
 import { User } from '../UserEntities/User';
 
 @ObjectType()
 @Entity()
-export class UserSetting extends EntityWithBase(BaseEntity) {
+export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
   @Field(() => Int)
   @Column()
   userId: number;
 
   @Field(() => User)
-  @OneToOne(() => User)
-  @JoinColumn()
+  @OneToOne(() => User, (user) => user.settings) // specify inverse side as a second parameter
   user: User;
 
   @Field(() => Boolean)
@@ -24,7 +23,7 @@ export class UserSetting extends EntityWithBase(BaseEntity) {
   showPhone: boolean;
 
   @Field(() => String)
-  @Column({ unique: true })
+  @Column()
   accountURL: string;
 
   @Field(() => String)

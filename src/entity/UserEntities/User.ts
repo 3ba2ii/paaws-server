@@ -1,5 +1,6 @@
 import { Field, Int, ObjectType } from 'type-graphql';
 import {
+  AfterInsert,
   BaseEntity,
   Column,
   Entity,
@@ -156,8 +157,46 @@ export class User extends EntityWithDates(
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
+  @Field(() => Int)
+  @Column({ nullable: true })
+  settingsId: number;
+
   @Field(() => UserSetting)
-  @OneToOne(() => UserSetting)
-  @JoinColumn()
+  @OneToOne(() => UserSetting, (s) => s.user, { cascade: true })
+  @JoinColumn({ name: 'settingsId' })
   settings: UserSetting;
+
+  private async createUniqueAccountURL(
+    full_name: string,
+    tries: number
+  ): Promise<string> {
+    let suffix = '';
+    if (tries > 0) {
+      suffix = new Date().getTime().toString().slice(0, 7);
+    }
+
+    const uniqueURL = full_name.toLocaleLowerCase().replace(' ', '-') + suffix;
+
+    const accountURL = await UserSetting.findOne({ accountURL: uniqueURL });
+
+    if (accountURL) {
+      return this.createUniqueAccountURL(full_name, tries + 1);
+    }
+    return uniqueURL;
+  }
+
+  @AfterInsert()
+  async createSettings() {
+    this.settings = UserSetting.create({
+      userId: this.id,
+      showEmail: true,
+      showPhone: true,
+      language: 'EN',
+      accountURL: await this.createUniqueAccountURL(this.full_name, 0),
+    }); //
+
+    this.settingsId = this.settings.id;
+
+    this.save();
+  }
 }

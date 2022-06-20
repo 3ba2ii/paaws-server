@@ -7,7 +7,7 @@ import { User } from '../UserEntities/User';
 @Entity()
 export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
   @Field(() => Int)
-  @Column()
+  @Column({ unique: true })
   userId: number;
 
   @Field(() => User)
@@ -23,10 +23,30 @@ export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
   showPhone: boolean;
 
   @Field(() => String)
-  @Column()
+  @Column({ unique: true })
   accountURL: string;
 
   @Field(() => String)
   @Column()
   language: string;
+
+  public async createUniqueAccountURL(
+    full_name: string,
+    tries: number
+  ): Promise<string> {
+    let suffix = '';
+    if (tries > 0) {
+      suffix = new Date().getTime().toString().slice(0, 7);
+    }
+
+    const uniqueURL =
+      full_name.trim().toLocaleLowerCase().replace(' ', '') + suffix;
+
+    const accountURL = await UserSetting.findOne({ accountURL: uniqueURL });
+
+    if (accountURL) {
+      return this.createUniqueAccountURL(full_name, tries + 1);
+    }
+    return uniqueURL;
+  }
 }

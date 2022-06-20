@@ -16,6 +16,7 @@ import {
 } from '../../utils/class-mixins';
 import { PostUpdoot } from '../InteractionsEntities/PostUpdoot';
 import { Photo } from '../MediaEntities/Photo';
+import { UserMetadata } from '../Metadata/UserMetadata';
 import { OwnedPet } from '../PetEntities/OwnedPet';
 import { AdoptionPost } from '../PostEntities/AdoptionPost';
 import { UserSetting } from '../Settings/UserSettings';
@@ -156,6 +157,10 @@ export class User extends EntityWithDates(
   @Field(() => [Notification])
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
+
+  @Field(() => [UserMetadata])
+  @OneToMany(() => UserMetadata, (meta) => meta.user)
+  metadata: UserMetadata[];
 
   @Field(() => Int)
   @Column({ nullable: true })

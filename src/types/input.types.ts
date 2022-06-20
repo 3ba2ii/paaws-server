@@ -392,3 +392,27 @@ export class PostFilters {
   })
   order?: SortingOrder;
 }
+
+@InputType()
+export class UpdateUserSettingsInput {
+  @Field(() => Boolean, { nullable: true })
+  showPhoneNumber?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  showEmail?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  showBirthDate?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  showBio?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  showLocation?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  showGender?: boolean;
+
+  @Field(() => String, { nullable: true })
+  language?: string;
+}

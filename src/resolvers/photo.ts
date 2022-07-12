@@ -49,7 +49,7 @@ class PhotoResolver {
   }
 
   @Mutation(() => RegularResponse)
-  //@UseMiddleware(isAuth)
+  @UseMiddleware(isAuth)
   async removeAvatar(@Ctx() { req }: MyContext): Promise<RegularResponse> {
     const userId = req.session.userId;
     const user = await User.findOne(userId, { relations: ['avatar'] });

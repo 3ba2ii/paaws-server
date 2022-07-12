@@ -1,3 +1,4 @@
+import { RegularResponse } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from 'type-graphql';
 import { Photo } from '../entity/MediaEntities/Photo';
@@ -44,6 +45,28 @@ class PhotoResolver {
       return {
         errors: [INTERNAL_SERVER_ERROR],
       };
+    }
+  }
+
+  @Mutation(() => RegularResponse)
+  @UseMiddleware(isAuth)
+  async removeAvatar(@Ctx() { req }: MyContext): Promise<RegularResponse> {
+    const userId = req.session.userId;
+    const user = await User.findOne(userId, { relations: ['avatar'] });
+
+    if (!user) {
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
+    if (!user.avatar || !user.avatarId) {
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('avatar')] };
+    }
+    try {
+      //1. delete avatar from the database
+      await user.avatar.remove();
+
+      return { success: true };
+    } catch (e) {
+      return { success: false, errors: [INTERNAL_SERVER_ERROR, e] };
     }
   }
 }

@@ -118,7 +118,7 @@ export class User extends EntityWithDates(
   avatarId: number;
 
   @Field(() => Photo, { nullable: true })
-  @OneToOne(() => Photo, { cascade: true })
+  @OneToOne(() => Photo, { cascade: true, onDelete: 'SET NULL' })
   @JoinColumn()
   avatar: Photo;
 

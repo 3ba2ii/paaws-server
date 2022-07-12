@@ -31,7 +31,7 @@ export class UserRepo extends Repository<User> {
         errors: [
           {
             code: 400,
-            field: 'fullName',
+            field: 'full_name',
             message: 'You can only update your name 5 times',
           },
         ],
@@ -49,7 +49,7 @@ export class UserRepo extends Repository<User> {
         errors: [
           {
             code: 400,
-            field: 'fullName',
+            field: 'full_name',
             message: 'You can only update your name once every 30 days',
           },
         ],
@@ -59,16 +59,14 @@ export class UserRepo extends Repository<User> {
     if (fullName === '') {
       return {
         success: false,
-        errors: [CREATE_INVALID_ERROR('fullName', 'fullName cannot be empty')],
+        errors: [CREATE_INVALID_ERROR('full_name', 'Name cannot be empty')],
       };
     }
 
     if (fullName === user.full_name) {
       return {
         success: false,
-        errors: [
-          CREATE_INVALID_ERROR('fullName', 'fullName cannot be the same'),
-        ],
+        errors: [CREATE_INVALID_ERROR('full_name', 'Name cannot be the same')],
       };
     }
 

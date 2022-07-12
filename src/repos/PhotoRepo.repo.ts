@@ -24,6 +24,9 @@ export class PhotoRepo extends Repository<Photo> {
   async uploadToS3(file: Upload): Promise<UploadImageResponse> {
     return new AWSS3().uploadFileToS3(file);
   }
+  async removeFromS3(fileName: string): Promise<boolean> {
+    return new AWSS3().deleteFie(fileName);
+  }
   async createPhoto(
     file: Upload,
     userId: number

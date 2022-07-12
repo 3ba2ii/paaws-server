@@ -49,7 +49,7 @@ class PhotoResolver {
   }
 
   @Mutation(() => RegularResponse)
-  @UseMiddleware(isAuth)
+  //@UseMiddleware(isAuth)
   async removeAvatar(@Ctx() { req }: MyContext): Promise<RegularResponse> {
     const userId = req.session.userId;
     const user = await User.findOne(userId, { relations: ['avatar'] });
@@ -62,7 +62,9 @@ class PhotoResolver {
     }
     try {
       //1. delete avatar from the database
-      await user.avatar.remove();
+      const avatar = await user.avatar.remove();
+      if (!avatar) return { success: false, errors: [INTERNAL_SERVER_ERROR] };
+      this.photoRepo.removeFromS3(avatar.filename);
 
       return { success: true };
     } catch (e) {

@@ -1,11 +1,12 @@
-import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
-import { compressImage, validateImage } from './compressImage';
-import AWS from 'aws-sdk';
-import { randomBytes } from 'crypto';
-import { UploadImageResponse, ErrorResponse } from '../types/response.types';
-import { Upload } from './../types/Upload';
-import { file2Buffer } from './fileToBuffer';
 import * as Sentry from '@sentry/node';
+import AWS from 'aws-sdk';
+import { DeleteObjectRequest } from 'aws-sdk/clients/s3';
+import { randomBytes } from 'crypto';
+import { ErrorResponse, UploadImageResponse } from '../types/response.types';
+import { CREATE_INVALID_ERROR, INTERNAL_SERVER_ERROR } from './../errors';
+import { Upload } from './../types/Upload';
+import { compressImage, validateImage } from './compressImage';
+import { file2Buffer } from './fileToBuffer';
 require('dotenv-safe').config();
 
 const bucketName = process.env.AWS_BUCKET_NAME;
@@ -72,7 +73,7 @@ export class AWSS3 {
         ContentType: type || 'jpg',
       };
       const response = await this.s3.upload(s3UploadParams).promise();
-      return { url: response.Location, filename };
+      return { url: response.Location, filename: `${filename}.${type}` };
     } catch (err) {
       console.log(
         `🚀 ~ file: s3.ts ~ line 76 ~ AWSS3 ~ uploadFileToS3 ~ err`,
@@ -90,4 +91,27 @@ export class AWSS3 {
       };
     }
   } //
+
+  public async deleteFie(fileName: string): Promise<boolean> {
+    const params: DeleteObjectRequest = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileName,
+    };
+
+    try {
+      await this.s3.headObject(params).promise();
+      console.log('File Found in S3');
+      try {
+        await this.s3.deleteObject(params).promise();
+        console.log('file deleted Successfully');
+      } catch (err) {
+        console.log('ERROR in file Deleting : ' + JSON.stringify(err));
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
 }

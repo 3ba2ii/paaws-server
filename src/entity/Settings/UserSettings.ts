@@ -15,6 +15,10 @@ export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
   user: User;
 
   @Field(() => Boolean)
+  @Column({ default: false })
+  emailVerified: boolean;
+
+  @Field(() => Boolean)
   @Column({ default: true })
   showEmail: boolean;
 

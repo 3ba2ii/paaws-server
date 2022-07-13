@@ -178,6 +178,7 @@ export class User extends EntityWithDates(
       showEmail: true,
       showPhone: true,
       language: 'EN',
+      emailVerified: this.providerId && this.provider ? true : false,
       slug: await UserSetting.prototype.createUniqueAccountURL(
         this.full_name,
         0

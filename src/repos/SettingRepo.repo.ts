@@ -36,9 +36,9 @@ export class SettingRepo extends Repository<Setting> {
     const uniqueURL =
       user.full_name.toLocaleLowerCase().replace(' ', '-') + '-' + suffix;
 
-    const accountURL = await UserSetting.findOne({ accountURL: uniqueURL });
+    const slug = await UserSetting.findOne({ slug: uniqueURL });
 
-    if (accountURL) {
+    if (slug) {
       return this.createUniqueAccountURL(user, tries + 1);
     }
     return uniqueURL;
@@ -50,7 +50,7 @@ export class SettingRepo extends Repository<Setting> {
       showEmail: true,
       showPhone: true,
       language: 'EN',
-      accountURL: await this.createUniqueAccountURL(user, 0),
+      slug: await this.createUniqueAccountURL(user, 0),
     }); //
   }
 
@@ -58,17 +58,17 @@ export class SettingRepo extends Repository<Setting> {
     return str.trim().toLocaleLowerCase().replace(' ', '');
   }
 
-  public async isValidAccountURL(accountURL: string): Promise<boolean> {
-    const trimmedURL = this.trimAndLower(accountURL);
+  public async isValidAccountURL(slug: string): Promise<boolean> {
+    const trimmedURL = this.trimAndLower(slug);
 
-    const us = await UserSetting.findOne({ accountURL: trimmedURL });
+    const us = await UserSetting.findOne({ slug: trimmedURL });
 
     return us ? false : true;
   }
 
   public async updateUserSettingsURL(
     userId: number,
-    accountURL: string
+    slug: string
   ): Promise<RegularResponse> {
     const userSettings = await UserSetting.findOne({ where: { userId } });
     if (!userSettings) {
@@ -80,13 +80,13 @@ export class SettingRepo extends Repository<Setting> {
       };
     }
     //check if its the same account URL
-    if (userSettings.accountURL === accountURL) {
+    if (userSettings.slug === slug) {
       return {
         success: false,
         errors: [
           {
             code: 401,
-            field: 'accountURL',
+            field: 'slug',
             message: 'The account url is the same as before',
           },
         ],
@@ -94,19 +94,19 @@ export class SettingRepo extends Repository<Setting> {
     }
 
     //check if the account URL is a valid one (Not duplicated)
-    const isValid = await this.isValidAccountURL(accountURL);
+    const isValid = await this.isValidAccountURL(slug);
     if (!isValid) {
       return {
         success: false,
         errors: [
           CREATE_ALREADY_EXISTS_ERROR(
-            'accountURL',
+            'slug',
             'This account URL is already in use.'
           ),
         ],
       };
     }
-    userSettings.accountURL = this.trimAndLower(accountURL);
+    userSettings.slug = this.trimAndLower(slug);
 
     try {
       await userSettings.save();

@@ -275,4 +275,15 @@ export class LocalAuthResolver {
       success: true,
     };
   }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async verifyUserEmail(
+    @Arg('token') token: string,
+    @Ctx() { req, redis }: MyContext
+  ) {
+    const user = await User.findOne(req.session.userId);
+    if (!user) return false;
+    return this.authRepo.verifyUserEmail(token, redis, user);
+  }
 }

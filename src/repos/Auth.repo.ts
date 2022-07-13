@@ -256,6 +256,45 @@ export class AuthRepo extends Repository<User> {
     return true;
   }
 
+  async verifyUserEmail(
+    token: string,
+    redis: IORedis.Redis,
+    requestSender: User
+  ) {
+    try {
+      const redisValue = await redis.get(token.trim());
+      if (!redisValue) return false;
+
+      const email = redisValue.split(':')[1]?.trim()?.toLowerCase();
+
+      if (!email) return false;
+
+      const foundUser = await User.findOne({
+        where: { email },
+        relations: ['settings'],
+      });
+
+      if (!foundUser) return false;
+
+      if (email !== requestSender.email.trim().toLowerCase()) {
+        return false;
+      }
+
+      if (!foundUser.settings) {
+        return false;
+      }
+
+      if (foundUser.settings.emailVerified) return true;
+
+      foundUser.settings.emailVerified = true;
+      await foundUser.save();
+      await redis.del(token);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async register(
     userInfo?: BaseRegisterInput | null,
     provider?: ProviderTypes,

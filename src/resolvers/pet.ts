@@ -21,7 +21,7 @@ import { User } from './../entity/UserEntities/User';
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { PetRepo } from './../repos/Pet.repo';
 import { CreatePetInput, PaginationArgs } from './../types/input.types';
-import { PaginatedUserOwnedPetsResponse } from './../types/response.types';
+import { PaginatedUserOwnedPetsResponse } from '../types/response.types';
 import { Upload } from './../types/Upload';
 
 @Resolver(OwnedPet)
@@ -92,7 +92,7 @@ class PetResolver {
       .getMany();
 
     return {
-      ownedPets: ownedPets.slice(0, realLimit),
+      items: ownedPets.slice(0, realLimit),
       hasMore: ownedPets.length === realLimitPlusOne,
     };
   }

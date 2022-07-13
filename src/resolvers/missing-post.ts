@@ -1,4 +1,4 @@
-import { PaginatedMissingPosts } from './../types/response.types';
+import { PaginatedMissingPosts } from '../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -235,7 +235,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       .getMany();
 
     return {
-      missingPosts: results.slice(0, realLimit),
+      items: results.slice(0, realLimit),
       hasMore: results.length === realLimitPlusOne,
     };
   }
@@ -265,7 +265,7 @@ class MissingPostResolver extends MissingPostBaseResolver {
       .getMany();
 
     return {
-      missingPosts: results.slice(0, realLimit),
+      items: results.slice(0, realLimit),
       hasMore: results.length === realLimitPlusOne,
     };
   }

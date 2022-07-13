@@ -146,4 +146,18 @@ export class SettingRepo extends Repository<Setting> {
       return { success: false, errors: [e, INTERNAL_SERVER_ERROR] };
     }
   }
+
+  public async isEmailVerified(userId: number): Promise<RegularResponse> {
+    const user = await User.findOne(userId, { relations: ['settings'] });
+
+    if (!user) {
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
+    let userSettings = user.settings;
+    if (!userSettings) {
+      userSettings = await user.createSettings();
+    }
+
+    return { success: userSettings.emailVerified };
+  }
 }

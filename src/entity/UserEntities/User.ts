@@ -172,7 +172,7 @@ export class User extends EntityWithDates(
   settings: UserSetting;
 
   @AfterInsert()
-  async createSettings() {
+  async createSettings(): Promise<UserSetting> {
     this.settings = UserSetting.create({
       userId: this.id,
       showEmail: true,
@@ -187,6 +187,7 @@ export class User extends EntityWithDates(
 
     this.settingsId = this.settings.id;
 
-    this.save();
+    await this.save();
+    return this.settings;
   }
 }

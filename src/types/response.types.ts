@@ -1,11 +1,23 @@
-import { OwnedPet } from './../entity/PetEntities/OwnedPet';
-import { Field, Int, ObjectType } from 'type-graphql';
+import { OwnedPet } from '../entity/PetEntities/OwnedPet';
+import { ClassType, Field, Int, ObjectType } from 'type-graphql';
 import { Pet } from '../entity/PetEntities/Pet';
 import { AdoptionPost } from '../entity/PostEntities/AdoptionPost';
 import { User } from '../entity/UserEntities/User';
 import { Comment } from '../entity/InteractionsEntities/Comment';
 import { Photo } from '../entity/MediaEntities/Photo';
 import { MissingPost } from '../entity/PostEntities/MissingPost';
+
+function PaginatedResponse<T>(fieldName: string, TClass: ClassType<T>) {
+  @ObjectType(`Paginated${TClass.name}Response`, { isAbstract: true })
+  abstract class RegularResponseClass extends ErrorResponse {
+    @Field(() => [TClass], { name: fieldName || 'items', defaultValue: [] })
+    items?: InstanceType<typeof TClass>[];
+
+    @Field({ defaultValue: false })
+    hasMore?: boolean;
+  }
+  return RegularResponseClass;
+}
 
 @ObjectType()
 export class FieldError {
@@ -116,23 +128,17 @@ export class CommentResponse extends ErrorResponse {
   comment?: Comment;
 }
 
-@ObjectType()
+/* @ObjectType()
 export class PaginatedResponse extends ErrorResponse {
   @Field({ defaultValue: false })
   hasMore?: boolean;
-}
+} */
 
 @ObjectType()
-export class PaginatedComments extends PaginatedResponse {
-  @Field(() => [Comment])
-  comments?: Comment[];
-}
+export class PaginatedComments extends PaginatedResponse('comment', Comment) {}
 
 @ObjectType()
-export class PaginatedReplies extends PaginatedResponse {
-  @Field(() => [Comment])
-  replies: Comment[];
-}
+export class PaginatedReplies extends PaginatedResponse('replies', Comment) {}
 
 @ObjectType()
 export class VotingResponse extends ErrorResponse {
@@ -141,10 +147,10 @@ export class VotingResponse extends ErrorResponse {
 }
 
 @ObjectType()
-export class PaginatedMissingPosts extends PaginatedResponse {
-  @Field(() => [MissingPost])
-  missingPosts: MissingPost[];
-}
+export class PaginatedMissingPosts extends PaginatedResponse(
+  'missingPosts',
+  MissingPost
+) {}
 @ObjectType()
 export class UploadImageResponse extends ErrorResponse {
   @Field({ nullable: true })
@@ -187,7 +193,7 @@ export class CreateUserOwnedPetResponse extends ErrorResponse {
 }
 
 @ObjectType()
-export class PaginatedUserOwnedPetsResponse extends PaginatedResponse {
-  @Field(() => [OwnedPet])
-  ownedPets?: OwnedPet[];
-}
+export class PaginatedUserOwnedPetsResponse extends PaginatedResponse(
+  'ownedPets',
+  OwnedPet
+) {}

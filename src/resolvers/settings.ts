@@ -1,7 +1,7 @@
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { User } from './../entity/UserEntities/User';
 import { UpdateUserSettingsInput } from './../types/input.types';
-import { RegularResponse } from './../types/response.types';
+import { RegularResponse } from '../types/response.types';
 import { SettingRepo } from './../repos/SettingRepo.repo';
 import { UserSetting } from './../entity/Settings/UserSettings';
 import {

@@ -14,7 +14,7 @@ import { CreatePetInput } from './../types/input.types';
 import {
   CreateUserOwnedPetResponse,
   FieldError,
-} from './../types/response.types';
+} from '../types/response.types';
 import { Upload } from './../types/Upload';
 import { PhotoRepo } from './PhotoRepo.repo';
 

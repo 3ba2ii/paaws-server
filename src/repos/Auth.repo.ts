@@ -21,7 +21,7 @@ import {
 } from './../errors';
 import { ProviderTypes } from './../types/enums.types';
 import { BaseRegisterInput, LoginInput } from './../types/input.types';
-import { RegularResponse, UserResponse } from './../types/response.types';
+import { RegularResponse, UserResponse } from '../types/response.types';
 
 /* We need to separate the logic outside the resolvers
     1. Register the user

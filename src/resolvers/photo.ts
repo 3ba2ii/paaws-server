@@ -1,4 +1,4 @@
-import { RegularResponse } from './../types/response.types';
+import { RegularResponse } from '../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from 'type-graphql';
 import { Photo } from '../entity/MediaEntities/Photo';

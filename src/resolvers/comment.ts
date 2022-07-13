@@ -90,7 +90,7 @@ export class CommentResolver {
     });
 
     return {
-      comments: replies.slice(0, realLimit),
+      items: replies.slice(0, realLimit),
       hasMore: replies.length === realLimitPlusOne,
     };
   }
@@ -180,7 +180,7 @@ export class CommentResolver {
       take: realLimitPlusOne,
     });
 
-    const { comments: replies, errors } = await this.getReplies(
+    const { items: replies, errors } = await this.getReplies(
       comments.map((c) => c.id),
       null,
       3
@@ -190,15 +190,16 @@ export class CommentResolver {
       return {
         errors,
       };
-    if (replies)
+    if (replies) {
       comments.forEach((comment) => {
         comment.replies = replies.filter(
           (reply) => reply.parentId === comment.id
         );
       });
+    }
 
     return {
-      comments: comments.slice(0, realLimit),
+      items: comments.slice(0, realLimit),
       hasMore: comments.length === realLimitPlusOne,
     };
   }
@@ -249,7 +250,7 @@ export class CommentResolver {
     const dateCursor = cursor ? new Date(cursor) : new Date();
 
     //comments here are referring to the replies
-    const { comments, errors, hasMore } = await this.getReplies(
+    const { items, errors, hasMore } = await this.getReplies(
       parentId,
       dateCursor,
       limit
@@ -262,7 +263,7 @@ export class CommentResolver {
     }
 
     return {
-      comments,
+      items,
       hasMore,
     };
   }

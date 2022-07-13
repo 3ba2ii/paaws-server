@@ -1,5 +1,3 @@
-import { CREATE_NOT_FOUND_ERROR } from './../errors';
-import { RegularResponse } from './../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -22,15 +20,18 @@ import {
   FindNearestUsersInput,
   PaginationArgs,
   UpdateUserInfo,
-  WhereClause,
 } from '../types/input.types';
-import { PaginatedMissingPosts, PaginatedUsers } from '../types/response.types';
+import {
+  PaginatedMissingPosts,
+  RegularResponse,
+} from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { getDisplayName } from '../utils/getDisplayName';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Notification } from './../entity/Notification/Notification';
 import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
+import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { isAuth } from './../middleware/isAuth';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
@@ -101,34 +102,6 @@ class UserResolver extends UserBaseResolver {
     return this.notificationRepo.getNotificationsByUserId(userId as number);
   }
 
-  @Query(() => PaginatedUsers)
-  async users(
-    @Arg('where', () => WhereClause)
-    { cursor, limit }: WhereClause
-  ): Promise<PaginatedUsers> {
-    // 20 -> 21
-
-    const realLimit = Math.min(50, limit);
-    const realLimitPlusOne = realLimit + 1;
-
-    const replacements: any[] = [realLimitPlusOne];
-    if (cursor) replacements.push(new Date(cursor));
-
-    const users = await getConnection().query(
-      `
-        select * from public."user"
-        ${cursor ? 'where "createdAt" < $2' : ''}
-        order by "createdAt" DESC
-        limit $1;
-    `,
-      replacements
-    );
-    return {
-      users: users.slice(0, realLimit),
-      hasMore: users.length === realLimitPlusOne,
-    };
-  }
-
   @Query(() => User, { nullable: true })
   //@UseMiddleware(isAuth)
   user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
@@ -157,7 +130,7 @@ class UserResolver extends UserBaseResolver {
     });
 
     return {
-      missingPosts: updoots.map((v) => v.post).slice(0, raelLimit),
+      items: updoots.map((v) => v.post).slice(0, raelLimit),
       hasMore: updoots.length === realLimitPlusOne,
     };
   }

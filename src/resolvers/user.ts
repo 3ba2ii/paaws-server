@@ -22,6 +22,7 @@ import {
   UpdateUserInfo,
 } from '../types/input.types';
 import {
+  BooleanResponseType,
   PaginatedMissingPosts,
   RegularResponse,
 } from '../types/response.types';
@@ -35,6 +36,7 @@ import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { isAuth } from './../middleware/isAuth';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
+import { SettingRepo } from './../repos/SettingRepo.repo';
 import { UserRepo } from './../repos/User.repo';
 import { MyContext } from './../types';
 import { Upload } from './../types/Upload';
@@ -48,7 +50,8 @@ class UserResolver extends UserBaseResolver {
   constructor(
     private readonly notificationRepo: NotificationRepo,
     private readonly addressRepo: AddressRepo,
-    private readonly userRepo: UserRepo
+    private readonly userRepo: UserRepo,
+    private readonly settingsRepo: SettingRepo
   ) {
     super();
   }
@@ -192,6 +195,15 @@ class UserResolver extends UserBaseResolver {
     return this.userRepo.setUserAvatar(user, avatar);
   }
 
+  @Query(() => BooleanResponseType)
+  @UseMiddleware(isAuth)
+  async isEmailVerified(
+    @Ctx() { req }: MyContext
+  ): Promise<BooleanResponseType> {
+    return req.session.userId
+      ? this.settingsRepo.isEmailVerified(req.session.userId)
+      : { errors: [CREATE_NOT_FOUND_ERROR('user')] };
+  }
   @Query(() => [User], { nullable: true })
   getNearestUsers(
     @Arg('options') { lat, lng, radius }: FindNearestUsersInput

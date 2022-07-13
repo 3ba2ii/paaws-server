@@ -9,14 +9,14 @@ import { MissingPost } from '../entity/PostEntities/MissingPost';
 
 function PaginatedResponse<T>(fieldName: string, TClass: ClassType<T>) {
   @ObjectType(`Paginated${TClass.name}Response`, { isAbstract: true })
-  abstract class RegularResponseClass extends ErrorResponse {
+  abstract class GenericPaginatedResponse extends ErrorResponse {
     @Field(() => [TClass], { name: fieldName || 'items', defaultValue: [] })
     items?: InstanceType<typeof TClass>[];
 
     @Field({ defaultValue: false })
     hasMore?: boolean;
   }
-  return RegularResponseClass;
+  return GenericPaginatedResponse;
 }
 
 @ObjectType()
@@ -128,12 +128,6 @@ export class CommentResponse extends ErrorResponse {
   comment?: Comment;
 }
 
-/* @ObjectType()
-export class PaginatedResponse extends ErrorResponse {
-  @Field({ defaultValue: false })
-  hasMore?: boolean;
-} */
-
 @ObjectType()
 export class PaginatedComments extends PaginatedResponse('comment', Comment) {}
 
@@ -197,3 +191,9 @@ export class PaginatedUserOwnedPetsResponse extends PaginatedResponse(
   'ownedPets',
   OwnedPet
 ) {}
+
+@ObjectType()
+export class BooleanResponseType extends ErrorResponse {
+  @Field(() => Boolean, { nullable: true })
+  response?: boolean;
+}

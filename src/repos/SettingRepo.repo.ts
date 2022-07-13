@@ -1,3 +1,4 @@
+import { BooleanResponseType } from './../types/response.types';
 import { RegularResponse } from 'src/types/response.types';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
@@ -147,17 +148,17 @@ export class SettingRepo extends Repository<Setting> {
     }
   }
 
-  public async isEmailVerified(userId: number): Promise<RegularResponse> {
+  public async isEmailVerified(userId: number): Promise<BooleanResponseType> {
     const user = await User.findOne(userId, { relations: ['settings'] });
 
     if (!user) {
-      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+      return { errors: [CREATE_NOT_FOUND_ERROR('user')] };
     }
     let userSettings = user.settings;
     if (!userSettings) {
       userSettings = await user.createSettings();
     }
 
-    return { success: userSettings.emailVerified };
+    return { response: userSettings.emailVerified };
   }
 }

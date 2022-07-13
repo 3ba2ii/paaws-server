@@ -245,7 +245,7 @@ export class AuthRepo extends Repository<User> {
     //1. send email to the user with the verification token
     const sent = await sendEmail(
       email,
-      `Please click on the following link to verify your email address, ${process.env.CORS_ORIGIN}/verify-email/token=${token}`,
+      `Please click on the following link to verify your email address, ${process.env.CORS_ORIGIN}/verify-email/${token}`,
       'verify email'
     );
     if (!sent) return false;

@@ -129,7 +129,7 @@ export class CommentResponse extends ErrorResponse {
 }
 
 @ObjectType()
-export class PaginatedComments extends PaginatedResponse('comment', Comment) {}
+export class PaginatedComments extends PaginatedResponse('comments', Comment) {}
 
 @ObjectType()
 export class PaginatedReplies extends PaginatedResponse('replies', Comment) {}

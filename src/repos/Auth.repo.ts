@@ -22,6 +22,7 @@ import {
 import { ProviderTypes } from './../types/enums.types';
 import { BaseRegisterInput, LoginInput } from './../types/input.types';
 import { RegularResponse, UserResponse } from '../types/response.types';
+import { v4 } from 'uuid';
 
 /* We need to separate the logic outside the resolvers
     1. Register the user
@@ -236,19 +237,21 @@ export class AuthRepo extends Repository<User> {
   }
 
   async sendEmailVerification(email: string, redis: IORedis.Redis) {
-    const code = Math.floor(Math.random() * 1000000);
-    const redisKey = `${VERIFY_EMAIL_PREFIX}:${email}`;
+    //1. create a unique token that identified the user
+    const token = v4();
 
-    //1. send email to the user with the verification code
+    const redisValue = `${VERIFY_EMAIL_PREFIX}:${email}`;
+
+    //1. send email to the user with the verification token
     const sent = await sendEmail(
       email,
-      `your verification code is: ${code}`,
+      `Please click on the following link to verify your email address, ${process.env.CORS_ORIGIN}/verify-email/token=${token}`,
       'verify email'
     );
     if (!sent) return false;
 
     //2. save the code in redis
-    await redis.set(redisKey, code, 'ex', 60 * 60 * 5);
+    await redis.set(token, redisValue, 'ex', 60 * 60 * 5);
 
     return true;
   }

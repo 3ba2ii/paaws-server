@@ -1,4 +1,3 @@
-import { CREATE_ALREADY_EXISTS_ERROR } from './../../errors';
 import argon2 from 'argon2';
 import { Request } from 'express';
 import {
@@ -124,11 +123,19 @@ export class LocalAuthResolver {
     /* check whether a user has this email or not*/
     const user = await User.findOne({
       where: { email: email.toLowerCase().trim() },
+      relations: ['settings'],
     });
-    if (user)
-      return { success: false, errors: [CREATE_ALREADY_EXISTS_ERROR('user')] };
+    if (!user) {
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
 
-    //otherwise send a verification email
+    if (user.settings.emailVerified) {
+      return {
+        success: false,
+        errors: [{ code: 400, field: 'email', message: 'already verified' }],
+      };
+    }
+    //if we found a user, check if he is already verified send a verification email
     const res = await this.authRepo.sendEmailVerification(email, redis);
     return res
       ? { success: true }

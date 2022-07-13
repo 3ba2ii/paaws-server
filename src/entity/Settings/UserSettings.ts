@@ -24,15 +24,15 @@ export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
 
   @Field(() => String)
   @Column({ unique: true })
-  accountURL: string;
+  slug: string;
 
   @Field(() => String)
   @Column()
   language: string;
 
-  public async verifyUniqueURL(accountURL: string): Promise<boolean> {
-    const trimmedURL = accountURL.trim().toLocaleLowerCase().replace(' ', '');
-    const user = await UserSetting.findOne({ accountURL: trimmedURL });
+  public async verifyUniqueURL(slug: string): Promise<boolean> {
+    const trimmedURL = slug.trim().toLocaleLowerCase().replace(' ', '');
+    const user = await UserSetting.findOne({ slug: trimmedURL });
     if (user) {
       return false;
     }
@@ -51,9 +51,9 @@ export class UserSetting extends EntityWithBase(EntityWithDates(BaseEntity)) {
     const uniqueURL =
       full_name.trim().toLocaleLowerCase().replace(' ', '') + suffix;
 
-    const accountURL = await UserSetting.findOne({ accountURL: uniqueURL });
+    const slug = await UserSetting.findOne({ slug: uniqueURL });
 
-    if (accountURL) {
+    if (slug) {
       return this.createUniqueAccountURL(full_name, tries + 1);
     }
     return uniqueURL;

@@ -30,6 +30,7 @@ import {
 import { checkDuplicationError } from '../../utils/checkDuplicationError';
 import { sendEmail } from '../../utils/sendEmail';
 import { sendSMS } from '../../utils/sendSMS';
+import { VERIFY_EMAIL_PREFIX } from './../../constants';
 import { isAuth } from './../../middleware/isAuth';
 import { AuthRepo } from './../../repos/Auth.repo';
 import { ProviderTypes } from './../../types/enums.types';
@@ -116,7 +117,7 @@ export class LocalAuthResolver {
   }
 
   @Mutation(() => RegularResponse)
-  async sendEmailVerification(
+  async sendEmailVerificationMail(
     @Arg('email') email: string,
     @Ctx() { redis }: MyContext
   ): Promise<RegularResponse> {
@@ -136,7 +137,17 @@ export class LocalAuthResolver {
       };
     }
     //if we found a user, check if he is already verified send a verification email
-    const res = await this.authRepo.sendEmailVerification(email, redis);
+
+    const redisValue = `${VERIFY_EMAIL_PREFIX}:${email}`;
+    const url = `${process.env.CORS_ORIGIN}/verify-email`;
+
+    const res = await this.authRepo.sendEmailVerificationMail(
+      email.trim().toLowerCase(),
+      redis,
+      redisValue,
+      `Hello ${user.displayName}, Please verify your email using the following link: ${url}`,
+      'Verify your email now'
+    );
     return res
       ? { success: true }
       : { success: false, errors: [CREATE_INVALID_ERROR('email')] };

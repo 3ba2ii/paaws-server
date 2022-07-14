@@ -1,15 +1,16 @@
 import argon2 from 'argon2';
 import { Request } from 'express';
 import IORedis from 'ioredis';
-import { sendEmail } from '../utils/sendEmail';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
+import { v4 } from 'uuid';
 import { User } from '../entity/UserEntities/User';
 import { getAuthClient } from '../provider/auth';
+import { RegularResponse, UserResponse } from '../types/response.types';
+import { sendEmail } from '../utils/sendEmail';
 import { sendSMS } from '../utils/sendSMS';
 import {
   PHONE_NUMBER_REG_EXP,
-  VERIFY_EMAIL_PREFIX,
   VERIFY_PHONE_NUMBER_PREFIX,
 } from './../constants';
 import {
@@ -21,8 +22,6 @@ import {
 } from './../errors';
 import { ProviderTypes } from './../types/enums.types';
 import { BaseRegisterInput, LoginInput } from './../types/input.types';
-import { RegularResponse, UserResponse } from '../types/response.types';
-import { v4 } from 'uuid';
 
 /* We need to separate the logic outside the resolvers
     1. Register the user
@@ -236,18 +235,18 @@ export class AuthRepo extends Repository<User> {
     }
   }
 
-  async sendEmailVerification(email: string, redis: IORedis.Redis) {
+  async sendEmailVerificationMail(
+    email: string,
+    redis: IORedis.Redis,
+    redisValue: string,
+    html: string,
+    subject?: string
+  ) {
     //1. create a unique token that identified the user
     const token = v4();
 
-    const redisValue = `${VERIFY_EMAIL_PREFIX}:${email}`;
-
     //1. send email to the user with the verification token
-    const sent = await sendEmail(
-      email,
-      `Please click on the following link to verify your email address, ${process.env.CORS_ORIGIN}/verify-email/${token}`,
-      'verify email'
-    );
+    const sent = await sendEmail(email, `${html}/${token}`, subject || 'Paaws');
     if (!sent) return false;
 
     //2. save the code in redis
@@ -293,6 +292,51 @@ export class AuthRepo extends Repository<User> {
     } catch (e) {
       return false;
     }
+  }
+
+  async sendChangeUserEmailMail(
+    user: User,
+    newEmail: string,
+    redis: IORedis.Redis
+  ): Promise<RegularResponse> {
+    if (user.email.trim().toLowerCase() === newEmail.trim().toLowerCase()) {
+      return {
+        success: false,
+        errors: [
+          CREATE_INVALID_ERROR(
+            'email',
+            'New email can not be the same as the old one'
+          ),
+        ],
+      };
+    }
+    const foundUser = await User.findOne({
+      where: { email: newEmail.trim().toLowerCase() },
+    });
+    if (foundUser) {
+      return {
+        success: false,
+        errors: [
+          CREATE_ALREADY_EXISTS_ERROR(
+            'email',
+            'This email is already associated with another account'
+          ),
+        ],
+      };
+    }
+
+    const redisValue = `CHANGE_EMAIL_PREFIX:${newEmail}`;
+    const url = `${process.env.CORS_ORIGIN}/change-email`;
+    const verificationEmailSent = await this.sendEmailVerificationMail(
+      newEmail.trim().toLowerCase(),
+      redis,
+      redisValue,
+      `Hello ${user.displayName}, Please click the following button to set this email as your account's main email: ${url}`
+    );
+
+    return verificationEmailSent
+      ? { success: true }
+      : { success: false, errors: [INTERNAL_SERVER_ERROR] };
   }
 
   async register(

@@ -1,3 +1,4 @@
+import { isUserFound } from './../middleware/isUserFound';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -93,16 +94,18 @@ class UserResolver extends UserBaseResolver {
 
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuth)
-  me(@Ctx() { req }: MyContext): Promise<User | undefined> {
-    return User.findOne(req.session.userId);
+  @UseMiddleware(isUserFound)
+  me(@Ctx() { req }: MyContext): User | undefined {
+    return req.session.user;
   }
 
   @Query(() => [Notification])
   @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
   notifications(@Ctx() { req }: MyContext): Promise<Notification[]> {
-    const { userId } = req.session;
-
-    return this.notificationRepo.getNotificationsByUserId(userId as number);
+    return this.notificationRepo.getNotificationsByUserId(
+      req.session.userId as number
+    );
   }
 
   @Query(() => User, { nullable: true })
@@ -140,11 +143,12 @@ class UserResolver extends UserBaseResolver {
 
   @Mutation(() => RegularResponse)
   @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
   async updateUserFullName(
     @Arg('fullName') fullName: string,
     @Ctx() { req }: MyContext
   ): Promise<RegularResponse> {
-    const user = await User.findOne(req.session.userId);
+    const user = req.session.user;
     if (!user) {
       return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
     }
@@ -153,11 +157,12 @@ class UserResolver extends UserBaseResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
   async addUserTag(
     @Arg('tag', () => UserTagsType) tag: UserTagsType,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const user = await User.findOne(req.session.userId);
+    const user = req.session!.user;
     const newTag = UserTag.create({ user, tagName: tag });
 
     try {
@@ -171,28 +176,24 @@ class UserResolver extends UserBaseResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
   async updateUser(
     @Arg('updateOptions') updateOptions: UpdateUserInfo,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const user = await User.findOne(req.session.userId);
-    if (!user) return false;
-
-    return this.userRepo.updateUser(updateOptions, user);
+    const user = req.session.user;
+    return !user ? false : this.userRepo.updateUser(updateOptions, user);
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
   async addUserAvatar(
     @Arg('avatar', () => GraphQLUpload) avatar: Upload,
     @Ctx() { req }: MyContext
   ): Promise<boolean> {
-    const userId = req.session.userId;
-    if (!userId) return false;
-    const user = await User.findOne(userId);
-
-    if (!user) return false;
-    return this.userRepo.setUserAvatar(user, avatar);
+    const user = req.session.user;
+    return !user ? false : this.userRepo.setUserAvatar(user, avatar);
   }
 
   @Query(() => BooleanResponseType)
@@ -204,6 +205,7 @@ class UserResolver extends UserBaseResolver {
       ? this.settingsRepo.isEmailVerified(req.session.userId)
       : { errors: [CREATE_NOT_FOUND_ERROR('user')] };
   }
+
   @Query(() => [User], { nullable: true })
   getNearestUsers(
     @Arg('options') { lat, lng, radius }: FindNearestUsersInput

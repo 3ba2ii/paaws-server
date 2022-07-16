@@ -117,7 +117,7 @@ export class LocalAuthResolver {
   }
 
   @Mutation(() => RegularResponse)
-  async sendEmailVerificationMail(
+  async sendVerificationMail(
     @Arg('email') email: string,
     @Ctx() { redis }: MyContext
   ): Promise<RegularResponse> {
@@ -141,7 +141,7 @@ export class LocalAuthResolver {
     const redisValue = `${VERIFY_EMAIL_PREFIX}:${email}`;
     const url = `${process.env.CORS_ORIGIN}/verify-email`;
 
-    const res = await this.authRepo.sendEmailVerificationMail(
+    const res = await this.authRepo.sendVerificationMail(
       email.trim().toLowerCase(),
       redis,
       redisValue,
@@ -151,6 +151,24 @@ export class LocalAuthResolver {
     return res
       ? { success: true }
       : { success: false, errors: [CREATE_INVALID_ERROR('email')] };
+  }
+
+  @Mutation(() => RegularResponse)
+  async sendChangeEmailVerificationMail(
+    @Arg('email') email: string,
+    @Ctx() { req, redis }: MyContext
+  ): Promise<RegularResponse> {
+    const userId = req.session.userId;
+    if (!userId)
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    const user = await User.findOne(req.session.userId);
+    if (!user)
+      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    return this.authRepo.sendChangeUserEmailMail(
+      user,
+      email.trim().toLowerCase(),
+      redis
+    );
   }
 
   @Mutation(() => UserResponse)

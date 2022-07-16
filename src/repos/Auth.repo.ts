@@ -1,3 +1,4 @@
+import { getDisplayName } from './../utils/getDisplayName';
 import argon2 from 'argon2';
 import { Request } from 'express';
 import IORedis from 'ioredis';
@@ -235,7 +236,7 @@ export class AuthRepo extends Repository<User> {
     }
   }
 
-  async sendEmailVerificationMail(
+  async sendVerificationMail(
     email: string,
     redis: IORedis.Redis,
     redisValue: string,
@@ -325,13 +326,15 @@ export class AuthRepo extends Repository<User> {
       };
     }
 
-    const redisValue = `CHANGE_EMAIL_PREFIX:${newEmail}`;
+    const redisValue = `CHANGE_EMAIL_PREFIX:${newEmail}:${user.id}`;
     const url = `${process.env.CORS_ORIGIN}/change-email`;
-    const verificationEmailSent = await this.sendEmailVerificationMail(
+    const verificationEmailSent = await this.sendVerificationMail(
       newEmail.trim().toLowerCase(),
       redis,
       redisValue,
-      `Hello ${user.displayName}, Please click the following button to set this email as your account's main email: ${url}`
+      `Hello ${getDisplayName(
+        user.full_name
+      )}, Please click the following button to set this email as your account's main email: ${url}`
     );
 
     return verificationEmailSent

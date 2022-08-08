@@ -187,7 +187,7 @@ export class User extends EntityWithDates(
 
     this.settingsId = this.settings.id;
 
-    await this.save();
+    this.save();
     return this.settings;
   }
 }

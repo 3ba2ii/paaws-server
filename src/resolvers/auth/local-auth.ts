@@ -1,3 +1,4 @@
+import { isUserFound } from './../../middleware/isUserFound';
 import argon2 from 'argon2';
 import { Request } from 'express';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../../types/input.types';
 import {
   ChangePasswordResponse,
+  GenerateAuthTokenResponse,
   RegularResponse,
   UserResponse,
 } from '../../types/response.types';
@@ -41,6 +43,7 @@ export class LocalAuthResolver {
 
   private async saveUserToDB(user: User, req: Request): Promise<UserResponse> {
     try {
+      console.log('hitting save user to db');
       await user.save();
       req.session.userId = user.id;
 
@@ -200,9 +203,11 @@ export class LocalAuthResolver {
 
     if (errors && errors.length > 0) return { errors };
 
-    return user
-      ? this.saveUserToDB(user, req)
-      : { errors: [INTERNAL_SERVER_ERROR] };
+    if (!user) return { errors: [INTERNAL_SERVER_ERROR] };
+
+    await user.save();
+    req.session.userId = user.id;
+    return { user };
   }
 
   //Change Password Mutation
@@ -314,5 +319,30 @@ export class LocalAuthResolver {
     const user = await User.findOne(req.session.userId);
     if (!user) return false;
     return this.authRepo.verifyUserEmail(token, redis, user);
+  }
+
+  @Mutation(() => GenerateAuthTokenResponse)
+  @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
+  async generateAuthToken(
+    @Arg('authAction') authAction: string,
+    @Ctx() { req, redis }: MyContext
+  ): Promise<GenerateAuthTokenResponse> {
+    try {
+      if (!req.session.userId) throw new Error('User not found');
+      const authToken = await v4();
+
+      await redis.set(
+        `AUTH_TOKEN:${authToken}`,
+        `${authAction}:${req.session.userId}`,
+        'ex',
+        60 * 60 * 24
+      );
+
+      return { authToken };
+    } catch (err) {
+      console.error(`🚀 ~ file: user.ts ~ line 446 ~ UserResolver ~ err`, err);
+      return { errors: [INTERNAL_SERVER_ERROR, err] };
+    }
   }
 }

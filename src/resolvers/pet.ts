@@ -1,4 +1,3 @@
-import { PetSkill } from './../entity/PetEntities/PetSkill';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -15,13 +14,16 @@ import { getConnection } from 'typeorm';
 import { Pet } from '../entity/PetEntities/Pet';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '../types';
-import { CreateUserOwnedPetResponse } from '../types/response.types';
+import {
+  CreateUserOwnedPetResponse,
+  PaginatedUserOwnedPetsResponse,
+} from '../types/response.types';
 import { OwnedPet } from './../entity/PetEntities/OwnedPet';
+import { PetSkill } from './../entity/PetEntities/PetSkill';
 import { User } from './../entity/UserEntities/User';
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { PetRepo } from './../repos/Pet.repo';
 import { CreatePetInput, PaginationArgs } from './../types/input.types';
-import { PaginatedUserOwnedPetsResponse } from '../types/response.types';
 import { Upload } from './../types/Upload';
 
 @Resolver(OwnedPet)

@@ -197,3 +197,9 @@ export class BooleanResponseType extends ErrorResponse {
   @Field(() => Boolean, { nullable: true })
   response?: boolean;
 }
+
+@ObjectType()
+export class GenerateAuthTokenResponse extends ErrorResponse {
+  @Field(() => String, { nullable: true })
+  authToken?: string;
+}

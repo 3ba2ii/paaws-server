@@ -332,9 +332,9 @@ export class AuthRepo extends Repository<User> {
       newEmail.trim().toLowerCase(),
       redis,
       redisValue,
-      `Hello ${getDisplayName(
-        user.full_name
-      )}, Please click the following button to set this email as your account's main email: ${url}`
+      `Hello ${
+        getDisplayName(user.full_name) || 'There'
+      }, Please click the following button to set this email as your account's main email: ${url}`
     );
 
     return verificationEmailSent
@@ -366,20 +366,7 @@ export class AuthRepo extends Repository<User> {
       user = createdUser;
     }
 
-    if (!user) {
-      return {
-        errors: [
-          {
-            code: 500,
-            message:
-              'We could not create the user right now, please try again later',
-            field: 'server',
-          },
-        ],
-      };
-    }
-
-    return { user };
+    return !user ? { errors: [INTERNAL_SERVER_ERROR] } : { user };
   }
   async loginWithIdentifierAndPassword(
     options: LoginInput,

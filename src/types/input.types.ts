@@ -416,3 +416,15 @@ export class UpdateUserSettingsInput {
   @Field(() => String, { nullable: true })
   language?: string;
 }
+
+@InputType()
+export class UpdateEmailInput {
+  @Field()
+  email!: string;
+
+  @Field()
+  authToken!: string;
+
+  @Field()
+  authAction!: string;
+}

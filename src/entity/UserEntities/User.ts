@@ -188,6 +188,7 @@ export class User extends EntityWithDates(
     this.settingsId = this.settings.id;
 
     this.save();
+
     return this.settings;
   }
 }

@@ -10,7 +10,11 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { v4 } from 'uuid';
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../../constants';
+import {
+  AUTH_TOKEN_PREFIX,
+  COOKIE_NAME,
+  FORGET_PASSWORD_PREFIX,
+} from '../../constants';
 import { User } from '../../entity/UserEntities/User';
 import {
   CREATE_INVALID_ERROR,
@@ -142,7 +146,7 @@ export class LocalAuthResolver {
     //if we found a user, check if he is already verified send a verification email
 
     const redisValue = `${VERIFY_EMAIL_PREFIX}:${email}`;
-    const url = `${process.env.CORS_ORIGIN}/verify-email`;
+    const url = `${process.env.CORS_ORIGIN}/${VERIFY_EMAIL_PREFIX}`;
 
     const res = await this.authRepo.sendVerificationMail(
       email.trim().toLowerCase(),
@@ -154,24 +158,6 @@ export class LocalAuthResolver {
     return res
       ? { success: true }
       : { success: false, errors: [CREATE_INVALID_ERROR('email')] };
-  }
-
-  @Mutation(() => RegularResponse)
-  async sendChangeEmailVerificationMail(
-    @Arg('email') email: string,
-    @Ctx() { req, redis }: MyContext
-  ): Promise<RegularResponse> {
-    const userId = req.session.userId;
-    if (!userId)
-      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
-    const user = await User.findOne(req.session.userId);
-    if (!user)
-      return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
-    return this.authRepo.sendChangeUserEmailMail(
-      user,
-      email.trim().toLowerCase(),
-      redis
-    );
   }
 
   @Mutation(() => UserResponse)
@@ -332,16 +318,16 @@ export class LocalAuthResolver {
       if (!req.session.userId) throw new Error('User not found');
       const authToken = await v4();
 
+      const value = { action: authAction, userId: req.session.userId };
       await redis.set(
-        `AUTH_TOKEN:${authToken}`,
-        `${authAction}:${req.session.userId}`,
+        `${AUTH_TOKEN_PREFIX}:${authToken}`,
+        JSON.stringify(value),
         'ex',
         60 * 60 * 24
       );
 
       return { authToken };
     } catch (err) {
-      console.error(`🚀 ~ file: user.ts ~ line 446 ~ UserResolver ~ err`, err);
       return { errors: [INTERNAL_SERVER_ERROR, err] };
     }
   }

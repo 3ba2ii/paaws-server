@@ -30,7 +30,12 @@ class SettingsResolver {
       throw new Error('User not found');
     }
 
-    return UserSetting.findOne({ where: { userId } });
+    let settings = await UserSetting.findOne({ where: { userId } });
+    if (!settings) {
+      const user = await User.findOne(userId);
+      settings = await user?.createSettings();
+    }
+    return settings;
   }
 
   @Mutation(() => RegularResponse)

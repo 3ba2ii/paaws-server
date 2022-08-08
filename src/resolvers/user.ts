@@ -1,4 +1,3 @@
-import { isUserFound } from './../middleware/isUserFound';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -12,10 +11,13 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection, LessThan } from 'typeorm';
+import { v4 } from 'uuid';
+import { AUTH_TOKEN_PREFIX } from '../constants';
 import { Photo } from '../entity/MediaEntities/Photo';
 import { Pet } from '../entity/PetEntities/Pet';
 import { User } from '../entity/UserEntities/User';
 import { UserTag } from '../entity/UserEntities/UserTags';
+import { isAuthorized } from '../middleware/isAuthorized';
 import { UserTagsType } from '../types/enums.types';
 import {
   FindNearestUsersInput,
@@ -29,17 +31,25 @@ import {
 } from '../types/response.types';
 import { createBaseResolver } from '../utils/createBaseResolver';
 import { getDisplayName } from '../utils/getDisplayName';
+import { sendEmail } from '../utils/sendEmail';
+import { CHANGE_EMAIL_PREFIX } from './../constants';
 import { PostUpdoot } from './../entity/InteractionsEntities/PostUpdoot';
 import { Notification } from './../entity/Notification/Notification';
 import { AdoptionPost } from './../entity/PostEntities/AdoptionPost';
 import { MissingPost } from './../entity/PostEntities/MissingPost';
-import { CREATE_NOT_FOUND_ERROR } from './../errors';
+import {
+  CREATE_ALREADY_EXISTS_ERROR,
+  CREATE_INVALID_ERROR,
+  CREATE_NOT_FOUND_ERROR,
+} from './../errors';
 import { isAuth } from './../middleware/isAuth';
+import { isUserFound } from './../middleware/isUserFound';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
 import { SettingRepo } from './../repos/SettingRepo.repo';
 import { UserRepo } from './../repos/User.repo';
 import { MyContext } from './../types';
+import { AuthorizationInputType } from './../types/authorization.types';
 import { Upload } from './../types/Upload';
 
 require('dotenv-safe').config();
@@ -204,6 +214,86 @@ class UserResolver extends UserBaseResolver {
     return req.session.userId
       ? this.settingsRepo.isEmailVerified(req.session.userId)
       : { errors: [CREATE_NOT_FOUND_ERROR('user')] };
+  }
+
+  @Mutation(() => BooleanResponseType)
+  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthorized)
+  async sendChangeUserEmailEmail(
+    @Arg('email') email: string,
+    @Arg('authToken') authToken: string,
+    @Arg('authAction') _authAction: string,
+    @Ctx() { req, redis }: MyContext
+  ): Promise<BooleanResponseType> {
+    if (!req.session.userId) {
+      return { response: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
+    /* delete the old authToken */
+    const authTokenRedisKey = `${AUTH_TOKEN_PREFIX}:${authToken}`;
+
+    const authValue = await redis.get(authTokenRedisKey);
+
+    if (!authValue) {
+      return { response: false, errors: [CREATE_NOT_FOUND_ERROR('authToken')] };
+    }
+
+    //check wether the old authValue which holds the action and userId is the same as the one in the session
+    const { action, userId } = JSON.parse(authValue) as AuthorizationInputType;
+
+    if (action !== CHANGE_EMAIL_PREFIX || userId !== req.session.userId) {
+      return {
+        response: false,
+        errors: [
+          CREATE_INVALID_ERROR('action'),
+          CREATE_INVALID_ERROR('userId'),
+        ],
+      };
+    }
+
+    await redis.del(authTokenRedisKey);
+
+    const user = await User.findOne(req.session.userId);
+    if (!user) {
+      return { response: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+    }
+    //check if email is already in use
+    const userWithEmail = await User.findOne({ where: { email } });
+    if (userWithEmail) {
+      return {
+        response: false,
+        errors: [CREATE_ALREADY_EXISTS_ERROR('email')],
+      };
+    }
+
+    //check if its the same email
+    if (user.email.toLowerCase().trim() === email.toLowerCase().trim()) {
+      return {
+        response: false,
+        errors: [
+          CREATE_ALREADY_EXISTS_ERROR(
+            'email',
+            'New email is the same as the current one'
+          ),
+        ],
+      };
+    }
+    //send email to user
+    const changeEmailVerificationCode = await v4();
+    const redisKey = `${CHANGE_EMAIL_PREFIX}:${changeEmailVerificationCode}`;
+    const reidValue = JSON.stringify({
+      email,
+      userId: user.id,
+      timestamp: new Date(),
+    });
+
+    await redis.set(redisKey, reidValue, 'ex', 60 * 60 * 0.1); //10 mins
+
+    //send email with that redis key
+    const changeEmailLink = `${process.env.CORS_ORIGIN}/change-email/${changeEmailVerificationCode}`;
+    const emailHTML = `<a href="${changeEmailLink}">${changeEmailLink}</a>`;
+    await sendEmail(email, emailHTML, 'Change Email');
+
+    return { response: true };
   }
 
   @Query(() => [User], { nullable: true })

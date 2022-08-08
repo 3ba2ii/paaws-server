@@ -10,5 +10,6 @@ export const isAuth: MiddlewareFn<MyContext> = (
     res.clearCookie(COOKIE_NAME);
     throw new Error('Not Authenticated');
   }
+
   return next();
 };

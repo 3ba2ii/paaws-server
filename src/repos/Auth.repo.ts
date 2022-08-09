@@ -398,6 +398,10 @@ export class AuthRepo extends Repository<User> {
             'identifier',
             'User is registered with an auth provider, Please try to login with that provider'
           ),
+          CREATE_NOT_AUTHORIZED_ERROR(
+            'password',
+            'User is registered with an auth provider, Please try to login with that provider'
+          ),
         ],
       };
     }

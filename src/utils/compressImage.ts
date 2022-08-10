@@ -49,10 +49,7 @@ export const compressImage = async (buffer: Buffer) => {
       plugins: [convertToJpg, mozjpeg({ quality: isLargerThan2mb ? 50 : 85 })],
     });
   } catch (err) {
-    console.log(
-      `🚀 ~ file: compressImage.ts ~ line 50 ~ compressImage ~ err`,
-      err
-    );
+   
     Sentry.captureException(err);
     return null;
   }

@@ -46,7 +46,7 @@ jobs:
 
       - name: List files in the repository
         run: |
-          ls ${{ github.workspace }}
+          ls -a ${{ github.workspace }}
       - name: Build Docker Image
         id: docker_build
         run: |

@@ -1,4 +1,3 @@
-import { PaginatedMissingPosts } from '../types/response.types';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -16,14 +15,22 @@ import { isAuth } from '../middleware/isAuth';
 import { PhotoRepo } from '../repos/PhotoRepo.repo';
 import { MyContext } from '../types';
 import {
+  MissingPostTags,
+  MissingPostTypes,
+  NotificationType,
+  SortingOrder,
+} from '../types/enums.types';
+import {
   CreateMissingPostInput,
   PaginationArgs,
+  PostFilters,
   UpdateMissingPostInput,
 } from '../types/input.types';
 import {
   CreateMissingPostResponse,
   EditMissingPostResponse,
   MissingPostResponse,
+  PaginatedMissingPosts,
 } from '../types/response.types';
 import { Upload } from '../types/Upload';
 import { createBaseResolver } from '../utils/createBaseResolver';
@@ -39,13 +46,6 @@ import {
 } from './../errors';
 import { AddressRepo } from './../repos/AddressRepo.repo';
 import { NotificationRepo } from './../repos/NotificationRepo.repo';
-import { PostFilters } from '../types/input.types';
-import {
-  MissingPostTags,
-  MissingPostTypes,
-  NotificationType,
-  SortingOrder,
-} from '../types/enums.types';
 import { getLocationFilterBoundary } from './../utils/getLocationFilterBoundary';
 import { getStartAndEndDateFilters } from './../utils/getStartAndEndDateFilters';
 
@@ -185,11 +185,9 @@ class MissingPostResolver extends MissingPostBaseResolver {
           return `"addressId" IN (${subQuery.getQuery()})`;
         });
       }
-
       return posts;
     } catch (e) {
       console.error(e.message);
-    } finally {
       return posts;
     }
   }

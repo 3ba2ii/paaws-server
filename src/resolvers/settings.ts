@@ -86,10 +86,6 @@ class SettingsResolver {
     @Ctx() { req }: MyContext
   ): Promise<BooleanResponseType> {
     const user = req.session.user;
-    console.log(
-      `🚀 ~ file: settings.ts ~ line 89 ~ SettingsResolver ~ user`,
-      user
-    );
 
     return user
       ? this.settingRepo.updateSlug(user, newSlug)

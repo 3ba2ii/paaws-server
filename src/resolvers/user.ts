@@ -1,3 +1,7 @@
+import {
+  UserMetadata,
+  UserMetadataDescription,
+} from './../entity/Metadata/UserMetadata';
 import { GraphQLUpload } from 'graphql-upload';
 import {
   Arg,
@@ -41,6 +45,7 @@ import {
   CREATE_ALREADY_EXISTS_ERROR,
   CREATE_INVALID_ERROR,
   CREATE_NOT_FOUND_ERROR,
+  INTERNAL_SERVER_ERROR,
 } from './../errors';
 import { isAuth } from './../middleware/isAuth';
 import { isUserFound } from './../middleware/isUserFound';
@@ -53,6 +58,12 @@ import { AuthorizationInputType } from './../types/authorization.types';
 import { Upload } from './../types/Upload';
 
 require('dotenv-safe').config();
+
+export type ChangeEmailRedisValue = {
+  email: string;
+  userId: number;
+  timestamp: Date;
+};
 
 const UserBaseResolver = createBaseResolver('User', User);
 
@@ -294,6 +305,73 @@ class UserResolver extends UserBaseResolver {
     await sendEmail(email, emailHTML, 'Change Email');
 
     return { response: true };
+  }
+
+  @Mutation(() => BooleanResponseType)
+  @UseMiddleware(isAuth)
+  async changeUserEmail(
+    @Arg('token') token: string,
+    @Ctx() { req, redis }: MyContext
+  ): Promise<BooleanResponseType> {
+    try {
+      const redisKey = `${CHANGE_EMAIL_PREFIX}:${token}`;
+      const redisValue = await redis.get(redisKey);
+      if (!redisValue) {
+        return { response: false, errors: [CREATE_NOT_FOUND_ERROR('token')] };
+      }
+
+      const { email, userId, timestamp } = JSON.parse(
+        redisValue
+      ) as ChangeEmailRedisValue;
+
+      if (!email || !userId || !timestamp) {
+        return { response: false, errors: [CREATE_INVALID_ERROR('token')] };
+      }
+      if (req.session?.userId !== userId) {
+        return {
+          response: false,
+          errors: [
+            CREATE_INVALID_ERROR(
+              'token',
+              'Logged in user is not the same as the user who requested the change'
+            ),
+          ],
+        };
+      }
+
+      /* check if email already exists */
+      const userWithEmail = await User.findOne({ where: { email } });
+      if (userWithEmail) {
+        return {
+          response: false,
+          errors: [CREATE_ALREADY_EXISTS_ERROR('email')],
+        };
+      }
+
+      const user = await User.findOne(req.session.userId, {
+        relations: ['settings'],
+      });
+      if (!user) {
+        return { response: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
+      }
+
+      const oldEmail = user.email;
+      const metadata = UserMetadata.create({
+        user,
+        description: UserMetadataDescription.UPDATE_EMAIL,
+        value: oldEmail,
+      });
+      user.email = email.trim().toLowerCase();
+      user.settings.emailVerified = true;
+
+      await user.save();
+      await metadata.save();
+      await redis.del(redisKey);
+      //todo: must send a notification to old email and new email
+      return { response: true };
+    } catch (e) {
+      return { response: false, errors: [INTERNAL_SERVER_ERROR, e] };
+    }
   }
 
   @Query(() => [User], { nullable: true })

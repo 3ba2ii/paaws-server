@@ -161,4 +161,40 @@ export class SettingRepo extends Repository<Setting> {
 
     return { response: userSettings.emailVerified };
   }
+
+  public async updateSlug(
+    user: User,
+    newSlug: string
+  ): Promise<BooleanResponseType> {
+    try {
+      const userWithSlug = await UserSetting.findOne({
+        where: { slug: newSlug?.trim()?.toLowerCase() },
+      });
+      if (userWithSlug) {
+        return {
+          errors: [
+            CREATE_ALREADY_EXISTS_ERROR(
+              'slug',
+              'This url is already in use, Try another one.'
+            ),
+          ],
+        };
+      }
+      const userSettings = await UserSetting.findOne({
+        where: { userId: user.id },
+      });
+      if (!userSettings) {
+        return {
+          errors: [
+            CREATE_NOT_FOUND_ERROR('user-settings', 'No user settings found'),
+          ],
+        };
+      }
+      userSettings.slug = newSlug?.trim()?.toLowerCase();
+      await userSettings.save();
+      return { response: true };
+    } catch (e) {
+      return { errors: [e, INTERNAL_SERVER_ERROR] };
+    }
+  }
 }

@@ -1,3 +1,5 @@
+import { BooleanResponseType } from './../types/response.types';
+import { isUserFound } from './../middleware/isUserFound';
 import { CREATE_NOT_FOUND_ERROR } from './../errors';
 import { User } from './../entity/UserEntities/User';
 import { UpdateUserSettingsInput } from './../types/input.types';
@@ -73,6 +75,25 @@ class SettingsResolver {
       return { success: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
 
     return this.settingRepo.updateUserSettings(userId, updateUserSettingsInput);
+  }
+
+  @Mutation(() => BooleanResponseType)
+  @UseMiddleware(isAuth)
+  @UseMiddleware(isUserFound)
+  async updateSlug(
+    @Arg('newSlug')
+    newSlug: string,
+    @Ctx() { req }: MyContext
+  ): Promise<BooleanResponseType> {
+    const user = req.session.user;
+    console.log(
+      `🚀 ~ file: settings.ts ~ line 89 ~ SettingsResolver ~ user`,
+      user
+    );
+
+    return user
+      ? this.settingRepo.updateSlug(user, newSlug)
+      : { response: false, errors: [CREATE_NOT_FOUND_ERROR('user')] };
   }
 }
 

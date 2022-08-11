@@ -219,7 +219,7 @@ export class LocalAuthResolver {
     await redis.set(
       FORGET_PASSWORD_PREFIX + token,
       user.id,
-      'ex',
+      'EX',
       expirationDate
     ); //1 day expiration if email, 10 minutes expiration if phone number)
 
@@ -322,7 +322,7 @@ export class LocalAuthResolver {
       await redis.set(
         `${AUTH_TOKEN_PREFIX}:${authToken}`,
         JSON.stringify(value),
-        'ex',
+        'EX',
         60 * 60 * 24
       );
 

@@ -9,6 +9,8 @@
   "entities": ["dist/entity/**/*.js"],
   "migrations": ["dist/migration/*.js"],
   "subscribers": ["src/subscriber/**/*.js"],
+  "seeds": ["src/db/seeds/**/*{.ts,.js}"],
+  "factories": ["src/db/seeds/factories/**/*{.ts,.js}"],
 
   "cli": {
     "migrationsDir": "src/migration"

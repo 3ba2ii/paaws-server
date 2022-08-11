@@ -12,6 +12,7 @@
     "create-migration": "typeorm migration:create -n NewMigration",
     "generate-migration": "typeorm migration:generate -n NewGenMigration",
     "db:setup": "ts-node ./src/test-utils/setup.ts",
+    "db:seed": "ts-node ./node_modules/typeorm-seeding/dist/cli.js seed",
     "test": "jest",
     "test2": "nodemon --watch src --ext ts --exec 'clear && yarn jest --no-cache || true'"
   },
@@ -74,7 +75,7 @@
     "graphql-upload": "^12.0.0",
     "imagemin": "7.0.1",
     "imagemin-mozjpeg": "^9.0.0",
-    "ioredis": "^4.27.9",
+    "ioredis": "^5.2.2",
     "is-jpg": "^3.0.0",
     "passport": "^0.5.2",
     "passport-auth0": "^1.4.2",

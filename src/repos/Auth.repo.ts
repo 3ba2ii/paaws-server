@@ -1,7 +1,7 @@
 import { getDisplayName } from './../utils/getDisplayName';
 import argon2 from 'argon2';
 import { Request } from 'express';
-import IORedis from 'ioredis';
+import { Redis } from 'ioredis';
 import { Service } from 'typedi';
 import { EntityRepository, Repository } from 'typeorm';
 import { v4 } from 'uuid';
@@ -34,11 +34,7 @@ import { BaseRegisterInput, LoginInput } from './../types/input.types';
 @Service()
 @EntityRepository(User)
 export class AuthRepo extends Repository<User> {
-  private async isValidOTP(
-    otp: string,
-    redisKey: string,
-    redis: IORedis.Redis
-  ) {
+  private async isValidOTP(otp: string, redisKey: string, redis: Redis) {
     try {
       const storedOTP = await redis.get(redisKey);
 
@@ -138,7 +134,7 @@ export class AuthRepo extends Repository<User> {
   async sendOTP(
     phone: string,
     email: string,
-    redis: IORedis.Redis
+    redis: Redis
   ): Promise<RegularResponse> {
     /* create a better otp */
 
@@ -179,7 +175,7 @@ export class AuthRepo extends Repository<User> {
 
       /* 1. Store the OTP with the user's phone in redis */
       const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}`;
-      await redis.set(redisKey, otp, 'ex', 60 * 5);
+      await redis.set(redisKey, otp, 'EX', 60 * 5);
 
       /* 2. Send SMS to this user containing the OTP*/
       const { sent } = await sendSMS(`Your OTP for Paaws is ${otp}`, phone);
@@ -207,7 +203,7 @@ export class AuthRepo extends Repository<User> {
     user: User,
     phone: string,
     otp: string,
-    redis: IORedis.Redis
+    redis: Redis
   ): Promise<RegularResponse> {
     try {
       const redisKey = `${VERIFY_PHONE_NUMBER_PREFIX}:${phone}`;
@@ -238,7 +234,7 @@ export class AuthRepo extends Repository<User> {
 
   async sendVerificationMail(
     email: string,
-    redis: IORedis.Redis,
+    redis: Redis,
     redisValue: string,
     html: string,
     subject?: string
@@ -251,16 +247,12 @@ export class AuthRepo extends Repository<User> {
     if (!sent) return false;
 
     //2. save the code in redis
-    await redis.set(token, redisValue, 'ex', 60 * 60 * 5);
+    await redis.set(token, redisValue, 'EX', 60 * 60 * 5);
 
     return true;
   }
 
-  async verifyUserEmail(
-    token: string,
-    redis: IORedis.Redis,
-    requestSender: User
-  ) {
+  async verifyUserEmail(token: string, redis: Redis, requestSender: User) {
     try {
       const redisValue = await redis.get(token.trim());
       if (!redisValue) return false;
@@ -298,7 +290,7 @@ export class AuthRepo extends Repository<User> {
   async sendChangeUserEmailMail(
     user: User,
     newEmail: string,
-    redis: IORedis.Redis
+    redis: Redis
   ): Promise<RegularResponse> {
     if (user.email.trim().toLowerCase() === newEmail.trim().toLowerCase()) {
       return {

@@ -46,7 +46,7 @@ class AddressResolver {
       await redis.set(
         `userLocation${userId}`,
         `${user.lat}*${user.lng}`,
-        'ex',
+        'EX',
         60 * 5
       );
 

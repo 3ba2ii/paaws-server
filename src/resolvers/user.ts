@@ -297,7 +297,7 @@ class UserResolver extends UserBaseResolver {
       timestamp: new Date(),
     });
 
-    await redis.set(redisKey, reidValue, 'ex', 60 * 60 * 0.1); //10 mins
+    await redis.set(redisKey, reidValue, 'EX', 60 * 60 * 0.1); //10 mins
 
     //send email with that redis key
     const changeEmailLink = `${process.env.CORS_ORIGIN}/change-email/${changeEmailVerificationCode}`;

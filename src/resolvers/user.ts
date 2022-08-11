@@ -141,8 +141,8 @@ class UserResolver extends UserBaseResolver {
     @Arg('userId', () => Int) userId: number,
     @Arg('paginationArgs', { nullable: true }) { limit, cursor }: PaginationArgs
   ): Promise<PaginatedMissingPosts> {
-    const raelLimit = Math.min(20, limit || 5);
-    const realLimitPlusOne = raelLimit + 1;
+    const realLimit = Math.min(20, limit || 5);
+    const realLimitPlusOne = realLimit + 1;
 
     const votesRepo = getConnection().getRepository(PostUpdoot);
 
@@ -157,7 +157,7 @@ class UserResolver extends UserBaseResolver {
     });
 
     return {
-      items: updoots.map((v) => v.post).slice(0, raelLimit),
+      items: updoots.map((v) => v.post).slice(0, realLimit),
       hasMore: updoots.length === realLimitPlusOne,
     };
   }

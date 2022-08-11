@@ -75,10 +75,6 @@ export class AWSS3 {
       const response = await this.s3.upload(s3UploadParams).promise();
       return { url: response.Location, filename: `${filename}.${type}` };
     } catch (err) {
-      console.log(
-        `🚀 ~ file: s3.ts ~ line 76 ~ AWSS3 ~ uploadFileToS3 ~ err`,
-        err
-      );
       Sentry.captureException(err);
       return {
         errors: [

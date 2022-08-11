@@ -175,7 +175,7 @@ export class SettingRepo extends Repository<Setting> {
           errors: [
             CREATE_ALREADY_EXISTS_ERROR(
               'slug',
-              'This url is already in use, Try another one.'
+              'This URL is already associated with another account, Please try another one.'
             ),
           ],
         };
